@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Splitrip</string>
+    <string name="facebook_app_id">2502530640080257</string>
+    <string name="fb_login_protocol_scheme">fb2502530640080257</string>
+    <string name="facebook_client_token">0c1572144fa651a0352cb242aa8a6aa4</string>
+
+
+</resources>

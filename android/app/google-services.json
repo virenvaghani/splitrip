@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "277675518255",
+    "project_id": "splitrip-b619f",
+    "storage_bucket": "splitrip-b619f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277675518255:android:8295fcffe37fd4ff2959da",
+        "android_client_info": {
+          "package_name": "com.example.splitrip"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "277675518255-4pk9e5r1tget834r3ht2e4u4824qnj5r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.splitrip",
+            "certificate_hash": "25c4d1ffe40a0611e49ec0c1b7e5a5b59013c18a"
+          }
+        },
+        {
+          "client_id": "277675518255-bh1ivd9i1mm4g76ant6bt1t7acsequid.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzCYIQ66bDk50JUMONec0jIxAc2f4ws5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "277675518255-bh1ivd9i1mm4g76ant6bt1t7acsequid.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
