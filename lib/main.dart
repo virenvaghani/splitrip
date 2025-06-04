@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:splitrip/controller/emoji_controller.dart';
 import 'package:splitrip/controller/profile_controller.dart';
 import 'package:splitrip/services/auth_service.dart';
 import 'controller/animation_controller.dart';
@@ -22,6 +23,7 @@ void main() async {
   Get.put(UserController());
   Get.lazyPut(() => ProfileController());
   Get.put(AppPageController());
+  Get.put(EmojiController());
 
   runApp(const MyApp());
 }
