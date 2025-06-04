@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:splitrip/views/home/createtrip/create_trip.dart';
-import 'package:splitrip/views/home/createtrip/trip_page.dart';
-import 'package:splitrip/widgets/my_button.dart';
+import 'package:splitrip/views/home/trip/create_trip.dart';
+import 'package:splitrip/views/home/trip/trip_detail.dart';
 import 'package:splitrip/widgets/myappbar.dart';
-
-import 'createtrip/create_trip.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

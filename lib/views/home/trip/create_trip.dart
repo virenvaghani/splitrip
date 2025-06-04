@@ -271,13 +271,7 @@ class _CreateTripState extends State<CreateTrip> {
                                 onTap: () {
                                   showDialog(
                                     context: context,
-                                    builder: (context) => Dialog(
-                                      backgroundColor: theme.cardTheme.color,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const EmojiSelectorBottomSheet(),
-                                    ),
+                                    builder: (context) => Card(child: EmojiSelectorBottomSheet()),
                                   );
                                 },
                                 child: CircleAvatar(
