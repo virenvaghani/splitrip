@@ -21,6 +21,7 @@ class CustomTextField extends StatelessWidget {
   final InputBorder? focusedBorder;
   final bool? filled;
   final Color? fillColor;
+  final bool isEnabled;
 
   const CustomTextField({
     super.key,
@@ -43,6 +44,7 @@ class CustomTextField extends StatelessWidget {
     this.focusedBorder,
     this.filled,
     this.fillColor,
+    this.isEnabled=true
 
 
   });
@@ -51,6 +53,7 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return TextField(
+
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
@@ -60,14 +63,15 @@ class CustomTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       onSubmitted: onFieldSubmitted,
       decoration: InputDecoration(
+        enabled: isEnabled,
         hintText: hintText,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        border: border,
-        focusedBorder: focusedBorder,
+        border: OutlineInputBorder(borderSide: BorderSide(width: 1.0),borderRadius: BorderRadius.circular(10.0)),
+        focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.0),borderRadius: BorderRadius.circular(10.0)),
         errorBorder:errorBorder,
-        disabledBorder:disabledBorder,
-        enabledBorder: enabledBorder,
+        disabledBorder:OutlineInputBorder(borderSide: BorderSide(width: 1.0),borderRadius: BorderRadius.circular(10.0)),
+        enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.0),borderRadius: BorderRadius.circular(10.0)),
         filled: filled,
         fillColor: fillColor,
       ),

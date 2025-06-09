@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:splitrip/controller/emoji_controller.dart';
 import 'package:splitrip/controller/profile_controller.dart';
 import 'package:splitrip/services/auth_service.dart';
+import 'package:splitrip/views/trip/maintain_trip_screen_.dart';
 import 'controller/animation_controller.dart';
 import 'controller/button_controller.dart';
 import 'controller/theme_controller.dart';
@@ -40,20 +41,28 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<ThemeController>(
         builder: (context, themeController, child) {
-          return AnimatedTheme(
-            data: themeController.currentTheme,
-            duration: const Duration(milliseconds: 200),
-            child: AnimationProviderWrapper(
-              child: GetMaterialApp(
-                debugShowCheckedModeBanner: false,
-                themeMode: themeController.isDarkMode
+          return GetMaterialApp(
+            defaultTransition: Transition.rightToLeftWithFade,
+            transitionDuration: const Duration(milliseconds: 300),
+            debugShowCheckedModeBanner: false,
+            themeMode:
+                themeController.isDarkMode
                     ? ThemeMode.dark
                     : ThemeMode.light,
-                theme: themeController.lightTheme,
-                darkTheme: themeController.darkTheme,
-                home:  WidgetTree(),
+            theme: themeController.lightTheme,
+            darkTheme: themeController.darkTheme,
+            home: WidgetTree(),
+            getPages: [
+              /* GetPage(
+                name: Constant().routeSplashActivity,
+                page: () => const SplashActivity(),
+                //page: () => const DashboardActivity(), IDENTITY_INSERT is set to OFF.
+              ),*/
+              GetPage(
+                name: "/MaintainTripScreen",
+                page: () => MaintainTripScreen(),
               ),
-            ),
+            ],
           );
         },
       ),
@@ -68,7 +77,8 @@ class AnimationProviderWrapper extends StatefulWidget {
   const AnimationProviderWrapper({super.key, required this.child});
 
   @override
-  AnimationProviderWrapperState createState() => AnimationProviderWrapperState();
+  AnimationProviderWrapperState createState() =>
+      AnimationProviderWrapperState();
 }
 
 class AnimationProviderWrapperState extends State<AnimationProviderWrapper>

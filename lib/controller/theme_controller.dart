@@ -85,6 +85,7 @@ class ThemeController extends ChangeNotifier {
 
   // Light Theme
   final ThemeData lightTheme = ThemeData(
+
     brightness: Brightness.light,
     scaffoldBackgroundColor: lightBackground,
     primaryColor: primaryColor,
@@ -103,6 +104,12 @@ class ThemeController extends ChangeNotifier {
       backgroundColor: lightBackground,
       foregroundColor: lightTextColor,
       elevation: 0,
+      centerTitle: true,
+      titleTextStyle: GoogleFonts.inter(
+        color: Color(0xFF212121),
+        letterSpacing: 0.2,
+        fontWeight: FontWeight.w400,
+      ).copyWith(fontSize: 24, fontWeight: FontWeight.w500),
       iconTheme: IconThemeData(color: lightTextColor),
     ),
     buttonTheme: ButtonThemeData(
@@ -190,6 +197,12 @@ class ThemeController extends ChangeNotifier {
       backgroundColor: darkBackground,
       foregroundColor: darkTextColor,
       elevation: 0,
+      centerTitle: true,
+      titleTextStyle: GoogleFonts.inter(
+        color: Color(0xFFE0E0E0),
+        letterSpacing: 0.2,
+        fontWeight: FontWeight.w400,
+      ).copyWith(fontSize: 24, fontWeight: FontWeight.w500),
       iconTheme: IconThemeData(color: darkTextColor),
     ),
     buttonTheme: ButtonThemeData(

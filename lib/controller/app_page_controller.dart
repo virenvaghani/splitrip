@@ -1,12 +1,13 @@
 import 'package:flutter/Material.dart';
 import 'package:get/get.dart';
+
 import '../views/friend_list/friends_page.dart';
-import '../views/home/home_page.dart';
 import '../views/profile/profile_page.dart';
+import '../views/trip/trip_screen.dart';
 class AppPageController extends GetxController {
   final List<Widget> pages = [
      FriendsPage(),
-     HomePage(),
+     TripScreen(),
      ProfilePage(),
   ];
   var pageIndex = 1.obs; // Default to 0 (FriendsPage)

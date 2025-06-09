@@ -2,7 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
 class Mydropdown extends StatefulWidget {
-  const Mydropdown({super.key});
+  Mydropdown({super.key});
 
   @override
   _MydropdownState createState() => _MydropdownState();
@@ -52,8 +52,11 @@ class _MydropdownState extends State<Mydropdown> {
             selectedValue  = value;
           });
         },
-        buttonStyleData: const ButtonStyleData(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+        buttonStyleData:  ButtonStyleData(
+          padding: EdgeInsets.symmetric(horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.black
+          ),
           height: 40,
           elevation: 0
         ),

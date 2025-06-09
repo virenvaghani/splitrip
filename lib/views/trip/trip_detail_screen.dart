@@ -156,8 +156,8 @@ class _TripPageState extends State<TripPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildTab(context, 'Expenses', true),
-                    _buildTab(context, 'Balances', false, tabs['balances_notification']),
-                    _buildTab(context, 'Photos', false, tabs['photos_notification']),
+                    _buildTab(context, 'Balances', false),
+                    _buildTab(context, 'Photos', false),
                   ],
                 ),
               ),
@@ -385,7 +385,7 @@ class _TripPageState extends State<TripPage> {
     );
   }
 
-  Widget _buildSummaryRow(BuildContext context, String label, String value, {bool isHighlighted = false}) {
+  Widget   _buildSummaryRow(BuildContext context, String label, String value, {bool isHighlighted = false}) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
