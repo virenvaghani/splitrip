@@ -13,7 +13,9 @@ class ProfileDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final UserController userController = Get.find<UserController>();
-    final ThemeController themeController = Provider.of<ThemeController>(context);
+    final ThemeController themeController = Provider.of<ThemeController>(
+      context,
+    );
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -29,14 +31,15 @@ class ProfileDetailsPage extends StatelessWidget {
   }
 
   Widget _buildPortrait(
-      BuildContext context,
-      UserController userController,
-      ThemeController themeController,
-      ) {
+    BuildContext context,
+    UserController userController,
+    ThemeController themeController,
+  ) {
     final theme = Theme.of(context);
-    final borderColor = themeController.isDarkMode
-        ? theme.colorScheme.onSurface.withOpacity(0.2)
-        : theme.colorScheme.primary.withOpacity(0.2);
+    final borderColor =
+        themeController.isDarkMode
+            ? theme.colorScheme.onSurface.withOpacity(0.2)
+            : theme.colorScheme.primary.withOpacity(0.2);
 
     return CustomScrollView(
       physics: const ClampingScrollPhysics(),
@@ -72,7 +75,9 @@ class ProfileDetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.onSurface.withOpacity(0.05),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.05,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -82,28 +87,38 @@ class ProfileDetailsPage extends StatelessWidget {
                         child: Row(
                           children: [
                             Obx(
-                                  () => CircleAvatar(
+                              () => CircleAvatar(
                                 radius: 40,
-                                backgroundImage: userController.photoUrl.isNotEmpty
-                                    ? NetworkImage(userController.photoUrl)
-                                    : (user.photoURL != null
-                                    ? NetworkImage(user.photoURL!)
-                                    : null),
-                                backgroundColor: theme.colorScheme.primaryContainer,
-                                child: userController.photoUrl.isEmpty &&
-                                    user.photoURL == null
-                                    ? Text(
-                                  userController.userName.isNotEmpty
-                                      ? userController.userName[0].toUpperCase()
-                                      : (user.displayName?.isNotEmpty == true
-                                      ? user.displayName![0].toUpperCase()
-                                      : '?'),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                                    : null,
+                                backgroundImage:
+                                    userController.photoUrl.isNotEmpty
+                                        ? NetworkImage(userController.photoUrl)
+                                        : (user.photoURL != null
+                                            ? NetworkImage(user.photoURL!)
+                                            : null),
+                                backgroundColor:
+                                    theme.colorScheme.primaryContainer,
+                                child:
+                                    userController.photoUrl.isEmpty &&
+                                            user.photoURL == null
+                                        ? Text(
+                                          userController.userName.isNotEmpty
+                                              ? userController.userName[0]
+                                                  .toUpperCase()
+                                              : (user.displayName?.isNotEmpty ==
+                                                      true
+                                                  ? user.displayName![0]
+                                                      .toUpperCase()
+                                                  : '?'),
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                color:
+                                                    theme
+                                                        .colorScheme
+                                                        .onPrimaryContainer,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        )
+                                        : null,
                                 onBackgroundImageError: (error, stackTrace) {},
                               ),
                             ),
@@ -113,26 +128,30 @@ class ProfileDetailsPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Obx(
-                                        () => Text(
+                                    () => Text(
                                       userController.userName.isNotEmpty
                                           ? userController.userName
-                                          : (user.displayName ?? 'No name available'),
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: theme.colorScheme.onSurface,
-                                      ),
+                                          : (user.displayName ??
+                                              'No name available'),
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Obx(
-                                        () => Text(
+                                    () => Text(
                                       userController.userEmail.isNotEmpty
                                           ? userController.userEmail
-                                          : (user.email ?? 'No email available'),
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color:
-                                        theme.colorScheme.onSurface.withOpacity(0.6),
-                                      ),
+                                          : (user.email ??
+                                              'No email available'),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface
+                                                .withOpacity(0.6),
+                                          ),
                                     ),
                                   ),
                                 ],
@@ -161,7 +180,8 @@ class ProfileDetailsPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(color: borderColor),
                       ),
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.95),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withOpacity(0.95),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Column(
@@ -180,9 +200,13 @@ class ProfileDetailsPage extends StatelessWidget {
                                   SnackBar(
                                     content: Text(
                                       'Notifications ${value ? 'enabled' : 'disabled'}',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onInverseSurface,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onInverseSurface,
+                                          ),
                                     ),
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(
@@ -193,12 +217,18 @@ class ProfileDetailsPage extends StatelessWidget {
                                 );
                               },
                               activeColor: theme.colorScheme.primary,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
                               child: Divider(
-                                color: theme.colorScheme.onSurface.withOpacity(0.1),
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.1,
+                                ),
                               ),
                             ),
                             SwitchListTile.adaptive(
@@ -215,9 +245,13 @@ class ProfileDetailsPage extends StatelessWidget {
                                   SnackBar(
                                     content: Text(
                                       'Dark mode ${value ? 'enabled' : 'disabled'}',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onInverseSurface,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color:
+                                                theme
+                                                    .colorScheme
+                                                    .onInverseSurface,
+                                          ),
                                     ),
                                     behavior: SnackBarBehavior.floating,
                                     shape: RoundedRectangleBorder(
@@ -228,7 +262,9 @@ class ProfileDetailsPage extends StatelessWidget {
                                 );
                               },
                               activeColor: theme.colorScheme.primary,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
                             ),
                           ],
                         ),
@@ -245,14 +281,15 @@ class ProfileDetailsPage extends StatelessWidget {
   }
 
   Widget _buildLandscape(
-      BuildContext context,
-      UserController userController,
-      ThemeController themeController,
-      ) {
+    BuildContext context,
+    UserController userController,
+    ThemeController themeController,
+  ) {
     final theme = Theme.of(context);
-    final borderColor = themeController.isDarkMode
-        ? theme.colorScheme.onSurface.withOpacity(0.2)
-        : theme.colorScheme.primary.withOpacity(0.2);
+    final borderColor =
+        themeController.isDarkMode
+            ? theme.colorScheme.onSurface.withOpacity(0.2)
+            : theme.colorScheme.primary.withOpacity(0.2);
 
     return CustomScrollView(
       physics: const ClampingScrollPhysics(),
@@ -289,7 +326,9 @@ class ProfileDetailsPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.05,
+                                ),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -299,57 +338,79 @@ class ProfileDetailsPage extends StatelessWidget {
                           child: Row(
                             children: [
                               Obx(
-                                    () => CircleAvatar(
+                                () => CircleAvatar(
                                   radius: 30,
-                                  backgroundImage: userController.photoUrl.isNotEmpty
-                                      ? NetworkImage(userController.photoUrl)
-                                      : (user.photoURL != null
-                                      ? NetworkImage(user.photoURL!)
-                                      : null),
-                                  backgroundColor: theme.colorScheme.primaryContainer,
-                                  child: userController.photoUrl.isEmpty &&
-                                      user.photoURL == null
-                                      ? Text(
-                                    userController.userName.isNotEmpty
-                                        ? userController.userName[0].toUpperCase()
-                                        : (user.displayName?.isNotEmpty == true
-                                        ? user.displayName![0].toUpperCase()
-                                        : '?'),
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      color: theme.colorScheme.onPrimaryContainer,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                      : null,
-                                  onBackgroundImageError: (error, stackTrace) {},
+                                  backgroundImage:
+                                      userController.photoUrl.isNotEmpty
+                                          ? NetworkImage(
+                                            userController.photoUrl,
+                                          )
+                                          : (user.photoURL != null
+                                              ? NetworkImage(user.photoURL!)
+                                              : null),
+                                  backgroundColor:
+                                      theme.colorScheme.primaryContainer,
+                                  child:
+                                      userController.photoUrl.isEmpty &&
+                                              user.photoURL == null
+                                          ? Text(
+                                            userController.userName.isNotEmpty
+                                                ? userController.userName[0]
+                                                    .toUpperCase()
+                                                : (user
+                                                            .displayName
+                                                            ?.isNotEmpty ==
+                                                        true
+                                                    ? user.displayName![0]
+                                                        .toUpperCase()
+                                                    : '?'),
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  color:
+                                                      theme
+                                                          .colorScheme
+                                                          .onPrimaryContainer,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          )
+                                          : null,
+                                  onBackgroundImageError:
+                                      (error, stackTrace) {},
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Obx(
-                                      () => Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  () => Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         userController.userName.isNotEmpty
                                             ? userController.userName
-                                            : (user.displayName ?? 'No name available'),
-                                        style: theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: theme.colorScheme.onSurface,
-                                          fontSize: 18,
-                                        ),
+                                            : (user.displayName ??
+                                                'No name available'),
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              fontSize: 18,
+                                            ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         userController.userEmail.isNotEmpty
                                             ? userController.userEmail
-                                            : (user.email ?? 'No email available'),
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                          fontSize: 12,
-                                        ),
+                                            : (user.email ??
+                                                'No email available'),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme.colorScheme.onSurface
+                                                  .withOpacity(0.6),
+                                              fontSize: 12,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -372,7 +433,8 @@ class ProfileDetailsPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(color: borderColor),
                         ),
-                        color: theme.colorScheme.surfaceVariant.withOpacity(0.95),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withOpacity(0.95),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Column(
@@ -404,9 +466,13 @@ class ProfileDetailsPage extends StatelessWidget {
                                     SnackBar(
                                       content: Text(
                                         'Notifications ${value ? 'enabled' : 'disabled'}',
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onInverseSurface,
-                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color:
+                                                  theme
+                                                      .colorScheme
+                                                      .onInverseSurface,
+                                            ),
                                       ),
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
@@ -417,12 +483,17 @@ class ProfileDetailsPage extends StatelessWidget {
                                   );
                                 },
                                 activeColor: theme.colorScheme.primary,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
                                 child: Divider(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.1),
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.1),
                                 ),
                               ),
                               SwitchListTile.adaptive(
@@ -439,9 +510,13 @@ class ProfileDetailsPage extends StatelessWidget {
                                     SnackBar(
                                       content: Text(
                                         'Dark mode ${value ? 'enabled' : 'disabled'}',
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onInverseSurface,
-                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color:
+                                                  theme
+                                                      .colorScheme
+                                                      .onInverseSurface,
+                                            ),
                                       ),
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
@@ -452,7 +527,9 @@ class ProfileDetailsPage extends StatelessWidget {
                                   );
                                 },
                                 activeColor: theme.colorScheme.primary,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
                               ),
                             ],
                           ),

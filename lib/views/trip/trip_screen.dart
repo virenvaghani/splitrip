@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
+import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/views/trip/trip_detail_screen.dart';
 import 'package:splitrip/widgets/myappbar.dart';
@@ -17,13 +18,14 @@ class TripScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return GetX<TripController>(
-      initState: (state) {
-        tripController.iniStateMethodForList();
-      },
+      initState: (state) {},
       builder: (_) {
         return Scaffold(
-          floatingActionButton: floatingactonbutton(context: context, theme: theme),
-          appBar:appbar(context:context, theme:theme),
+          floatingActionButton: floatingactonbutton(
+            context: context,
+            theme: theme,
+          ),
+          appBar: appbar(context: context, theme: theme),
           body: bodyWidget(context: context, theme: theme),
         );
       },
@@ -97,20 +99,19 @@ class TripScreen extends StatelessWidget {
                                         .elementAt(index)
                                         .tripName
                                         .toString(),
-                                    style: theme.textTheme.bodyLarge
-                                        ?.copyWith(
-                                          color: theme.colorScheme.onSurface,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                   Text(
-                                    "Currency: ${tripController.tripModelList.elementAt(index).currency.toString()}",
+                                    "Currency: ${tripController.tripModelList.elementAt(index).tripCurrency.toString()}",
                                     style: theme.textTheme.labelSmall,
                                   ),
                                   Text(
-                                    "Members: ${tripController.tripModelList.elementAt(index).participantModelList?.length ?? 0}",
+                                    "Members: ${tripController.tripModelList.elementAt(index).participantIds.length ?? 0}",
                                     style: theme.textTheme.labelSmall,
-                                  )
+                                  ),
                                 ],
                               ),
                             ],
@@ -135,15 +136,18 @@ class TripScreen extends StatelessWidget {
     }
   }
 
-  floatingactonbutton({required BuildContext context, required ThemeData theme}) {
+  floatingactonbutton({
+    required BuildContext context,
+    required ThemeData theme,
+  }) {
     return ClipRRect(
-      child: Container(
+      child: SizedBox(
         height: 80,
         width: 100,
         child: ElevatedButton(
           onPressed: () {
             Get.toNamed(
-              "/MaintainTripScreen",
+              PageConstant.MaintainTripPage,
               arguments: {"Call From": "Add"},
             );
           },
@@ -157,10 +161,8 @@ class TripScreen extends StatelessWidget {
             splashFactory: NoSplash.splashFactory,
             elevation: 0,
           ).copyWith(
-            backgroundColor: MaterialStateProperty.all(
-              Colors.transparent,
-            ),
-            overlayColor: MaterialStateProperty.all(Colors.transparent),
+            backgroundColor: WidgetStateProperty.all(Colors.transparent),
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
           ),
           child: Container(
             decoration: BoxDecoration(
@@ -199,19 +201,22 @@ class TripScreen extends StatelessWidget {
   }
 
   appbar({required BuildContext context, required ThemeData theme}) {
-    return  CustomAppBar(
+    return CustomAppBar(
       title: "Home",
-      actions: tripController.tripModelList.isNotEmpty ? [
-      IconButton(
-        onPressed: () {},
-        icon: Icon(
-          Icons.archive_outlined,
-          color: theme.primaryColor,
-          size: 24,
-        ),
-        tooltip: 'Archive',
-      ),
-      ]:null,
+      actions:
+          tripController.tripModelList.isNotEmpty
+              ? [
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.archive_outlined,
+                    color: theme.primaryColor,
+                    size: 24,
+                  ),
+                  tooltip: 'Archive',
+                ),
+              ]
+              : null,
     );
   }
 }

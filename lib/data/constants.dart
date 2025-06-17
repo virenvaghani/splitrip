@@ -4,3 +4,7 @@ class Kconstant {
   static const String UserEmail = 'user_email';
   static const String photoURL ='Image';
 }
+
+class PageConstant{
+  static const String MaintainTripPage = "/MaintainTripScreen";
+}

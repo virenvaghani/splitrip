@@ -1,29 +1,32 @@
-import 'package:flutter/Material.dart';
+import 'dart:convert';
+import 'package:emoji_selector/src/emoji_data.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:splitrip/api/api.dart';
 import 'package:splitrip/model/trip/participant_model.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
-
+import '../../data/token.dart';
 import '../../model/friend/friend_model.dart';
-import '../../views/trip/maintain_trip_screen_.dart';
 import '../emoji_controller.dart';
+import 'package:http/http.dart' as http;
 
 class TripController extends GetxController {
-  //Maintain trip screen parameter
+  // Maintain trip screen parameters
   final RxString callFrom = "".obs;
   final EmojiController emojiController = Get.put(EmojiController());
   final TextEditingController tripNameController = TextEditingController();
   final TextEditingController tripMemberController = TextEditingController();
   final TextEditingController friendNameController = TextEditingController();
-  RxString selectedCurrency = "".obs;
-  RxString selectedParticipant = "".obs;
-  RxList<ParticipantModel> participantModelList = RxList();
-  RxList<FriendModel> friendModelList = RxList();
-  RxString validationMsgForSelectFriend = "".obs;
-  RxBool isVisibleAddFriendForm = false.obs;
+  final RxString selectedCurrency = "".obs;
+  final RxString selectedParticipant = "".obs;
+  final RxList<ParticipantModel> participantModelList = RxList();
+  final RxList<FriendModel> friendModelList = RxList();
+  final RxString validationMsgForSelectFriend = "".obs;
+  final RxBool isVisibleAddFriendForm = false.obs;
 
-  // tripscreen
-  RxList<TripModel> tripModelList = RxList();
+  // Trip screen
+  final RxList<Trip> tripModelList = RxList();
 
   final formKey = GlobalKey<FormState>();
   final addParticipantFormKey = GlobalKey<FormState>();
@@ -33,131 +36,120 @@ class TripController extends GetxController {
   final TextEditingController newParticipantMembersController =
       TextEditingController();
 
-  // Reactive variables to track field states
-  final RxBool isNameValid = false.obs;
-  final RxBool isMembersValid = false.obs;
+  @override
+  void onClose() {
+    // Dispose of TextEditingControllers to prevent memory leaks
+    tripNameController.dispose();
+    tripMemberController.dispose();
+    friendNameController.dispose();
+    newParticipantNameController.dispose();
+    newParticipantMembersController.dispose();
+    super.onClose();
+  }
 
-  void initStateMethodForMaintain({required argumentData}) {
-    callFrom.value = argumentData["Call From"];
-    if (callFrom.value == "Add") {
-      validationMsgForSelectFriend.value = "";
-      isVisibleAddFriendForm.value = false;
-      tripNameController.clear();
-      tripMemberController.clear();
-      selectedCurrency.value = "INR";
-      selectedParticipant.value = "Select Participant";
+  void initStateMethodForMaintain({
+    required Map<String, dynamic> argumentData,
+  }) async {
+    callFrom.value = argumentData["Call From"] ?? "";
+    int? tripId = argumentData["trip_id"]; // could be null
+    selectedCurrency.value = "INR";
+
+    final response = await ApiService.fetchTripInitData(tripId: tripId);
+
+    if (response != null) {
+      // === Existing Trip ===
+      if (response["trip"] != null) {
+        final trip = response["trip"];
+        tripNameController.text = trip["trip_name"] ?? "";
+        selectedCurrency.value = trip["trip_currency"] ?? "INR";
+
+        // Set emoji using getEmojiDataByString
+        emojiController.selectedEmoji.value =
+            emojiController.getEmojiDataByString(trip["trip_emoji"]) ??
+            emojiController.getEmojiDataByString(
+              '🧳',
+            ); // Fallback to luggage emoji
+      } else {
+        // === New Trip ===
+        tripNameController.clear();
+        selectedCurrency.value = "INR";
+        emojiController.selectedEmoji.value = emojiController
+            .getEmojiDataByString('🧳'); // Default to luggage emoji
+      }
+
+      // Selected participants for this trip
       participantModelList.clear();
-      participantModelList.add(
-        ParticipantModel(name: "Viren", memberCount: 2, isCurrentUser: true),
-      );
+      for (var p in response["selected_participants"]) {
+        participantModelList.add(ParticipantModel.fromJson(p));
+      }
+
+      // Available (reusable) participants to choose from
       friendModelList.clear();
-      friendModelList.add(
-        FriendModel(name: "Viren", memberCount: 2, isSelected: false),
-      );
-      friendModelList.add(
-        FriendModel(name: "Jaydip", memberCount: 2, isSelected: false),
-      );
-      friendModelList.add(
-        FriendModel( name: "Arjun", memberCount: 2, isSelected: false),
-      );
-      friendModelList.add(
-        FriendModel(name: "Jignesh", memberCount: 2, isSelected: false),
-      );
-      friendModelList.add(
-        FriendModel(name: "Ayush", memberCount: 2, isSelected: false),
-      );
-      if (kDebugMode) {
-        print("participant count ${participantModelList.length}");
+      for (var p in response["available_participants"]) {
+        friendModelList.add(FriendModel.fromJson(p));
       }
-    }
-  }
 
-  void addParticipantMethod({
-    required BuildContext context,
-    required ThemeData theme,
-  }) {
-    if (friendModelList.where((p0) => p0.isSelected == true).toList().isEmpty) {
-      validationMsgForSelectFriend.value = "Please select at least one friend";
-    } else {
-      friendModelList.where((p0) => p0.isSelected == true).toList().forEach((
-        element,
-      ) {
-        ParticipantModel participantModel = ParticipantModel(
-          id: element.id,
-          name: element.name,
-          memberCount: element.memberCount,
-        );
-        participantModelList.add(participantModel);
-      });
-      participantModelList.refresh();
-      if (kDebugMode) {
-        print("participant count ${participantModelList.length}");
-      }
-      Get.back();
-    }
-  }
-
-  void addTripMethod({
-    required BuildContext context,
-    required ThemeData theme,
-  }) {
-    if (tripNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: theme.snackBarTheme.actionTextColor,
-          content: Text("Please Enter Name"),
-        ),
-      );
-    } else if (selectedCurrency.value.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: theme.snackBarTheme.actionTextColor,
-          content: Text("Please Select Currency"),
-        ),
-      );
-    } else if (participantModelList.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: theme.snackBarTheme.actionTextColor,
-          content: Text("Select Participant"),
-        ),
+      print(
+        "InitState loaded for ${tripId != null ? "editing" : "creating"} trip",
       );
     } else {
-      TripModel tripModel = TripModel(
-        id: tripModelList.length,
-        tripName: tripNameController.text,
-        currency: selectedCurrency.value,
-        tripEmoji: emojiController.selectedEmoji.value?.char,
-        participantModelList: participantModelList,
+      showSnackBar(
+        Get.context!,
+        Theme.of(Get.context!),
+        "Failed to load trip data",
       );
-      tripModelList.add(tripModel);
-      tripModelList.refresh();
-      Get.back();
-    }
-
-    if (kDebugMode) {
-      print("trip count ${tripModelList.length}");
     }
   }
 
-
-  void removeFromParticipantList({
-    required BuildContext context,
-    required ThemeData theme,
-    int? participant_id,
-  }) {
-
-
-    participantModelList.removeWhere((p) => p.id == participant_id);
-
-    final friend = friendModelList.firstWhere(
-          (f) => f.id == participant_id,
-      orElse: () => FriendModel(id: participant_id, isSelected: false),
+  void showSnackBar(BuildContext context, ThemeData theme, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: theme.snackBarTheme.actionTextColor,
+        content: Text(message),
+      ),
     );
   }
 
-  void iniStateMethodForList() {}
+  Future<void> loadTripInitData({int? tripId}) async {
+    final data = await ApiService.fetchTripInitData(tripId: tripId);
+
+    if (data != null) {
+      // If editing a trip, populate fields
+      if (data["trip"] != null) {
+        final trip = Trip.fromJson(data["trip"]);
+        tripNameController.text = trip.tripName ?? '';
+        selectedCurrency.value = trip.tripCurrency ?? 'INR';
+        selectedParticipant.value = 'Select Participant';
+
+        // Convert tripEmoji string to EmojiData
+        emojiController.selectedEmoji.value =
+            emojiController.getEmojiDataByString(trip.tripEmoji) ??
+            emojiController.getEmojiDataByString(
+              '🧳',
+            ); // Fallback to luggage emoji
+
+        // Map selected participants
+        participantModelList.value =
+            (data["selected_participants"] as List)
+                .map((e) => ParticipantModel.fromJson(e))
+                .toList();
+      } else {
+        // === New Trip ===
+        tripNameController.clear();
+        selectedCurrency.value = 'INR';
+        selectedParticipant.value = 'Select Participant';
+        emojiController.selectedEmoji.value = emojiController
+            .getEmojiDataByString('🧳'); // Default to luggage emoji
+      }
+
+      // Load available participants for selection
+      friendModelList.value =
+          (data["available_participants"] as List)
+              .map((e) => FriendModel.fromJson(e))
+              .toList();
+    } else {
+      showSnackBar(Get.context!, Get.theme, "Failed to load trip data");
+    }
+  }
 }

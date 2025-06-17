@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../api/api.dart';
 
 class AuthService extends GetxService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
@@ -37,6 +38,13 @@ class AuthService extends GetxService {
 
       final userCredential = await _auth.signInWithCredential(credential);
       print('Google Sign-In successful for user: ${googleUser.email}');
+      print('Google Sign-In successful for user: ${googleUser.photoUrl}');
+
+      await ApiService().saveUserToBackend(
+          email: googleUser.email,
+          displayName: googleUser.displayName ?? 'Google User',
+          photoUrl: googleUser.photoUrl ?? '',
+          provider: 'google',);
       return {
         'firebaseUser': userCredential.user,
         'providerData': {
@@ -93,6 +101,12 @@ class AuthService extends GetxService {
               final facebookData = await _facebookAuth.getUserData(
                 fields: "name,email,picture.width(200)",
               );
+              await ApiService().saveUserToBackend(
+                email: facebookData['email'] ?? userCredential.user?.email ?? '',
+                displayName: facebookData['name'] ?? userCredential.user?.displayName ?? 'Facebook User',
+                photoUrl: facebookData['picture']?['data']?['url'] ?? userCredential.user?.photoURL ?? '',
+                provider: 'facebook',
+              );
               print('New Facebook account created, user data: $facebookData');
               return {
                 'firebaseUser': userCredential.user,
@@ -137,3 +151,4 @@ class AuthService extends GetxService {
     }
   }
 }
+

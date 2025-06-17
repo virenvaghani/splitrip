@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:splitrip/widgets/My_navigation_bar.dart';
 import '../controller/app_page_controller.dart';
 
-class WidgetTree extends StatelessWidget {
-  WidgetTree({super.key});
+class DashBoard extends StatelessWidget {
+  const DashBoard({super.key});
 
   @override
   Widget build(BuildContext context) {

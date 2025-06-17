@@ -1,14 +1,22 @@
+import '../trip/participant_model.dart';
+
 class FriendModel {
-  int? id;
-  String? name;
-  int? memberCount;
-  bool? isSelected;
+  final ParticipantModel participant;
+  bool isSelected;
 
-  // Static counter for auto-incrementing IDs
-  static int _idCounter = 0;
+  FriendModel({
+    required this.participant,
+    this.isSelected = false,
+  });
 
-  FriendModel({this.id, this.name, this.memberCount, this.isSelected}) {
-    // Assign an auto-incremented ID if none is provided
-    id ??= _idCounter++;
+  factory FriendModel.fromJson(Map<String, dynamic> json) {
+    return FriendModel(
+      participant: ParticipantModel.fromJson(json),
+      isSelected: false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return participant.toJson();
   }
 }

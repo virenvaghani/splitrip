@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:splitrip/controller/emoji_controller.dart';
 import 'package:splitrip/controller/profile_controller.dart';
+import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/services/auth_service.dart';
 import 'package:splitrip/views/trip/maintain_trip_screen_.dart';
 import 'controller/animation_controller.dart';
@@ -12,7 +13,7 @@ import 'controller/button_controller.dart';
 import 'controller/theme_controller.dart';
 import 'controller/user_controller.dart';
 import 'controller/app_page_controller.dart';
-import 'views/widget_tree.dart';
+import 'views/dashboard.dart';
 import 'firebase_options.dart'; // Import AnimationProvider
 
 void main() async {
@@ -46,12 +47,10 @@ class MyApp extends StatelessWidget {
             transitionDuration: const Duration(milliseconds: 300),
             debugShowCheckedModeBanner: false,
             themeMode:
-                themeController.isDarkMode
-                    ? ThemeMode.dark
-                    : ThemeMode.light,
-            theme: themeController.lightTheme,
-            darkTheme: themeController.darkTheme,
-            home: WidgetTree(),
+                themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            theme: themeController.currentTheme,
+            darkTheme: themeController.currentTheme,
+            home: DashBoard(),
             getPages: [
               /* GetPage(
                 name: Constant().routeSplashActivity,
@@ -59,7 +58,7 @@ class MyApp extends StatelessWidget {
                 //page: () => const DashboardActivity(), IDENTITY_INSERT is set to OFF.
               ),*/
               GetPage(
-                name: "/MaintainTripScreen",
+                name: PageConstant.MaintainTripPage,
                 page: () => MaintainTripScreen(),
               ),
             ],

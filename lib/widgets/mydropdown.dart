@@ -2,7 +2,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
 class Mydropdown extends StatefulWidget {
-  Mydropdown({super.key});
+  const Mydropdown({super.key});
 
   @override
   _MydropdownState createState() => _MydropdownState();
@@ -38,38 +38,45 @@ class _MydropdownState extends State<Mydropdown> {
           "Select Item",
           style: TextStyle(color: Theme.of(context).hintColor),
         ),
-        items: items
-            .map(
-              (item) => DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          ),
-        )
-            .toList(),
+        items:
+            items
+                .map(
+                  (item) =>
+                      DropdownMenuItem<String>(value: item, child: Text(item)),
+                )
+                .toList(),
         value: selectedValue,
         onChanged: (value) {
           setState(() {
-            selectedValue  = value;
+            selectedValue = value;
           });
         },
-        buttonStyleData:  ButtonStyleData(
+        buttonStyleData: ButtonStyleData(
           padding: EdgeInsets.symmetric(horizontal: 15),
-          decoration: BoxDecoration(
-            color: Colors.black
-          ),
+          decoration: BoxDecoration(color: Colors.black),
           height: 40,
-          elevation: 0
+          elevation: 0,
         ),
-        dropdownStyleData: const DropdownStyleData(maxHeight: 200,elevation: 2,isOverButton:true ,decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(20))
-        )),
+        dropdownStyleData: const DropdownStyleData(
+          maxHeight: 200,
+          elevation: 2,
+          isOverButton: true,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+        ),
         menuItemStyleData: const MenuItemStyleData(height: 40),
         dropdownSearchData: DropdownSearchData(
           searchController: textEditingController,
           searchInnerWidgetHeight: 50,
           searchInnerWidget: Container(
             height: 50,
-            padding: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
+            padding: const EdgeInsets.only(
+              top: 8,
+              left: 8,
+              right: 8,
+              bottom: 4,
+            ),
             child: TextFormField(
               controller: textEditingController,
               decoration: InputDecoration(
@@ -87,7 +94,9 @@ class _MydropdownState extends State<Mydropdown> {
             ),
           ),
           searchMatchFn: (item, searchValue) {
-            return item.value.toString().toLowerCase().contains(searchValue.toLowerCase());
+            return item.value.toString().toLowerCase().contains(
+              searchValue.toLowerCase(),
+            );
           },
         ),
         onMenuStateChange: (isOpen) {

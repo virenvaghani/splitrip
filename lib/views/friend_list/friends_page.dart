@@ -80,83 +80,87 @@ class FriendsPage extends StatelessWidget {
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                final friendName = 'Friend ${index + 1}';
-                return AnimatedOpacity(
-                  opacity: 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: theme.colorScheme.primary.withOpacity(0.2),
-                        ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final friendName = 'Friend ${index + 1}';
+              return AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 5,
+                  ),
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: theme.colorScheme.primary.withOpacity(0.2),
                       ),
-                      color: index % 2 == 0
-                          ? theme.colorScheme.surface
-                          : theme.colorScheme.surfaceVariant.withOpacity(0.95),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: theme.colorScheme.primaryContainer,
-                              child: Text(
-                                friendName.isNotEmpty ? friendName[0].toUpperCase() : '?',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                    ),
+                    color:
+                        index % 2 == 0
+                            ? theme.colorScheme.surface
+                            : theme.colorScheme.surfaceContainerHighest
+                                .withOpacity(0.95),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            child: Text(
+                              friendName.isNotEmpty
+                                  ? friendName[0].toUpperCase()
+                                  : '?',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                friendName,
-                                style: theme.textTheme.bodyLarge,
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              friendName,
+                              style: theme.textTheme.bodyLarge,
                             ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                color: theme.colorScheme.error,
-                                size: 24,
-                              ),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '$friendName removed',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onInverseSurface,
-                                      ),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.close,
+                              color: theme.colorScheme.error,
+                              size: 24,
+                            ),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '$friendName removed',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onInverseSurface,
                                     ),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    duration: const Duration(seconds: 3),
                                   ),
-                                );
-                              },
-                              splashRadius: 20,
-                              tooltip: 'Remove friend',
-                            ),
-                          ],
-                        ),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            },
+                            splashRadius: 20,
+                            tooltip: 'Remove friend',
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                );
-              },
-              childCount: 3,
-            ),
+                ),
+              );
+            }, childCount: 3),
           ),
         ],
       ),
