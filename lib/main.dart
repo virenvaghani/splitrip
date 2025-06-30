@@ -7,7 +7,10 @@ import 'package:splitrip/controller/emoji_controller.dart';
 import 'package:splitrip/controller/profile_controller.dart';
 import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/services/auth_service.dart';
+import 'package:splitrip/views/profile/profile_page.dart';
 import 'package:splitrip/views/trip/maintain_trip_screen_.dart';
+import 'package:splitrip/views/trip/transaction/add_transaction_screen.dart';
+import 'package:splitrip/views/trip/trip_screen.dart';
 import 'controller/animation_controller.dart';
 import 'controller/button_controller.dart';
 import 'controller/theme_controller.dart';
@@ -61,6 +64,13 @@ class MyApp extends StatelessWidget {
                 name: PageConstant.MaintainTripPage,
                 page: () => MaintainTripScreen(),
               ),
+              GetPage(name: PageConstant.ProfilePage, page: () => ProfilePage(),),
+              GetPage(name: PageConstant.TripScreen, page: () => TripScreen(),),
+              GetPage(
+                name: PageConstant.AddTransactionScreen,
+                page: () =>  AddTransactionScreen(),
+              ),
+
             ],
           );
         },

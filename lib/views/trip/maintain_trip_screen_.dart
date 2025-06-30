@@ -13,7 +13,7 @@ import '../../widgets/my_textfield.dart';
 class MaintainTripScreen extends StatelessWidget {
   MaintainTripScreen({super.key});
 
-  final TripController tripController = Get.put(TripController());
+  final TripController tripController = Get.find<TripController>();
   final argumentData = Get.arguments;
 
   @override
@@ -26,11 +26,12 @@ class MaintainTripScreen extends StatelessWidget {
       builder: (_) {
         return Scaffold(
           appBar: CustomAppBar(title: AppStrings.newTripTitle),
-          body: bodyWidget(context: context, theme: theme),
-          bottomNavigationBar: bottomNavigationBarWidget(
-            context: context,
-            theme: theme,
-          ),
+          body: tripController.isMantainTripLoading.value
+              ? const Center(child: CircularProgressIndicator())
+              : bodyWidget(context: context, theme: theme),
+          bottomNavigationBar: tripController.isMantainTripLoading.value == false
+              ? bottomNavigationBarWidget(context: context, theme: theme)
+              : null,
         );
       },
     );
@@ -86,7 +87,14 @@ class MaintainTripScreen extends StatelessWidget {
         child: ElevatedButton(
           style: AppStyles.elevatedButtonStyle(theme),
           onPressed: () {
-            tripController.loadTripInitData();
+            final tripId = int.tryParse(argumentData['trip_id']?.toString() ?? '');
+            if (tripId != null) {
+              tripController.saveTripData(tripId: tripId);
+            } else {
+              // Handle the case where tripId is not a valid integer
+              print('Error: trip_id is not a valid integer');
+              // Optionally, show a user-friendly error message or take alternative action
+            }
           },
           child: Center(
             child: Text(
@@ -123,11 +131,7 @@ class MaintainTripScreen extends StatelessWidget {
                   decoration: AppStyles.kBoxDecoration,
                   child: Center(
                     child: Text(
-                      tripController
-                              .emojiController
-                              .selectedEmoji
-                              .value
-                              ?.char ??
+                      tripController.emojiController.selectedEmoji.value?.char ??
                           AppStrings.defaultEmoji,
                       style: AppStyles.emojiStyle,
                       semanticsLabel: AppStrings.selectEmojiLabel,
@@ -158,9 +162,7 @@ class MaintainTripScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(
-                    left: 5.0,
-                  ), // No matching constant, keeping as is
+                  padding: const EdgeInsets.only(left: 5.0),
                   child: Text(
                     AppStrings.titleLabel,
                     style: theme.textTheme.titleMedium,
@@ -169,6 +171,12 @@ class MaintainTripScreen extends StatelessWidget {
                 CustomTextField(
                   hintText: AppStrings.enterTripName,
                   controller: tripController.tripNameController,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return AppStrings.tripNameValidation;
+                    }
+                    return null;
+                  },
                 ),
               ],
             ),
@@ -201,9 +209,7 @@ class MaintainTripScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(
-                    left: 5.0,
-                  ), // No matching constant, keeping as is
+                  padding: const EdgeInsets.only(left: 5.0),
                   child: Text(
                     AppStrings.currencyLabel,
                     style: theme.textTheme.titleMedium,
@@ -216,18 +222,17 @@ class MaintainTripScreen extends StatelessWidget {
                     AppStrings.selectCurrency,
                     style: AppStyles.hintStyle(theme),
                   ),
-                  items:
-                      AppConstants.currencies
-                          .map(
-                            (currency) => DropdownMenuItem(
-                              value: currency,
-                              child: Text(
-                                currency,
-                                style: theme.textTheme.bodyLarge,
-                              ),
-                            ),
-                          )
-                          .toList(),
+                  items: AppConstants.currencies
+                      .map(
+                        (currency) => DropdownMenuItem(
+                      value: currency,
+                      child: Text(
+                        currency,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    ),
+                  )
+                      .toList(),
                   value: tripController.selectedCurrency.value,
                   onChanged: (value) {
                     tripController.selectedCurrency.value = value!;
@@ -288,10 +293,9 @@ class MaintainTripScreen extends StatelessWidget {
   }
 
   Future selectParticipantsBottomSheetMethod({
-    required ThemeData theme,
     required BuildContext context,
+    required ThemeData theme,
   }) {
-    var theme = Theme.of(context);
     tripController.validationMsgForSelectFriend.value = "";
     tripController.isVisibleAddFriendForm.value = false;
 
@@ -316,10 +320,7 @@ class MaintainTripScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(
-                      top: 15.0,
-                      bottom: 5.0,
-                    ), // No matching constant, keeping as is
+                    padding: const EdgeInsets.only(top: 15.0, bottom: 5.0),
                     child: Align(
                       alignment: Alignment.center,
                       child: Container(
@@ -334,18 +335,14 @@ class MaintainTripScreen extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: 5.0,
-                    ), // No matching constant, keeping as is
+                    padding: const EdgeInsets.only(bottom: 5.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              left: 2.0,
-                            ), // No matching constant, keeping as is
+                            padding: const EdgeInsets.only(left: 2.0),
                             child: Text(
                               AppStrings.selectParticipants,
                               style: theme.textTheme.titleMedium!.copyWith(
@@ -355,7 +352,7 @@ class MaintainTripScreen extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          iconSize: 24, // No matching constant, keeping as is
+                          iconSize: 24,
                           splashRadius: AppSizes.splashRadius,
                           constraints: const BoxConstraints(),
                           onPressed: () {
@@ -368,171 +365,132 @@ class MaintainTripScreen extends StatelessWidget {
                   ),
                   Flexible(
                     fit: FlexFit.loose,
-                    child: NotificationListener<
-                      OverscrollIndicatorNotification
-                    >(
-                      onNotification: (
-                        OverscrollIndicatorNotification overscroll,
-                      ) {
+                    child: NotificationListener<OverscrollIndicatorNotification>(
+                      onNotification: (OverscrollIndicatorNotification overscroll) {
                         overscroll.disallowIndicator();
                         return true;
                       },
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 20.0,
-                        ), // No matching constant, keeping as is
+                        padding: const EdgeInsets.only(bottom: 20.0),
                         child: SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Wrap(
+                              tripController.isAddparticipantLoading.value
+                                  ? const Center(child: CircularProgressIndicator())
+                                  : Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.start,
                                 alignment: WrapAlignment.start,
                                 runSpacing: AppSpacers.smallSpacing,
                                 spacing: AppSpacers.smallSpacing,
                                 children: [
-                                  ...List.generate(tripController.friendModelList.length, (
-                                    index,
-                                  ) {
-                                    FriendModel friendModel =
-                                        tripController.friendModelList[index];
-                                    return ChoiceChip(
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                      disabledColor: Colors.transparent,
-                                      selectedShadowColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      color: WidgetStatePropertyAll(
-                                        friendModel.isSelected
-                                            ? AppColors.primary
-                                            : AppColors.darkText,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      backgroundColor: theme.colorScheme.shadow,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: AppBorders.chipRadius,
-                                        side: BorderSide(
-                                          color: AppColors.darkText,
-                                        ),
-                                      ),
-                                      elevation: 0.0,
-                                      pressElevation: 3.0,
-                                      selectedColor:
+                                  ...List.generate(
+                                    tripController.selectedfriendModelList.length,
+                                        (index) {
+                                      FriendModel friendModel =
+                                      tripController.selectedfriendModelList[index];
+                                      return ChoiceChip(
+                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        disabledColor: Colors.transparent,
+                                        selectedShadowColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        color: WidgetStatePropertyAll(
                                           friendModel.isSelected
-                                              ? theme.primaryColor
+                                              ? AppColors.primary
                                               : AppColors.darkText,
-                                      surfaceTintColor: Colors.transparent,
-                                      checkmarkColor: AppColors.darkText,
-                                      avatar:
-                                          friendModel.isSelected
-                                              ? Icon(
-                                                Icons.check_circle_outline,
-                                                color:
-                                                    AppColors.lightBackground,
-                                              )
-                                              : null,
-                                      labelPadding: EdgeInsets.only(
-                                        left:
-                                            friendModel.isSelected
-                                                ? 0.0
-                                                : 10.0, // Conditional, no direct constant
-                                        right:
-                                            10.0, // No matching constant, keeping as is
-                                        top:
-                                            2.0, // No matching constant, keeping as is
-                                        bottom:
-                                            2.0, // No matching constant, keeping as is
-                                      ),
-                                      labelStyle: theme.textTheme.titleMedium!
-                                          .copyWith(
-                                            color:
-                                                friendModel.isSelected
-                                                    ? AppColors.lightBackground
-                                                    : theme.primaryColorDark,
-                                            fontWeight:
-                                                friendModel.isSelected
-                                                    ? FontWeight.bold
-                                                    : FontWeight.normal,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        backgroundColor: theme.colorScheme.shadow,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: AppBorders.chipRadius,
+                                          side: BorderSide(color: AppColors.darkText),
+                                        ),
+                                        elevation: 0.0,
+                                        pressElevation: 3.0,
+                                        selectedColor: friendModel.isSelected
+                                            ? theme.primaryColor
+                                            : AppColors.darkText,
+                                        surfaceTintColor: Colors.transparent,
+                                        checkmarkColor: AppColors.darkText,
+                                        avatar: friendModel.isSelected
+                                            ? Icon(
+                                          Icons.check_circle_outline,
+                                          color: AppColors.lightBackground,
+                                        )
+                                            : null,
+                                        labelPadding: EdgeInsets.only(
+                                          left: friendModel.isSelected ? 0.0 : 10.0,
+                                          right: 10.0,
+                                          top: 2.0,
+                                          bottom: 2.0,
+                                        ),
+                                        labelStyle: theme.textTheme.titleMedium!.copyWith(
+                                          color: friendModel.isSelected
+                                              ? AppColors.lightBackground
+                                              : theme.primaryColorDark,
+                                          fontWeight: friendModel.isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                        showCheckmark: false,
+                                        selected: friendModel.isSelected,
+                                        label: Padding(
+                                          padding: EdgeInsets.only(
+                                            left: friendModel.isSelected ? 0.0 : 5.0,
+                                            right: 5.0,
+                                            top: 2.0,
+                                            bottom: 2.0,
                                           ),
-                                      showCheckmark: false,
-                                      selected: friendModel.isSelected,
-                                      label: Padding(
-                                        padding: EdgeInsets.only(
-                                          left:
-                                              friendModel.isSelected
-                                                  ? 0.0
-                                                  : 5.0, // Conditional, no direct constant
-                                          right:
-                                              5.0, // No matching constant, keeping as is
-                                          top:
-                                              2.0, // No matching constant, keeping as is
-                                          bottom:
-                                              2.0, // No matching constant, keeping as is
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(friendModel.participant.name ?? 'Unknown'),
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    "Member:",
+                                                    style: AppStyles.chipLabelStyle(
+                                                      theme,
+                                                      friendModel.isSelected,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    friendModel.participant.member.toString(),
+                                                    style: AppStyles.chipLabelStyle(
+                                                      theme,
+                                                      friendModel.isSelected,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(friendModel.participant.name),
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "Member:",
-                                                  style:
-                                                      AppStyles.chipLabelStyle(
-                                                        theme,
-                                                        friendModel.isSelected,
-                                                      ),
-                                                ),
-                                                Text(
-                                                  friendModel.participant.member
-                                                      .toString(),
-                                                  style:
-                                                      AppStyles.chipLabelStyle(
-                                                        theme,
-                                                        friendModel.isSelected,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      onSelected: (value) {
-                                        friendModel.isSelected =
-                                            !friendModel.isSelected;
-                                        tripController.friendModelList
-                                            .refresh();
-                                      },
-                                    );
-                                  }),
+                                        onSelected: (value) {
+                                          friendModel.isSelected = !friendModel.isSelected;
+                                          tripController.selectedfriendModelList.refresh();
+                                        },
+                                      );
+                                    },
+                                  ),
                                   GestureDetector(
                                     onTap: () {
-                                      tripController
-                                          .isVisibleAddFriendForm
-                                          .value = true;
+                                      tripController.isVisibleAddFriendForm.value = true;
                                     },
                                     child: Chip(
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       shadowColor: Colors.transparent,
-                                      color: WidgetStatePropertyAll(
-                                        theme.primaryColor,
-                                      ),
+                                      color: WidgetStatePropertyAll(theme.primaryColor),
                                       padding: EdgeInsets.zero,
                                       backgroundColor: theme.primaryColor,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: AppBorders.chipRadius,
-                                        side: BorderSide(
-                                          color: theme.primaryColor,
-                                        ),
+                                        side: BorderSide(color: theme.primaryColor),
                                       ),
                                       elevation: 0.0,
                                       surfaceTintColor: Colors.transparent,
@@ -540,46 +498,33 @@ class MaintainTripScreen extends StatelessWidget {
                                         Icons.add_circle_outline,
                                         color: AppColors.lightBackground,
                                       ),
-                                      labelPadding: EdgeInsets.only(
-                                        right:
-                                            10.0, // No matching constant, keeping as is
-                                        top:
-                                            2.0, // No matching constant, keeping as is
-                                        bottom:
-                                            2.0, // No matching constant, keeping as is
+                                      labelPadding: const EdgeInsets.only(
+                                        right: 10.0,
+                                        top: 2.0,
+                                        bottom: 2.0,
                                       ),
-                                      labelStyle: theme.textTheme.titleMedium!
-                                          .copyWith(
-                                            color: AppColors.lightBackground,
-                                            fontWeight: FontWeight.normal,
-                                          ),
+                                      labelStyle: theme.textTheme.titleMedium!.copyWith(
+                                        color: AppColors.lightBackground,
+                                        fontWeight: FontWeight.normal,
+                                      ),
                                       label: Padding(
-                                        padding: EdgeInsets.only(
-                                          right:
-                                              5.0, // No matching constant, keeping as is
-                                          top:
-                                              2.0, // No matching constant, keeping as is
-                                          bottom:
-                                              2.0, // No matching constant, keeping as is
+                                        padding: const EdgeInsets.only(
+                                          right: 5.0,
+                                          top: 2.0,
+                                          bottom: 2.0,
                                         ),
                                         child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(AppStrings.addFriend),
                                             Text(
                                               AppStrings.clickHere,
-                                              style: theme.textTheme.labelSmall!
-                                                  .copyWith(
-                                                    color:
-                                                        AppColors
-                                                            .lightBackground,
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                  ),
+                                              style: theme.textTheme.labelSmall!.copyWith(
+                                                color: AppColors.lightBackground,
+                                                fontWeight: FontWeight.normal,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -588,68 +533,72 @@ class MaintainTripScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              if (tripController
-                                  .isVisibleAddFriendForm
-                                  .value) ...[
+                              if (tripController.isVisibleAddFriendForm.value) ...[
                                 Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 10.0,
-                                  ), // No matching constant, keeping as is
+                                  padding: const EdgeInsets.only(top: 10.0),
                                   child: Divider(color: theme.disabledColor),
                                 ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: AppPaddings.smallPadding,
-                                        child: Container(
+                                Form(
+                                  key: tripController.addParticipantFormKey,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Padding(
+                                          padding: AppPaddings.smallPadding,
                                           child: CustomTextField(
-                                            controller:
-                                                tripController
-                                                    .friendNameController,
+                                            controller: tripController.newParticipantNameController,
                                             hintText: AppStrings.nameLabel,
+                                            validator: (value) {
+                                              if (value == null || value.trim().isEmpty) {
+                                                return AppStrings.nameValidation;
+                                              }
+                                              return null;
+                                            },
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: AppPaddings.smallPadding,
-                                        child: Container(
+                                      Expanded(
+                                        child: Padding(
+                                          padding: AppPaddings.smallPadding,
                                           child: CustomTextField(
-                                            controller:
-                                                tripController
-                                                    .tripMemberController,
+                                            controller: tripController.newParticipantMembersController,
                                             hintText: AppStrings.memberLabel,
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                            validator: (value) {
+                                              if (value == null || value.trim().isEmpty) {
+                                                return AppStrings.memberInvalid;
+                                              }
+                                              if (int.tryParse(value) == null || int.parse(value) <= 0) {
+                                                return AppStrings.memberInvalid;
+                                              }
+                                              return null;
+                                            },
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        // tripController.friendModelList.add(
-                                        //   // FriendModel(
-                                        //   //   id: 0, // Placeholder if not yet saved to backend
-                                        //   //   referenceId: '', // Will be filled after backend response if needed
-                                        //   //   name: tripController.friendNameController.text,
-                                        //   //   member: int.tryParse(
-                                        //   //     tripController.tripMemberController.text,
-                                        //   //   ) ??
-                                        //   //       1,
-                                        //   //   isSelected: false,
-                                        //   // ),
-                                        // //);
-                                        // //tripController.tripMemberController.clear();
-                                        // //tripController.friendNameController.clear();
-                                      },
-                                      child: Text(
-                                        AppStrings.addLabel,
-                                        style: TextStyle(
-                                          color: theme.primaryColor,
+                                      TextButton(
+                                        onPressed: () {
+                                          if (tripController.addParticipantFormKey.currentState?.validate() ?? false) {
+                                            tripController.addNewParticipant(
+                                              context: context,
+                                              theme: theme,
+                                              participantData: {
+                                                'name': tripController.newParticipantNameController.text.trim(),
+                                                'member': int.parse(tripController.newParticipantMembersController.text.trim()),
+                                              },
+                                            );
+                                            tripController.newParticipantNameController.clear();
+                                            tripController.newParticipantMembersController.clear();
+                                          }
+                                        },
+                                        child: Text(
+                                          AppStrings.addLabel,
+                                          style: TextStyle(color: theme.primaryColor),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ],
@@ -658,10 +607,7 @@ class MaintainTripScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (tripController
-                      .validationMsgForSelectFriend
-                      .value
-                      .isNotEmpty)
+                  if (tripController.validationMsgForSelectFriend.value.isNotEmpty)
                     Text(
                       "* ${tripController.validationMsgForSelectFriend.value}",
                       style: theme.textTheme.titleMedium!.copyWith(
@@ -670,17 +616,12 @@ class MaintainTripScreen extends StatelessWidget {
                       ),
                     ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 15.0,
-                    ), // No matching constant, keeping as is
+                    padding: const EdgeInsets.symmetric(vertical: 15.0),
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.secondary,
-                          ],
+                          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -690,10 +631,7 @@ class MaintainTripScreen extends StatelessWidget {
                       child: ElevatedButton(
                         style: AppStyles.elevatedButtonStyle(theme),
                         onPressed: () {
-                          // tripController.addParticipantMethod(
-                          //   context: context,
-                          //   theme: theme,
-                          // );
+                          tripController.addParticipantMethod(context: context, theme: theme);
                         },
                         child: Center(
                           child: Text(
@@ -736,18 +674,76 @@ class MaintainTripScreen extends StatelessWidget {
     final selectedFriends = tripController.participantModelList;
     return selectedFriends.isNotEmpty
         ? Column(
-          children: [
-            Container(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: 0.1),
+                theme.colorScheme.secondary.withValues(alpha: 0.1),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: AppBorders.tableTopRadius,
+            boxShadow: [AppShadows.defaultShadow(theme)],
+          ),
+          child: Table(
+            border: null,
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            columnWidths: AppConstants.tableColumnWidths,
+            children: [
+              TableRow(
+                children: [
+                  Padding(
+                    padding: AppPaddings.tableCellPadding,
+                    child: Text(
+                      AppStrings.nameLabel,
+                      maxLines: 1,
+                      style: theme.textTheme.titleSmall!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: AppPaddings.tableCellPadding,
+                    child: Text(
+                      AppStrings.memberLabel,
+                      maxLines: 1,
+                      style: theme.textTheme.titleSmall!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: AppPaddings.tableCellPadding,
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: AppSizes.mediumIcon,
+                    ),
+                  ),
+                  Padding(
+                    padding: AppPaddings.tableCellPadding,
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: AppSizes.mediumIcon,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Column(
+          children: List.generate(selectedFriends.length, (index) {
+            return Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.1),
-                    theme.colorScheme.secondary.withValues(alpha: 0.1),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: AppBorders.tableTopRadius,
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: tripController.participantModelList.length - 1 == index
+                    ? AppBorders.tableBottomRadius
+                    : null,
                 boxShadow: [AppShadows.defaultShadow(theme)],
               ),
               child: Table(
@@ -760,7 +756,7 @@ class MaintainTripScreen extends StatelessWidget {
                       Padding(
                         padding: AppPaddings.tableCellPadding,
                         child: Text(
-                          AppStrings.nameLabel,
+                          selectedFriends[index].name ?? 'Unknown',
                           maxLines: 1,
                           style: theme.textTheme.titleSmall!.copyWith(
                             fontWeight: FontWeight.bold,
@@ -770,12 +766,14 @@ class MaintainTripScreen extends StatelessWidget {
                       ),
                       Padding(
                         padding: AppPaddings.tableCellPadding,
-                        child: Text(
-                          AppStrings.memberLabel,
-                          maxLines: 1,
-                          style: theme.textTheme.titleSmall!.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
+                        child: Center(
+                          child: Text(
+                            "${selectedFriends[index].member}",
+                            maxLines: 1,
+                            style: theme.textTheme.titleSmall!.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
                         ),
                       ),
@@ -784,104 +782,40 @@ class MaintainTripScreen extends StatelessWidget {
                         child: Icon(
                           Icons.edit_outlined,
                           size: AppSizes.mediumIcon,
+                          color: Colors.green,
                         ),
                       ),
                       Padding(
                         padding: AppPaddings.tableCellPadding,
-                        child: Icon(
-                          Icons.delete_outline,
-                          size: AppSizes.mediumIcon,
+                        child: GestureDetector(
+                          child: Icon(
+                            Icons.delete_outlined,
+                            color: Colors.red.shade600,
+                            size: AppSizes.mediumIcon,
+                          ),
+                          onTap: () {
+                            tripController.removeFromParticipantList(
+                              context: context,
+                              theme: theme,
+                              participantReferenceId: selectedFriends[index].referenceId,
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
-            Column(
-              children: List.generate(selectedFriends.length, (index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor,
-                    borderRadius:
-                        tripController.participantModelList.length - 1 == index
-                            ? AppBorders.tableBottomRadius
-                            : null,
-                    boxShadow: [AppShadows.defaultShadow(theme)],
-                  ),
-                  child: Table(
-                    border: null,
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    columnWidths: AppConstants.tableColumnWidths,
-                    children: [
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: AppPaddings.tableCellPadding,
-                            child: Text(
-                              selectedFriends[index].name,
-                              maxLines: 1,
-                              style: theme.textTheme.titleSmall!.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: AppPaddings.tableCellPadding,
-                            child: Center(
-                              child: Text(
-                                "${selectedFriends[index].member}",
-                                maxLines: 1,
-                                style: theme.textTheme.titleSmall!.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: AppPaddings.tableCellPadding,
-                            child: Icon(
-                              Icons.edit_outlined,
-                              size: AppSizes.mediumIcon,
-                              color: Colors.green,
-                            ),
-                          ),
-                          Padding(
-                            padding: AppPaddings.tableCellPadding,
-                            child: GestureDetector(
-                              child: Icon(
-                                Icons.delete_outlined,
-                                color: Colors.red.shade600,
-                                size: AppSizes.mediumIcon,
-                              ),
-                              onTap: () {
-                                // if (index >= 0 &&
-                                //     index < selectedFriends.length) {
-                                //   tripController.removeFromParticipantList(
-                                //     context: context,
-                                //     theme: theme,
-                                //     participantId: selectedFriends[index].id,
-                                //   );
-                                // }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-          ],
-        )
+            );
+          }),
+        ),
+      ],
+    )
         : const Center(
-          child: Text(
-            AppStrings.noFriendsSelected,
-            style: TextStyle(color: Colors.grey),
-          ),
-        );
+      child: Text(
+        AppStrings.noFriendsSelected,
+        style: TextStyle(color: Colors.grey),
+      ),
+    );
   }
 }

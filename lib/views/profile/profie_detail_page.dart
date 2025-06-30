@@ -4,545 +4,234 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:splitrip/controller/user_controller.dart';
 import 'package:splitrip/controller/theme_controller.dart';
+import 'package:splitrip/data/trip_constant.dart';
 
 class ProfileDetailsPage extends StatelessWidget {
   final User user;
 
   const ProfileDetailsPage({super.key, required this.user});
 
+  void _showProfileImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: InteractiveViewer(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(imageUrl, fit: BoxFit.contain),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final UserController userController = Get.find<UserController>();
-    final ThemeController themeController = Provider.of<ThemeController>(
-      context,
-    );
+    final userController = Get.find<UserController>();
+    final themeController = Provider.of<ThemeController>(context);
     final theme = Theme.of(context);
+
+    final photoUrl = userController.photoUrl.isNotEmpty
+        ? userController.photoUrl
+        : user.photoURL ?? '';
+
+    final displayName = userController.userName.isNotEmpty
+        ? userController.userName
+        : user.displayName ?? 'No name available';
+
+    final email = userController.userEmail.isNotEmpty
+        ? userController.userEmail
+        : user.email ?? 'No email available';
+
+    final isDarkMode = themeController.isDarkMode;
+    final borderColor = isDarkMode
+        ? theme.colorScheme.onSurface.withOpacity(0.2)
+        : theme.colorScheme.primary.withOpacity(0.2);
 
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isLandscape = constraints.maxWidth > constraints.maxHeight;
           return isLandscape
-              ? _buildLandscape(context, userController, themeController)
-              : _buildPortrait(context, userController, themeController);
+              ? _buildLandscapeView(context, theme, themeController, displayName, email, photoUrl, borderColor)
+              : _buildPortraitView(context, theme, themeController, displayName, email, photoUrl, borderColor);
         },
       ),
     );
   }
 
-  Widget _buildPortrait(
-    BuildContext context,
-    UserController userController,
-    ThemeController themeController,
-  ) {
-    final theme = Theme.of(context);
-    final borderColor =
-        themeController.isDarkMode
-            ? theme.colorScheme.onSurface.withOpacity(0.2)
-            : theme.colorScheme.primary.withOpacity(0.2);
+  Widget _buildPortraitView(BuildContext context, ThemeData theme, ThemeController themeController,
+      String displayName, String email, String photoUrl, Color borderColor) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () {
+                if (photoUrl.isNotEmpty) _showProfileImage(context, photoUrl);
+              },
+              child: CircleAvatar(
+                radius: 48,
+                backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                backgroundColor: theme.colorScheme.primaryContainer,
+                child: photoUrl.isEmpty
+                    ? Text(
+                  displayName[0].toUpperCase(),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+                    : null,
+              ),
+            ),
+            AppSpacers.medium,
+            Text(
+              displayName,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            AppSpacers.tiny,
+            Text(
+              email,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+           AppSpacers.BigSpacing,
+            _preferenceCard(theme, themeController, borderColor, context),
+          ],
+        ),
+      ),
+    );
+  }
 
-    return CustomScrollView(
-      physics: const ClampingScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
+  Widget _buildLandscapeView(BuildContext context, ThemeData theme, ThemeController themeController,
+      String displayName, String email, String photoUrl, Color borderColor) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 800),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AnimatedOpacity(
-                    opacity: 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide.none,
-                      ),
-                      color: theme.colorScheme.surface,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withOpacity(0.1),
-                              theme.colorScheme.secondary.withOpacity(0.1),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.05,
-                              ),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                  GestureDetector(
+                    onTap: () {
+                      if (photoUrl.isNotEmpty) _showProfileImage(context, photoUrl);
+                    },
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: photoUrl.isEmpty
+                          ? Text(
+                        displayName[0].toUpperCase(),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
                         ),
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Obx(
-                              () => CircleAvatar(
-                                radius: 40,
-                                backgroundImage:
-                                    userController.photoUrl.isNotEmpty
-                                        ? NetworkImage(userController.photoUrl)
-                                        : (user.photoURL != null
-                                            ? NetworkImage(user.photoURL!)
-                                            : null),
-                                backgroundColor:
-                                    theme.colorScheme.primaryContainer,
-                                child:
-                                    userController.photoUrl.isEmpty &&
-                                            user.photoURL == null
-                                        ? Text(
-                                          userController.userName.isNotEmpty
-                                              ? userController.userName[0]
-                                                  .toUpperCase()
-                                              : (user.displayName?.isNotEmpty ==
-                                                      true
-                                                  ? user.displayName![0]
-                                                      .toUpperCase()
-                                                  : '?'),
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                                color:
-                                                    theme
-                                                        .colorScheme
-                                                        .onPrimaryContainer,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        )
-                                        : null,
-                                onBackgroundImageError: (error, stackTrace) {},
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Obx(
-                                    () => Text(
-                                      userController.userName.isNotEmpty
-                                          ? userController.userName
-                                          : (user.displayName ??
-                                              'No name available'),
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: theme.colorScheme.onSurface,
-                                          ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Obx(
-                                    () => Text(
-                                      userController.userEmail.isNotEmpty
-                                          ? userController.userEmail
-                                          : (user.email ??
-                                              'No email available'),
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      )
+                          : null,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Text(
-                    'Preferences',
+                    displayName,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  AnimatedOpacity(
-                    opacity: 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: borderColor),
-                      ),
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.95),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SwitchListTile.adaptive(
-                              value: false,
-                              title: Text(
-                                'Notifications',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              onChanged: (value) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Notifications ${value ? 'enabled' : 'disabled'}',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color:
-                                                theme
-                                                    .colorScheme
-                                                    .onInverseSurface,
-                                          ),
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                              activeColor: theme.colorScheme.primary,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: Divider(
-                                color: theme.colorScheme.onSurface.withOpacity(
-                                  0.1,
-                                ),
-                              ),
-                            ),
-                            SwitchListTile.adaptive(
-                              value: themeController.isDarkMode,
-                              title: Text(
-                                'Dark Mode',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              onChanged: (value) {
-                                themeController.setThemeMode(value);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Dark mode ${value ? 'enabled' : 'disabled'}',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color:
-                                                theme
-                                                    .colorScheme
-                                                    .onInverseSurface,
-                                          ),
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                              activeColor: theme.colorScheme.primary,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
+            const SizedBox(width: 32),
+            Expanded(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _preferenceCard(theme, themeController, borderColor, context),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildLandscape(
-    BuildContext context,
-    UserController userController,
-    ThemeController themeController,
-  ) {
-    final theme = Theme.of(context);
-    final borderColor =
-        themeController.isDarkMode
-            ? theme.colorScheme.onSurface.withOpacity(0.2)
-            : theme.colorScheme.primary.withOpacity(0.2);
-
-    return CustomScrollView(
-      physics: const ClampingScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: AnimatedOpacity(
-                      opacity: 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: borderColor),
-                        ),
-                        color: theme.colorScheme.surface,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primary.withOpacity(0.1),
-                                theme.colorScheme.secondary.withOpacity(0.1),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.colorScheme.onSurface.withOpacity(
-                                  0.05,
-                                ),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Obx(
-                                () => CircleAvatar(
-                                  radius: 30,
-                                  backgroundImage:
-                                      userController.photoUrl.isNotEmpty
-                                          ? NetworkImage(
-                                            userController.photoUrl,
-                                          )
-                                          : (user.photoURL != null
-                                              ? NetworkImage(user.photoURL!)
-                                              : null),
-                                  backgroundColor:
-                                      theme.colorScheme.primaryContainer,
-                                  child:
-                                      userController.photoUrl.isEmpty &&
-                                              user.photoURL == null
-                                          ? Text(
-                                            userController.userName.isNotEmpty
-                                                ? userController.userName[0]
-                                                    .toUpperCase()
-                                                : (user
-                                                            .displayName
-                                                            ?.isNotEmpty ==
-                                                        true
-                                                    ? user.displayName![0]
-                                                        .toUpperCase()
-                                                    : '?'),
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                                  color:
-                                                      theme
-                                                          .colorScheme
-                                                          .onPrimaryContainer,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          )
-                                          : null,
-                                  onBackgroundImageError:
-                                      (error, stackTrace) {},
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Obx(
-                                  () => Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        userController.userName.isNotEmpty
-                                            ? userController.userName
-                                            : (user.displayName ??
-                                                'No name available'),
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color:
-                                                  theme.colorScheme.onSurface,
-                                              fontSize: 18,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        userController.userEmail.isNotEmpty
-                                            ? userController.userEmail
-                                            : (user.email ??
-                                                'No email available'),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: theme.colorScheme.onSurface
-                                                  .withOpacity(0.6),
-                                              fontSize: 12,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: AnimatedOpacity(
-                      opacity: 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: borderColor),
-                        ),
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withOpacity(0.95),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 8.0,
-                                ),
-                                child: Text(
-                                  'Preferences',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
-                              SwitchListTile.adaptive(
-                                value: false,
-                                title: Text(
-                                  'Notifications',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Notifications ${value ? 'enabled' : 'disabled'}',
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color:
-                                                  theme
-                                                      .colorScheme
-                                                      .onInverseSurface,
-                                            ),
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                },
-                                activeColor: theme.colorScheme.primary,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                ),
-                                child: Divider(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.1),
-                                ),
-                              ),
-                              SwitchListTile.adaptive(
-                                value: themeController.isDarkMode,
-                                title: Text(
-                                  'Dark Mode',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  themeController.setThemeMode(value);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Dark mode ${value ? 'enabled' : 'disabled'}',
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color:
-                                                  theme
-                                                      .colorScheme
-                                                      .onInverseSurface,
-                                            ),
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                },
-                                activeColor: theme.colorScheme.primary,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+  Widget _preferenceCard(ThemeData theme, ThemeController controller, Color borderColor, BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: borderColor),
+      ),
+      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.95),
+      child: Column(
+        children: [
+          SwitchListTile.adaptive(
+            value: false,
+            title: Text(
+              'Notifications',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
             ),
+            onChanged: (value) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Notifications ${value ? 'enabled' : 'disabled'}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onInverseSurface,
+                    ),
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            activeColor: theme.colorScheme.primary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
           ),
-        ),
-      ],
+          Divider(
+            color: theme.colorScheme.onSurface.withOpacity(0.1),
+            indent: 16,
+            endIndent: 16,
+          ),
+          SwitchListTile.adaptive(
+            value: controller.isDarkMode,
+            title: Text(
+              'Dark Mode',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            onChanged: controller.setThemeMode,
+            activeColor: theme.colorScheme.primary,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+          ),
+        ],
+      ),
     );
   }
 }

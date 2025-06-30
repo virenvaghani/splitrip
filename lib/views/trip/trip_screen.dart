@@ -2,221 +2,302 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/data/constants.dart';
-import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/views/trip/trip_detail_screen.dart';
 import 'package:splitrip/widgets/myappbar.dart';
 
-import '../../controller/trip/trip_controller.dart';
-import 'maintain_trip_screen_.dart';
+import '../../model/trip/trip_model.dart';
+import '../../widgets/my_snackbar.dart';
 
 class TripScreen extends StatelessWidget {
   TripScreen({super.key});
 
-  TripController tripController = Get.put(TripController());
+  final TripController tripController = Get.put(TripController());
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return GetX<TripController>(
-      initState: (state) {},
       builder: (_) {
         return Scaffold(
-          floatingActionButton: floatingactonbutton(
-            context: context,
-            theme: theme,
-          ),
-          appBar: appbar(context: context, theme: theme),
-          body: bodyWidget(context: context, theme: theme),
+          appBar: _buildAppBar(context, theme),
+          body: tripController.isTripScreenLoading.value
+              ? const Center(child: CircularProgressIndicator())
+              : _buildBody(context, theme),
         );
       },
     );
   }
 
-  bodyWidget({required BuildContext context, required ThemeData theme}) {
-    if (tripController.tripModelList.isNotEmpty) {
-      return ListView.builder(
-        itemCount: tripController.tripModelList.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 2),
-            child: GestureDetector(
-              onTap: () => Get.to(() => TripPage()),
-              child: Card(
-                elevation: 0,
-                color: theme.cardTheme.color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
-                  ),
-                ),
-                child: Container(
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary.withOpacity(0.05),
-                        theme.colorScheme.secondary.withOpacity(0.05),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.onSurface.withOpacity(0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+  Widget _buildBody(BuildContext context, ThemeData theme) {
+    if (tripController.isAuthenticated.value) {
+      if (tripController.tripModelList.isNotEmpty) {
+        return ListView.builder(
+          itemCount: tripController.tripModelList.length,
+          itemBuilder: (context, index) {
+            final trip = tripController.tripModelList[index];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+              child: Builder(
+                builder: (itemContext) {
+                  return GestureDetector(
+                    onTap: () => Get.to(() => TripPage()),
+                    onLongPress: () => _showTripContextMenu(itemContext, trip),
+                    child: Card(
+                      elevation: 0,
+                      color: theme.cardTheme.color,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: theme.colorScheme.primary.withOpacity(0.2),
+                        ),
                       ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
+                      child: Container(
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary.withOpacity(0.05),
+                              theme.colorScheme.secondary.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.onSurface.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              CircleAvatar(
-                                backgroundColor: theme.scaffoldBackgroundColor,
-                                child: Text(
-                                  tripController.tripModelList
-                                          .elementAt(index)
-                                          .tripEmoji ??
-                                      "",
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                 children: [
-                                  Text(
-                                    tripController.tripModelList
-                                        .elementAt(index)
-                                        .tripName
-                                        .toString(),
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                  CircleAvatar(
+                                    backgroundColor: theme.scaffoldBackgroundColor,
+                                    child: Text(trip.tripEmoji ?? ""),
                                   ),
-                                  Text(
-                                    "Currency: ${tripController.tripModelList.elementAt(index).tripCurrency.toString()}",
-                                    style: theme.textTheme.labelSmall,
-                                  ),
-                                  Text(
-                                    "Members: ${tripController.tripModelList.elementAt(index).participantIds.length ?? 0}",
-                                    style: theme.textTheme.labelSmall,
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        trip.tripName,
+                                        style: theme.textTheme.bodyLarge?.copyWith(
+                                          color: theme.colorScheme.onSurface,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Currency: ${trip.tripCurrency}",
+                                        style: theme.textTheme.labelSmall,
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                size: 20,
+                              ),
                             ],
                           ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
-                            size: 20,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
-            ),
-          );
-        },
-      );
+            );
+          },
+        );
+      } else {
+        return _buildEmptyState(theme, 'Welcome 👋', 'Looks like you haven’t added any trips yet.',
+            'Tap the button below to start your first journey!', 'Get Started', PageConstant.MaintainTripPage);
+      }
     } else {
-      return Center(child: Text("No Data"));
+      return _buildEmptyState(theme, 'Welcome Aboard! ✨', 'It looks like you haven’t signed up yet.',
+          'Tap the button below to join and start your journey!', 'Sign Up Now', PageConstant.ProfilePage);
     }
   }
 
-  floatingactonbutton({
-    required BuildContext context,
-    required ThemeData theme,
-  }) {
-    return ClipRRect(
-      child: SizedBox(
-        height: 80,
-        width: 100,
-        child: ElevatedButton(
+  Widget _buildEmptyState(ThemeData theme, String title, String subtitle, String message, String buttonText, String route) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withOpacity(0.05),
+            theme.colorScheme.secondary.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.onSurface.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          Text(subtitle,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text(message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 24),
+          TextButton(
+            onPressed: () => Get.toNamed(route, arguments: {"Call From": "Add"}),
+            style: TextButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+              foregroundColor: theme.colorScheme.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              splashFactory: NoSplash.splashFactory,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(buttonText,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    )),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward, size: 16, color: theme.colorScheme.primary),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context, ThemeData theme) {
+    return CustomAppBar(
+      title: "Trips",
+      CenterTitle: false,
+      actions: tripController.tripModelList.isNotEmpty
+          ? [
+        IconButton(
+          onPressed: () {
+            CustomSnackBar.show(title: "title", message: "message");
+          },
+          icon: Icon(Icons.archive_outlined, color: theme.primaryColor),
+          tooltip: 'Archive',
+        ),
+        IconButton(
           onPressed: () {
             Get.toNamed(
               PageConstant.MaintainTripPage,
               arguments: {"Call From": "Add"},
             );
           },
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            splashFactory: NoSplash.splashFactory,
-            elevation: 0,
-          ).copyWith(
-            backgroundColor: WidgetStateProperty.all(Colors.transparent),
-            overlayColor: WidgetStateProperty.all(Colors.transparent),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.secondary,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: Text(
-                'Create Trip',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-                semanticsLabel: 'Create trip',
-              ),
-            ),
-          ),
+          icon: Icon(Icons.add, color: theme.primaryColor),
         ),
-      ),
+      ]
+          : null,
     );
   }
 
-  appbar({required BuildContext context, required ThemeData theme}) {
-    return CustomAppBar(
-      title: "Home",
-      actions:
-          tripController.tripModelList.isNotEmpty
-              ? [
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.archive_outlined,
-                    color: theme.primaryColor,
-                    size: 24,
-                  ),
-                  tooltip: 'Archive',
-                ),
-              ]
-              : null,
+  void _showTripContextMenu(BuildContext context, Trip trip) async {
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final Offset position = renderBox.localToGlobal(Offset.zero);
+
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dy, position.dy + 30, position.dx, position.dy),
+      items: [
+        const PopupMenuItem(value: 'edit', child: Text('Edit')),
+        const PopupMenuItem(value: 'archive', child: Text('Archive')),
+        PopupMenuItem(
+          value: 'delete',
+          child: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        ),
+      ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
+      ),
     );
+
+    if (selected != null) {
+      switch (selected) {
+        case 'edit':
+          try {
+            Get.toNamed(PageConstant.MaintainTripPage, arguments: {"trip_id": trip.id});
+          } catch (e) {
+            CustomSnackBar.show(title: 'Error', message: 'Failed to open edit page: $e');
+          }
+          break;
+
+        case 'archive':
+          try {
+            // tripController.archiveTrip(trip);
+            CustomSnackBar.show(title: 'Archived', message: '${trip.tripName} archived successfully');
+          } catch (e) {
+            CustomSnackBar.show(title: 'Error', message: 'Failed to archive trip: $e');
+          }
+          break;
+
+        case 'delete':
+          Get.defaultDialog(
+            title: 'Delete Trip',
+            middleText: 'Are you sure you want to delete ${trip.tripName}?',
+            textConfirm: 'Delete',
+            textCancel: 'Cancel',
+            confirmTextColor: Colors.white,
+            onConfirm: () async {
+              try {
+                // await tripController.deleteTrip(trip);
+                Get.back();
+                CustomSnackBar.show(title: 'Deleted', message: '${trip.tripName} deleted');
+              } catch (e) {
+                CustomSnackBar.show(title: 'Error', message: 'Failed to delete trip: $e');
+              }
+            },
+          );
+          break;
+      }
+    }
   }
 }

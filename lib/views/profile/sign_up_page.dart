@@ -11,537 +11,150 @@ class SignUpPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProfileController profileController = Get.find<ProfileController>();
-    final ThemeController themeController = Provider.of<ThemeController>(
-      context,
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isLandscape = constraints.maxWidth > constraints.maxHeight;
-        return Scaffold(
-          body:
-              isLandscape
-                  ? SingleChildScrollView(
-                    child: _buildLandscape(
-                      context,
-                      profileController,
-                      themeController,
-                    ),
-                  )
-                  : _buildPortrait(context, profileController, themeController),
-        );
-      },
-    );
-  }
-
-  Widget _buildPortrait(
-    BuildContext context,
-    ProfileController profileController,
-    ThemeController themeController,
-  ) {
-    final theme = Theme.of(context);
-    return Container(
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.of(context).size.height,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: CustomScrollView(
-            physics: const ClampingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 16.0,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withOpacity(0.1),
-                              theme.colorScheme.secondary.withOpacity(0.1),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.05,
-                              ),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Container(
-                                height: 100,
-                                width: 100,
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.account_circle,
-                                  size: 60,
-                                  color: theme.colorScheme.primary,
-                                  semanticLabel: 'User profile icon',
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Stack(
-                                children: [
-                                  Text(
-                                    "Sign In to Splitrip",
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colorScheme.onSurface
-                                          .withOpacity(0.1),
-                                    ),
-                                  ),
-                                  Text(
-                                    "Sign In to Splitrip",
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      height: 2,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            theme.colorScheme.primary,
-                                            theme.colorScheme.primary
-                                                .withOpacity(0.3),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Connect with Google or Facebook",
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Card(
-                        elevation: 0,
-                        color: theme.cardTheme.color,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
-                          ),
-                        ),
-                        child: CustomAnimatedButton(
-                          key: const ValueKey('google_button'),
-                          buttonId: 'google',
-                          onTap: () async {
-                           await profileController.signInWithGoogle();
-                          },
-                          icon: Brand(Brands.google, size: 20),
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: theme.colorScheme.onSurface,
-                          borderRadius: 12,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          minimumSize: const Size(double.infinity, 48),
-                          useGradient: true,
-                          gradientColors: [
-                            theme.colorScheme.primary.withOpacity(0.1),
-                            theme.colorScheme.secondary.withOpacity(0.1),
-                          ],
-                          borderColor: Colors.transparent,
-                          semanticsLabel: 'Sign in with Google',
-                          showLoadingIndicator:
-                              true, // Show loading indicator for Google button
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Card(
-                        elevation: 0,
-                        color: theme.cardTheme.color,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
-                          ),
-                        ),
-                        child: CustomAnimatedButton(
-                          key: const ValueKey('facebook_button'),
-                          buttonId: 'facebook',
-                          onTap: () async {
-                            await profileController.signInWithFacebook();
-                          },
-                          icon: Icon(
-                            Icons.facebook,
-                            size: 20,
-                            color: theme.colorScheme.primary,
-                            semanticLabel: 'Facebook icon',
-                          ),
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Color(0xFF1877F2),
-                          borderRadius: 12,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          minimumSize: const Size(double.infinity, 48),
-                          useGradient: true,
-                          gradientColors: [
-                            theme.colorScheme.primary.withOpacity(0.1),
-                            theme.colorScheme.secondary.withOpacity(0.1),
-                          ],
-                          borderColor: Colors.transparent,
-                          semanticsLabel: 'Sign in with Facebook',
-                          showLoadingIndicator:
-                              false, // Hide loading indicator for Facebook button
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Card(
-                        elevation: 0,
-                        color: theme.scaffoldBackgroundColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 8.0,
-                                ),
-                                child: Text(
-                                  "Preferences",
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
-                              SwitchListTile.adaptive(
-                                value: themeController.isDarkMode,
-                                title: Text(
-                                  "Dark Mode",
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  themeController.setThemeMode(value);
-                                },
-                                activeColor: theme.colorScheme.primary,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  Widget _buildLandscape(
-      BuildContext context,
-      ProfileController profileController,
-      ThemeController themeController,
-      ) {
-    final borderColor =
-    themeController.isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
+    final profileController = Get.find<ProfileController>();
+    final themeController = Provider.of<ThemeController>(context);
     final theme = Theme.of(context);
 
-    return Container(
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.of(context).size.height,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 600;
+              return ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Flex(
+                  direction: isWide ? Axis.horizontal : Axis.vertical,
                   crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withOpacity(0.1),
-                              theme.colorScheme.secondary.withOpacity(0.1),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.05,
-                              ),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Container(
-                                height: 100,
-                                width: 100,
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.account_circle,
-                                  size: 60,
-                                  color: theme.colorScheme.primary,
-                                  semanticLabel: 'User profile icon',
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Stack(
-                                children: [
-                                  Text(
-                                    "Sign In to Splitrip",
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colorScheme.onSurface
-                                          .withOpacity(0.1),
-                                    ),
-                                  ),
-                                  Text(
-                                    "Sign In to Splitrip",
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      height: 2,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            theme.colorScheme.primary,
-                                            theme.colorScheme.primary
-                                                .withOpacity(0.3),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Connect with Google or Facebook",
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      child: _buildHeader(theme),
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(height: 24, width: 40),
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Card(
-                            elevation: 0,
-                            color: Theme.of(context).cardColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: borderColor),
-                            ),
-                            child: CustomAnimatedButton(
-                              key: const ValueKey('google_button'),
-                              buttonId: 'google',
-                              onTap: () async {
-                                try {
-                                  await profileController.signInWithGoogle();
-                                } catch (e) {
-                                  Get.snackbar(
-                                    'Error',
-                                    'Google sign-in failed: $e',
-                                    snackPosition: SnackPosition.TOP,
-                                    backgroundColor: Colors.redAccent,
-                                    colorText: Colors.white,
-                                  );
-                                }
-                              },
-                              icon: Brand(Brands.google, size: 18),
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF4285F4),
-                              borderRadius: 12,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 10),
-                              minimumSize: const Size(double.infinity, 44),
-                              useGradient: true,
-                              borderColor: borderColor,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Card(
-                            elevation: 0,
-                            color: Theme.of(context).cardColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: borderColor),
-                            ),
-                            child: CustomAnimatedButton(
-                              key: const ValueKey('facebook_button'),
-                              buttonId: 'facebook',
-                              onTap: () async {
-                                try {
-                                  await profileController.signInWithFacebook();
-                                } catch (e) {
-                                  Get.snackbar(
-                                    'Error',
-                                    'Facebook sign-in failed: $e',
-                                    snackPosition: SnackPosition.TOP,
-                                    backgroundColor: Colors.redAccent,
-                                    colorText: Colors.white,
-                                  );
-                                }
-                              },
-                              icon: const Icon(
-                                Icons.facebook,
-                                size: 18,
-                                color: Color(0xFF1877F2),
-                              ),
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF1877F2),
-                              borderRadius: 12,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 10),
-                              minimumSize: const Size(double.infinity, 44),
-                              useGradient: true,
-                              borderColor: borderColor,
-                            ),
-                          ),
-                        ],
+                      child: _buildFormSection(
+                        context,
+                        theme,
+                        profileController,
+                        themeController,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Card(
-                  elevation: 0,
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: borderColor),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 8.0),
-                          child: Text(
-                            "Preferences",
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 18,
-                            ) ??
-                                const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ),
-                        SwitchListTile.adaptive(
-                          value: themeController.isDarkMode,
-                          title: Text(
-                            "Dark Mode",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 14,
-                            ) ??
-                                const TextStyle(fontSize: 14),
-                          ),
-                          onChanged: (value) {
-                            themeController.setThemeMode(value);
-                          },
-                          activeColor: Theme.of(context).colorScheme.primary,
-                          contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16.0),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16), // Add padding at the bottom
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
     );
+  }
 
+  Widget _buildHeader(ThemeData theme) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.account_circle, size: 72, color: theme.colorScheme.primary),
+        const SizedBox(height: 16),
+        Text(
+          "Welcome to Splitrip",
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Join or log in to manage your trips",
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
 
+  Widget _buildFormSection(
+      BuildContext context,
+      ThemeData theme,
+      ProfileController profileController,
+      ThemeController themeController,
+      ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _minimalButton(
+          context,
+          label: "Continue with Google",
+          icon: Brand(Brands.google, size: 18),
+          onTap: () => profileController.signInWithGoogle(context),
+        ),
+        const SizedBox(height: 16),
+        _minimalButton(
+          context,
+          label: "Continue with Facebook",
+          icon: const Icon(Icons.facebook, size: 18, color: Color(0xFF1877F2)),
+          onTap: () => profileController.signInWithFacebook(),
+          foregroundColor: const Color(0xFF1877F2),
+        ),
+        const SizedBox(height: 32),
+        Divider(color: theme.dividerColor.withOpacity(0.3), thickness: 0.5),
+        const SizedBox(height: 16),
+        _minimalPreferenceToggle(themeController, theme),
+      ],
+    );
+  }
+
+  Widget _minimalButton(
+      BuildContext context, {
+        required String label,
+        required Widget icon,
+        required VoidCallback onTap,
+        Color? foregroundColor,
+      }) {
+    final theme = Theme.of(context);
+    return CustomAnimatedButton(
+      buttonId: label,
+      onTap: onTap,
+      icon: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          icon,
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+              color: foregroundColor ?? theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.transparent,
+      foregroundColor: foregroundColor ?? theme.colorScheme.onSurface,
+      borderColor: theme.colorScheme.outline.withOpacity(0.2),
+      borderRadius: 10,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      minimumSize: const Size(double.infinity, 48),
+      useGradient: false,
+      showLoadingIndicator: false,
+    );
+  }
+
+  Widget _minimalPreferenceToggle(ThemeController controller, ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text("Dark Mode", style: theme.textTheme.bodyMedium),
+        Switch.adaptive(
+          value: controller.isDarkMode,
+          onChanged: controller.setThemeMode,
+          activeColor: theme.colorScheme.primary,
+        ),
+      ],
+    );
   }
 }

@@ -23,6 +23,10 @@ class AppStrings {
   static const String addLabel = 'Add';
   static const String addFriend = 'Add Friend';
   static const String clickHere = 'Click here';
+  static const String  memberInvalid = "member is invalid";
+  static const String  nameValidation = "Name is invalid";
+  static const String  tripNameValidation = "Trip Name  is invalid";
+
 }
 
 
@@ -41,6 +45,8 @@ class AppSpacers {
   static const SizedBox medium = SizedBox(height: 16);
   static const double smallSpacing = 8;
   static const SizedBox horizontalSmall = SizedBox(width: 10); // Changed to SizedBox
+  static const SizedBox BigSpacing = SizedBox(height: 36);
+
 }
 
 class AppSizes {
@@ -86,7 +92,7 @@ class AppStyles {
     contentPadding: const EdgeInsets.symmetric(vertical: 15),
   );
   static TextStyle hintStyle(ThemeData theme) => theme.textTheme.bodyLarge!.copyWith(
-    color: theme.colorScheme.onSurface.withOpacity(0.6),
+    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
   );
   static const IconStyleData dropdownIconStyle = IconStyleData(
     icon: Padding(
@@ -102,14 +108,14 @@ class AppStyles {
     elevation: 0,
   );
   static TextStyle chipLabelStyle(ThemeData theme, bool isSelected) => theme.textTheme.labelSmall!.copyWith(
-    color: isSelected ? AppColors.lightBackground : theme.primaryColorDark,
+    color: isSelected ? AppColors.darkBackground : theme.primaryColorDark,
     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
   );
   static BoxDecoration kBoxDecoration = BoxDecoration(
   gradient: LinearGradient(
   colors: [
-    AppColors.primary.withValues(alpha: 0.1),
-    AppColors.accent.withValues(alpha: 0.1)
+    AppColors.primary.withValues(alpha: 0.05),
+    AppColors.secondary.withValues(alpha: 0.05),
   ],// Example gradient colors
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,

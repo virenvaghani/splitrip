@@ -1,17 +1,15 @@
-import '../user/user_model.dart';
-
 class ParticipantModel {
   final int? id;
-  final String name;
+  final String? name;
   final int member;
-  final String referenceId;
-  final UserModel? user; // creator of this participant
+  final String? referenceId;
+  final String? user; // now a string
 
   ParticipantModel({
     this.id,
     required this.name,
     required this.member,
-    required this.referenceId,
+    this.referenceId,
     this.user,
   });
 
@@ -21,7 +19,7 @@ class ParticipantModel {
       name: json['name'],
       member: json['member'],
       referenceId: json['reference_id'],
-      user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
+      user: json['user'], // string
     );
   }
 
@@ -31,7 +29,7 @@ class ParticipantModel {
       'name': name,
       'member': member,
       'reference_id': referenceId,
-      'user': user?.toJson(),
+      'user': user,
     };
   }
 }

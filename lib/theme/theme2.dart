@@ -4,46 +4,67 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:splitrip/theme/theme_colors.dart';
 
 TextTheme buildTextTheme(Color textColor) {
-  final baseTextStyle = GoogleFonts.inter(color: textColor, letterSpacing: 0.2);
+  final baseTextStyle = GoogleFonts.sora(color: textColor, letterSpacing: 0.2);
 
   return TextTheme(
+    // Large Displays
     displayLarge: baseTextStyle.copyWith(
-      fontSize: 57,
+      fontSize: 54,
       fontWeight: FontWeight.w300,
       letterSpacing: -0.5,
     ),
     displayMedium: baseTextStyle.copyWith(
-      fontSize: 45,
+      fontSize: 42,
       fontWeight: FontWeight.w300,
     ),
-    displaySmall: baseTextStyle.copyWith(fontSize: 36),
+    displaySmall: baseTextStyle.copyWith(
+      fontSize: 34,
+      fontWeight: FontWeight.w400,
+    ),
+
+    // Headlines
     headlineLarge: baseTextStyle.copyWith(
-      fontSize: 32,
-      fontWeight: FontWeight.w500,
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
     ),
     headlineMedium: baseTextStyle.copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w500,
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
     ),
     headlineSmall: baseTextStyle.copyWith(
-      fontSize: 24,
-      fontWeight: FontWeight.w500,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
     ),
+
+    // Titles
     titleLarge: baseTextStyle.copyWith(
-      fontSize: 22,
+      fontSize: 18,
       fontWeight: FontWeight.w600,
     ),
     titleMedium: baseTextStyle.copyWith(
       fontSize: 16,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
     ),
     titleSmall: baseTextStyle.copyWith(
       fontSize: 14,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
     ),
-    bodyLarge: baseTextStyle.copyWith(fontSize: 16),
-    bodyMedium: baseTextStyle.copyWith(fontSize: 14),
-    bodySmall: baseTextStyle.copyWith(fontSize: 12),
+
+    // Body Text
+    bodyLarge: baseTextStyle.copyWith(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+    ),
+    bodyMedium: baseTextStyle.copyWith(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+    ),
+    bodySmall: baseTextStyle.copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+    ),
+
+    // Labels
     labelLarge: baseTextStyle.copyWith(
       fontSize: 14,
       fontWeight: FontWeight.w500,
@@ -53,11 +74,12 @@ TextTheme buildTextTheme(Color textColor) {
       fontWeight: FontWeight.w500,
     ),
     labelSmall: baseTextStyle.copyWith(
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: FontWeight.w500,
     ),
   );
 }
+
 
 final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,

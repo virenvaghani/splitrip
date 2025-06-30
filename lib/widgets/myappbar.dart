@@ -4,12 +4,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
+  final  bool? CenterTitle;
 
   const CustomAppBar({
     super.key,
     required this.title,
     this.actions,
     this.leading,
+    this. CenterTitle = true, TextStyle? titleTextStyle,
   });
 
   @override
@@ -43,7 +45,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      centerTitle: true,
+      centerTitle: CenterTitle,
       actions: actions,
     );
   }

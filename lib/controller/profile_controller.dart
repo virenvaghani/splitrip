@@ -2,13 +2,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/controller/user_controller.dart';
 import 'package:splitrip/services/auth_service.dart';
 import '../widgets/my_snackbar.dart';
 
 class ProfileController extends GetxController {
+  RxBool isloading = false.obs;
   final AuthService authService = Get.find<AuthService>();
   final UserController userController = Get.find<UserController>();
+  final TripController tripController = Get.find<TripController>();
 
   // Reactive properties for user data
   final RxString userName = ''.obs;
@@ -25,7 +29,7 @@ class ProfileController extends GetxController {
 
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle(dynamic context) async {
     try {
       print('Opening Google login loader');
       Get.dialog(
@@ -51,6 +55,8 @@ class ProfileController extends GetxController {
           providerData['email'] ?? user.email ?? 'Email',
           providerData['photoUrl'] ?? user.photoURL,
         );
+        tripController.isAuthenticated.value = true;
+        tripController.iniStateMethodForTripScreen(context: context);
         Get.back();
         CustomSnackBar.show(
           title: 'Success',
@@ -98,6 +104,7 @@ class ProfileController extends GetxController {
           providerData['email'] ?? user.email ?? 'Email',
           providerData['photoUrl'] ?? user.photoURL,
         );
+        tripController.isAuthenticated.value = true;
         Get.back();
         CustomSnackBar.show(
           title: 'Success',
@@ -136,9 +143,14 @@ class ProfileController extends GetxController {
   }
 
   Future<void> signOut() async {
+    isloading.value = true;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
       await authService.signOut();
       await userController.clearUser();
+      isloading.value = false;
+      tripController.isAuthenticated.value = false;
     } catch (e) {
       Get.snackbar('Error', 'Failed to sign out: $e');
     }
