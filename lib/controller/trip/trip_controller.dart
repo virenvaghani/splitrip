@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:splitrip/data/constants.dart';
+import 'package:splitrip/data/token.dart';
 import 'package:splitrip/model/trip/participant_model.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/model/friend/friend_model.dart';
@@ -11,7 +12,7 @@ import '../emoji_controller.dart';
 
 class TripController extends GetxController {
   RxBool isFriendPageLoading = false.obs;
-  RxBool isAuthenticated = false.obs   ;
+  RxBool isAuthenticated = false.obs;
   RxBool isMantainTripLoading = true.obs;
   RxBool isAddparticipantLoading = false.obs;
   final RxString callFrom = "".obs;
@@ -29,7 +30,6 @@ class TripController extends GetxController {
   final formKey = GlobalKey<FormState>();
   final addParticipantFormKey = GlobalKey<FormState>();
   RxBool isTripScreenLoading = false.obs;
-
   @override
   void onClose() {
     tripNameController.dispose();
@@ -38,11 +38,49 @@ class TripController extends GetxController {
     super.onClose();
   }
 
-  Future<List<String>> fetchValidParticipantIds() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+  // Helper to get current user's participant ID
+  Future<String?> getCurrentUserParticipantId() async {
 
-    if (token == null || token.isEmpty) {
+    final token = await TokenStorage.getToken();
+
+    if (token == Null) {
+      print("Invalid or missing token");
+      showSnackBar(Get.context!, Get.theme, "Please log in again");
+      return null;
+    }
+
+    final Uri url = Uri.parse('${ApiConstants.baseUrl}/trip/maintain/');
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Token $token',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final availableParticipants = data["available_participants"] as List;
+        // Assuming the current user is identified by a field like 'is_current_user' or 'user'
+        final currentUserParticipant = availableParticipants.firstWhere(
+              (participant) => participant['user'] != null, // Adjust based on API response
+          orElse: () => null,
+        );
+        return currentUserParticipant?['reference_id'] as String?;
+      } else {
+        print("Failed to fetch participants: ${response.statusCode} - ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Exception fetching participants: $e");
+      return null;
+    }
+  }
+
+  Future<List<String>> fetchValidParticipantIds() async {
+
+    final token = await TokenStorage.getToken();
+
+    if (token == Null) {
       print("Invalid or missing token");
       return [];
     }
@@ -93,12 +131,11 @@ class TripController extends GetxController {
         selectedCurrency.value = trip["trip_currency"] ?? "INR";
         emojiController.selectedEmoji.value =
             emojiController.getEmojiDataByString(trip["trip_emoji"]) ??
-                emojiController.getEmojiDataByString('🧳');
+                emojiController.getRandomEmoji();
       } else {
         tripNameController.clear();
         selectedCurrency.value = "INR";
-        emojiController.selectedEmoji.value =
-            emojiController.getEmojiDataByString('🧳');
+        emojiController.selectedEmoji.value = emojiController.getRandomEmoji();
       }
 
       participantModelList.value = (data["selected_participants"] as List)
@@ -119,10 +156,10 @@ class TripController extends GetxController {
     required int? tripId,
     Map<String, dynamic>? tripData,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
 
-    if (token == null || token.isEmpty) {
+    final token = await TokenStorage.getToken();
+
+    if (token == Null) {
       print("Invalid or missing token");
       showSnackBar(Get.context!, Get.theme, "Please log in again");
       return null;
@@ -146,6 +183,19 @@ class TripController extends GetxController {
       print("Headers: $headers");
 
       if (isSaving) {
+        // Fetch current user's participant ID
+        final currentUserParticipantId = await getCurrentUserParticipantId();
+        if (currentUserParticipantId == null) {
+          showSnackBar(Get.context!, Get.theme, "Failed to identify current user as participant");
+          return null;
+        }
+
+        // Ensure participants field exists and add current user's participant ID
+        tripData!['participants'] = tripData['participants'] ?? [];
+        if (!tripData['participants'].contains(currentUserParticipantId)) {
+          tripData['participants'].add(currentUserParticipantId);
+        }
+
         final String body = jsonEncode(tripData);
         print("Sending POST/PUT to $url with body: $body");
 
@@ -171,7 +221,10 @@ class TripController extends GetxController {
     }
   }
 
-  Future<void> saveTripData({int? tripId}) async {
+  // Updated saveTrip method
+  Future<void> saveTrip({
+    required Map<String, dynamic> argumentData,
+  }) async {
     if (formKey.currentState?.validate() ?? false) {
       isMantainTripLoading.value = true;
 
@@ -190,64 +243,60 @@ class TripController extends GetxController {
         return;
       }
 
+      // Fetch current user's participant ID and ensure it's included
+      final currentUserParticipantId = await getCurrentUserParticipantId();
+      if (currentUserParticipantId == null) {
+        showSnackBar(Get.context!, Get.theme, "Failed to identify current user as participant");
+        isMantainTripLoading.value = false;
+        return;
+      }
+
+      if (!participantRefIds.contains(currentUserParticipantId)) {
+        participantRefIds.add(currentUserParticipantId);
+      }
+
       // Validate participant IDs against server
-      try {
-        final validServerIds = await fetchValidParticipantIds();
-        final validParticipantIds = participantRefIds.where((id) => validServerIds.contains(id)).toList();
+      final validServerIds = await fetchValidParticipantIds();
+      final validParticipantIds = participantRefIds.where((id) => validServerIds.contains(id)).toList();
 
-        if (validParticipantIds.isEmpty) {
-          print("No valid participants selected. Participant refIds: $participantRefIds");
-          print("Valid server participant IDs: $validServerIds");
-          showSnackBar(Get.context!, Get.theme, "No valid participants selected or participants not found on server");
-          isMantainTripLoading.value = false;
-          return;
-        }
+      if (validParticipantIds.isEmpty) {
+        print("No valid participants selected. Participant refIds: $participantRefIds");
+        print("Valid server participant IDs: $validServerIds");
+        showSnackBar(Get.context!, Get.theme, "No valid participants selected or participants not found on server");
+        isMantainTripLoading.value = false;
+        return;
+      }
 
-        // Create Trip object
-        final trip = Trip(
-          id: tripId?.toString(),
-          tripEmoji: emojiController.selectedEmoji.value?.char ?? '🏝️',
-          tripName: tripNameController.text.trim(),
-          tripCurrency: selectedCurrency.value,
-          participantReferenceIds: validParticipantIds,
-          // inviteCode and createdBy are set by backend, so left as null
-        );
+      // Prepare trip data
+      final tripData = {
+        'trip_name': tripNameController.text.trim(),
+        'trip_currency': selectedCurrency.value,
+        'trip_emoji': emojiController.selectedEmoji.value?.char ?? '🧳',
+        'participants': validParticipantIds,
+      };
 
-        print("Sending trip data: ${trip.toJson()}");
+      // Save or update trip
+      final tripId = int.tryParse(argumentData['trip_id']?.toString() ?? '');
+      final response = await fetchOrSaveTripData(tripId: tripId, tripData: tripData);
 
-        try {
-          final response = await fetchOrSaveTripData(
-            tripId: tripId,
-            tripData: trip.toJson(),
-          );
-          if (response != null) {
-            showSnackBar(Get.context!, Get.theme, "Trip saved successfully");
-            Trip trip= Trip.fromJson(response);
-            Get.back(result: response);
-            tripModelList.refresh();
-          } else {
-            showSnackBar(Get.context!, Get.theme, "Failed to save trip: No response from server");
-          }
-        } catch (e) {
-          print("Error saving trip data: $e");
-          showSnackBar(Get.context!, Get.theme, "Failed to save trip: $e");
-        }
-      } catch (e) {
-        print("Error fetching valid participant IDs: $e");
-        showSnackBar(Get.context!, Get.theme, "Failed to validate participants: $e");
+      if (response != null) {
+        showSnackBar(Get.context!, Get.theme, tripId != null ? "Trip updated successfully" : "Trip created successfully");
+        Get.back(result: response);
+        tripModelList.refresh();
+      } else {
+        showSnackBar(Get.context!, Get.theme, "Failed to ${tripId != null ? 'update' : 'create'} trip");
       }
 
       isMantainTripLoading.value = false;
     } else {
       showSnackBar(Get.context!, Get.theme, "Please fill in all required fields");
-      isMantainTripLoading.value = false;
     }
   }
 
-  void addParticipantMethod({
+  Future<void> addParticipantMethod({
     required BuildContext context,
     required ThemeData theme,
-  }) {
+  }) async {
     validationMsgForSelectFriend.value = "";
 
     final selectedFriends = selectedfriendModelList.where((friend) => friend.isSelected).toList();
@@ -309,7 +358,7 @@ class TripController extends GetxController {
     if (participantData['name'] == null || participantData['name'].toString().trim().isEmpty) {
       showSnackBar(context, theme, "Participant name is required");
       isAddparticipantLoading.value = false;
-      isFriendPageLoading.value =false;
+      isFriendPageLoading.value = false;
       return;
     }
     if (participantData['member'] == null || participantData['member'] <= 0) {
@@ -322,10 +371,10 @@ class TripController extends GetxController {
     isAddparticipantLoading.value = true;
     isFriendPageLoading.value = true;
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
 
-    if (token == null || token.isEmpty) {
+    final token = TokenStorage.getToken();
+
+    if (token == Null) {
       print("Invalid or missing token");
       showSnackBar(context, theme, "Please log in again");
       isAddparticipantLoading.value = false;
@@ -407,16 +456,15 @@ class TripController extends GetxController {
     );
   }
 
-
   Future<void> iniStateMethodForTripScreen({
     required BuildContext context,
   }) async {
     isTripScreenLoading.value = true;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
 
-      if (token == null || token.isEmpty) {
+      final token = await TokenStorage.getToken();
+
+      if (token == Null) {
         Get.snackbar("Error", "Authentication token is missing.");
         return;
       }
@@ -432,8 +480,7 @@ class TripController extends GetxController {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final tripsData = data['trips'] as List;
-        tripModelList.value =
-            tripsData.map((json) => Trip.fromJson(json)).toList();
+        tripModelList.value = tripsData.map((json) => Trip.fromJson(json)).toList();
       } else {
         Get.snackbar("Error", "Failed to fetch trips: ${response.statusCode}");
       }
@@ -444,5 +491,28 @@ class TripController extends GetxController {
     }
   }
 
+  Future<void> addToArchive(Trip trip) async {
+    try {
+      final token = await TokenStorage.getToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
 
+      final response = await http.put(
+        Uri.parse('${ApiConstants.baseUrl}/trips/${trip.id}/archive/'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        tripModelList.refresh();
+      } else {
+        throw Exception('Failed to archive trip: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error archiving trip: $e');
+    }
+  }
 }

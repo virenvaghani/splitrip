@@ -5,16 +5,21 @@ class TokenStorage {
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
+    final trimmedToken = token.trim(); // Remove any leading/trailing spaces
+    print('Saving token: $trimmedToken'); // Debug log
+    await prefs.setString(_tokenKey, trimmedToken);
   }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    final token = prefs.getString(_tokenKey);
+    print('Retrieved token: $token'); // Debug log
+    return token;
   }
 
   static Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
+    print('Token cleared'); // Debug log
   }
 }

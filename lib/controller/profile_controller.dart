@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splitrip/controller/app_page_controller.dart';
+import 'package:splitrip/controller/friend/friend_controller.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/controller/user_controller.dart';
 import 'package:splitrip/services/auth_service.dart';
@@ -13,6 +15,9 @@ class ProfileController extends GetxController {
   final AuthService authService = Get.find<AuthService>();
   final UserController userController = Get.find<UserController>();
   final TripController tripController = Get.find<TripController>();
+  final FriendController friendController = Get.find<FriendController>();
+  final AppPageController appPageController = Get.find<AppPageController>();
+
 
   // Reactive properties for user data
   final RxString userName = ''.obs;
@@ -26,7 +31,6 @@ class ProfileController extends GetxController {
     userEmail.value = userController.userEmail;
     photoUrl.value = userController.photoUrl;
     // Sync user data from UserController to reactive properties
-
   }
 
   Future<void> signInWithGoogle(dynamic context) async {
@@ -57,11 +61,13 @@ class ProfileController extends GetxController {
         );
         tripController.isAuthenticated.value = true;
         tripController.iniStateMethodForTripScreen(context: context);
+        friendController.fetchLinkedParticipants();
         Get.back();
         CustomSnackBar.show(
           title: 'Success',
           message: 'Logged in successfully',
         );
+        appPageController.pageIndex.value = 1;
       } else {
         Get.back();
         CustomSnackBar.show(
@@ -78,7 +84,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  Future<void> signInWithFacebook() async {
+  Future<void> signInWithFacebook(dynamic context) async {
     try {
       print('Opening Facebook login loader');
       Get.dialog(
@@ -105,11 +111,13 @@ class ProfileController extends GetxController {
           providerData['photoUrl'] ?? user.photoURL,
         );
         tripController.isAuthenticated.value = true;
+        tripController.iniStateMethodForTripScreen(context: context);
         Get.back();
         CustomSnackBar.show(
           title: 'Success',
           message: 'Logged in successfully',
         );
+        appPageController.pageIndex.value = 1;
       } else {
         Get.back();
         CustomSnackBar.show(
@@ -126,18 +134,17 @@ class ProfileController extends GetxController {
             errorMessage = 'Facebook login was canceled';
             break;
           case 'account-exists-with-different-credential':
-            errorMessage = 'An account already exists with a different credential';
+            errorMessage =
+                'An account already exists with a different credential';
             break;
           default:
-            errorMessage = 'Failed to sign in with Facebook: ${e.message ?? e.toString()}';
+            errorMessage =
+                'Failed to sign in with Facebook: ${e.message ?? e.toString()}';
         }
       } else {
         errorMessage = 'Failed to sign in with Facebook: $e';
       }
-      CustomSnackBar.show(
-        title: 'Error',
-        message: errorMessage,
-      );
+      CustomSnackBar.show(title: 'Error', message: errorMessage);
       print('Facebook sign-in error: $e');
     }
   }

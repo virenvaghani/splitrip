@@ -30,9 +30,7 @@ class SignUpPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: _buildHeader(theme),
-                    ),
+                    Expanded(child: _buildHeader(theme)),
                     const SizedBox(height: 24, width: 40),
                     Expanded(
                       child: _buildFormSection(
@@ -78,11 +76,11 @@ class SignUpPage extends StatelessWidget {
   }
 
   Widget _buildFormSection(
-      BuildContext context,
-      ThemeData theme,
-      ProfileController profileController,
-      ThemeController themeController,
-      ) {
+    BuildContext context,
+    ThemeData theme,
+    ProfileController profileController,
+    ThemeController themeController,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -97,7 +95,7 @@ class SignUpPage extends StatelessWidget {
           context,
           label: "Continue with Facebook",
           icon: const Icon(Icons.facebook, size: 18, color: Color(0xFF1877F2)),
-          onTap: () => profileController.signInWithFacebook(),
+          onTap: () => profileController.signInWithFacebook(context),
           foregroundColor: const Color(0xFF1877F2),
         ),
         const SizedBox(height: 32),
@@ -109,12 +107,12 @@ class SignUpPage extends StatelessWidget {
   }
 
   Widget _minimalButton(
-      BuildContext context, {
-        required String label,
-        required Widget icon,
-        required VoidCallback onTap,
-        Color? foregroundColor,
-      }) {
+    BuildContext context, {
+    required String label,
+    required Widget icon,
+    required VoidCallback onTap,
+    Color? foregroundColor,
+  }) {
     final theme = Theme.of(context);
     return CustomAnimatedButton(
       buttonId: label,

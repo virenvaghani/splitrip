@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:splitrip/controller/emoji_controller.dart';
+import 'package:splitrip/controller/friend/friend_controller.dart';
 import 'package:splitrip/controller/profile_controller.dart';
+import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/services/auth_service.dart';
 import 'package:splitrip/views/profile/profile_page.dart';
@@ -26,8 +28,11 @@ void main() async {
   // Register GetX controllers
   Get.put(AuthService());
   Get.put(UserController());
-  Get.lazyPut(() => ProfileController());
+  Get.put(TripController());
+  Get.put(FriendController());
   Get.put(AppPageController());
+  Get.lazyPut(() => ProfileController(),);
+
   Get.put(EmojiController());
 
   runApp(const MyApp());
@@ -79,24 +84,3 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Wrapper widget to provide TickerProvider and AnimationProvider
-class AnimationProviderWrapper extends StatefulWidget {
-  final Widget child;
-
-  const AnimationProviderWrapper({super.key, required this.child});
-
-  @override
-  AnimationProviderWrapperState createState() =>
-      AnimationProviderWrapperState();
-}
-
-class AnimationProviderWrapperState extends State<AnimationProviderWrapper>
-    with TickerProviderStateMixin {
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AnimationProvider(this), // Pass this as vsync
-      child: widget.child,
-    );
-  }
-}

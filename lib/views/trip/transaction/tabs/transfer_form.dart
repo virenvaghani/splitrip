@@ -111,7 +111,7 @@ class TransferForm extends StatelessWidget {
               theme,
               icon: Icons.more_horiz_outlined,
               title: "Extras",
-              child: _extras(context,theme, controller, transactionController),
+              child: _extras(context, theme, controller, transactionController),
             ),
             const SizedBox(height: 32),
             _submitButton(
@@ -320,8 +320,9 @@ class TransferForm extends StatelessWidget {
                                         controller.togglePayer(name);
                                         transactionController.hasChanges.value =
                                             true;
-                                        if (isSingleSelection)
+                                        if (isSingleSelection) {
                                           Navigator.pop(dialogContext);
+                                        }
                                       },
                               title: Text(
                                 name == "Viren" ? "$name (me)" : name,
@@ -552,7 +553,11 @@ class TransferForm extends StatelessWidget {
     );
   }
 
-  Widget _amountValidation(ThemeData theme, TripDetailController controller, {required bool isTransfer}) {
+  Widget _amountValidation(
+    ThemeData theme,
+    TripDetailController controller, {
+    required bool isTransfer,
+  }) {
     return Obx(() {
       final totalAmount =
           double.tryParse(controller.transactionAmount.value) ?? 0.0;
@@ -595,7 +600,7 @@ class TransferForm extends StatelessWidget {
           icon: const Icon(Icons.image_outlined),
           label: const Text("Bill Image"),
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.surfaceVariant,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             foregroundColor: theme.colorScheme.onSurface,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             shape: RoundedRectangleBorder(

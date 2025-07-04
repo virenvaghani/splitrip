@@ -27,7 +27,8 @@ class TripDetailController extends GetxController {
   final isTransactionSubmitted = false.obs;
   final selectedCategory = 'Misc'.obs;
   final transactionRecipients = <String>[].obs; // Added for multiple recipients
-  final recipientAmounts = <String, double>{}.obs; // Added for recipient amounts
+  final recipientAmounts =
+      <String, double>{}.obs; // Added for recipient amounts
   final transactionTypes = ['expense', 'income', 'transfer'].obs;
   final categories = ['Food', 'Travel', 'Stay', 'Misc'].obs;
   final splitTypes = ['Equally', 'As parts', 'As Amount'].obs;
@@ -199,7 +200,9 @@ class TripDetailController extends GetxController {
       final data = jsonDecode(mockResponse);
       trip.value = data['trip'];
       summary.value = data['summary'];
-      transactions.assignAll(List<Map<String, dynamic>>.from(data['transactions']));
+      transactions.assignAll(
+        List<Map<String, dynamic>>.from(data['transactions']),
+      );
       tabs.value = data['tabs'];
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch trip data: $e');
@@ -366,15 +369,27 @@ class TripDetailController extends GetxController {
         Get.snackbar('Error', 'Transfer can only have one payer');
         return;
       }
-      final totalReceived = recipientAmounts.values.fold(0.0, (sum, amount) => sum + amount);
+      final totalReceived = recipientAmounts.values.fold(
+        0.0,
+        (sum, amount) => sum + amount,
+      );
       if ((totalReceived - totalAmount).abs() > 0.01) {
-        Get.snackbar('Error', 'Total received amounts must equal the transaction amount');
+        Get.snackbar(
+          'Error',
+          'Total received amounts must equal the transaction amount',
+        );
         return;
       }
     } else {
-      final totalPaid = payerAmounts.values.fold(0.0, (sum, amount) => sum + amount);
+      final totalPaid = payerAmounts.values.fold(
+        0.0,
+        (sum, amount) => sum + amount,
+      );
       if ((totalPaid - totalAmount).abs() > 0.01) {
-        Get.snackbar('Error', 'Total paid amounts must equal the transaction amount');
+        Get.snackbar(
+          'Error',
+          'Total paid amounts must equal the transaction amount',
+        );
         return;
       }
     }
@@ -387,11 +402,21 @@ class TripDetailController extends GetxController {
       'icon': 'category',
       'amount': totalAmount,
       'payers': Map<String, double>.from(payerAmounts),
-      'user_share': transactionType.value == 'transfer' ? 0.0 : transactionShares['Viren'] ?? 0.0,
+      'user_share':
+          transactionType.value == 'transfer'
+              ? 0.0
+              : transactionShares['Viren'] ?? 0.0,
       'date': DateFormat('yyyy-MM-dd').format(transactionDate.value),
-      'split_type': transactionType.value == 'transfer' ? 'None' : transactionSplitType.value,
-      'shares': transactionType.value == 'transfer' ? {} : Map<String, double>.from(transactionShares),
-      if (transactionType.value == 'transfer') 'recipients': Map<String, double>.from(recipientAmounts),
+      'split_type':
+          transactionType.value == 'transfer'
+              ? 'None'
+              : transactionSplitType.value,
+      'shares':
+          transactionType.value == 'transfer'
+              ? {}
+              : Map<String, double>.from(transactionShares),
+      if (transactionType.value == 'transfer')
+        'recipients': Map<String, double>.from(recipientAmounts),
     };
 
     addTransaction(transaction);
@@ -405,28 +430,36 @@ class TripDetailController extends GetxController {
     final amount = transaction['amount'] ?? 0.0;
     final payers = Map<String, double>.from(transaction['payers'] ?? {});
     final shares = Map<String, double>.from(transaction['shares'] ?? {});
-    final recipients = transaction['recipients'] != null ? Map<String, double>.from(transaction['recipients']) : <String, double>{};
+    final recipients =
+        transaction['recipients'] != null
+            ? Map<String, double>.from(transaction['recipients'])
+            : <String, double>{};
 
     if (type == 'expense') {
       summary['total_expenses'] = (summary['total_expenses'] ?? 0.0) + amount;
       if (payers.containsKey('Viren')) {
-        summary['my_expenses'] = (summary['my_expenses'] ?? 0.0) + (payers['Viren'] ?? 0.0);
+        summary['my_expenses'] =
+            (summary['my_expenses'] ?? 0.0) + (payers['Viren'] ?? 0.0);
       }
     } else if (type == 'income') {
       summary['total_income'] = (summary['total_income'] ?? 0.0) + amount;
       if (payers.containsKey('Viren')) {
-        summary['my_income'] = (summary['my_income'] ?? 0.0) + (payers['Viren'] ?? 0.0);
+        summary['my_income'] =
+            (summary['my_income'] ?? 0.0) + (payers['Viren'] ?? 0.0);
       }
     } else if (type == 'transfer') {
       payers.forEach((payer, paidAmount) {
-        participantShares[payer] = (participantShares[payer] ?? 0.0) - paidAmount;
+        participantShares[payer] =
+            (participantShares[payer] ?? 0.0) - paidAmount;
       });
       recipients.forEach((recipient, receivedAmount) {
-        participantShares[recipient] = (participantShares[recipient] ?? 0.0) + receivedAmount;
+        participantShares[recipient] =
+            (participantShares[recipient] ?? 0.0) + receivedAmount;
       });
     }
 
-    summary['amount_owed'] = (summary['total_expenses'] ?? 0.0) -
+    summary['amount_owed'] =
+        (summary['total_expenses'] ?? 0.0) -
         (summary['my_expenses'] ?? 0.0) +
         (summary['my_income'] ?? 0.0);
 
@@ -438,7 +471,10 @@ class TripDetailController extends GetxController {
   }
 
   Map<String, double> calculateSplit(
-      double amount, String splitType, Map<String, double> customShares) {
+    double amount,
+    String splitType,
+    Map<String, double> customShares,
+  ) {
     final shares = <String, double>{};
     final participantCount = participants.length;
 
@@ -448,7 +484,9 @@ class TripDetailController extends GetxController {
     }
 
     if (splitType == 'Equally') {
-      final share = double.parse((amount / participantCount).toStringAsFixed(2));
+      final share = double.parse(
+        (amount / participantCount).toStringAsFixed(2),
+      );
       for (var person in participants) {
         shares[person] = share;
       }
@@ -460,23 +498,31 @@ class TripDetailController extends GetxController {
       }
       for (var person in participants) {
         final parts = customShares[person] ?? 0.0;
-        final share = double.parse(((parts / totalParts) * amount).toStringAsFixed(2));
+        final share = double.parse(
+          ((parts / totalParts) * amount).toStringAsFixed(2),
+        );
         shares[person] = share;
       }
     } else if (splitType == 'As Amount') {
-      final totalAssigned = customShares.values.fold(0.0, (sum, val) => sum + val);
+      final totalAssigned = customShares.values.fold(
+        0.0,
+        (sum, val) => sum + val,
+      );
       if ((totalAssigned - amount).abs() > 0.01) {
         Get.snackbar('Error', 'Assigned amounts must equal total amount');
         return shares;
       }
       for (var person in participants) {
-        final share = double.parse((customShares[person] ?? 0.0).toStringAsFixed(2));
+        final share = double.parse(
+          (customShares[person] ?? 0.0).toStringAsFixed(2),
+        );
         shares[person] = share;
       }
     }
 
     return shares;
   }
+
   void removePayer(String name) {
     transactionPayers.remove(name);
     payerAmounts.remove(name);

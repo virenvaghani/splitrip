@@ -8,16 +8,19 @@ class DashBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppPageController pageController = Get.put(AppPageController());
+    final AppPageController pageController = Get.find<AppPageController>();
 
     return Obx(() {
       return Scaffold(
         body: IndexedStack(
           index: pageController.pageIndex.value,
-          children: pageController.pages,
+          children: pageController.pageBuilders
+              .map((builder) => builder()) // 👈 evaluate each builder function
+              .toList(),
         ),
         bottomNavigationBar: const MyNavigationBar(),
       );
     });
+
   }
 }

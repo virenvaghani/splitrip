@@ -30,9 +30,21 @@ class ExpenseForm extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _titleField(theme, controller, transactionController)),
+                      Expanded(
+                        child: _titleField(
+                          theme,
+                          controller,
+                          transactionController,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _categoryDropdown(theme, controller, transactionController)),
+                      Expanded(
+                        child: _categoryDropdown(
+                          theme,
+                          controller,
+                          transactionController,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -40,7 +52,13 @@ class ExpenseForm extends StatelessWidget {
                     children: [
                       _currencyBox(theme, controller),
                       const SizedBox(width: 12),
-                      Expanded(child: _amountField(theme, controller, transactionController)),
+                      Expanded(
+                        child: _amountField(
+                          theme,
+                          controller,
+                          transactionController,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -54,7 +72,12 @@ class ExpenseForm extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _payerDropdown(context, theme, controller, transactionController),
+                  _payerDropdown(
+                    context,
+                    theme,
+                    controller,
+                    transactionController,
+                  ),
                   AppSpacers.medium,
                   _payerAmountInputs(theme, controller, transactionController),
                   AppSpacers.small,
@@ -86,14 +109,25 @@ class ExpenseForm extends StatelessWidget {
               child: _extras(context, theme, controller, transactionController),
             ),
             const SizedBox(height: 24),
-            _submitButton('Add Expense', theme, controller, formKey, transactionController),
+            _submitButton(
+              'Add Expense',
+              theme,
+              controller,
+              formKey,
+              transactionController,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSection(ThemeData theme, {required IconData icon, required String title, required Widget child}) {
+  Widget _buildSection(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required Widget child,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -145,7 +179,11 @@ class ExpenseForm extends StatelessWidget {
     );
   }
 
-  Widget _titleField(ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _titleField(
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return TextFormField(
       onChanged: (value) {
         controller.updateTitle(value);
@@ -157,50 +195,76 @@ class ExpenseForm extends StatelessWidget {
         hintText: 'Enter title',
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
         ),
       ),
-      validator: (value) => value == null || value.isEmpty ? 'Please enter a title' : null,
+      validator:
+          (value) =>
+              value == null || value.isEmpty ? 'Please enter a title' : null,
     );
   }
 
-  Widget _categoryDropdown(ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _categoryDropdown(
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return DropdownMenu<String>(
-      initialSelection: controller.selectedCategory.value.isEmpty ? null : controller.selectedCategory.value,
+      initialSelection:
+          controller.selectedCategory.value.isEmpty
+              ? null
+              : controller.selectedCategory.value,
       onSelected: (value) {
         controller.updateCategory(value);
         transactionController.hasChanges.value = true;
       },
       width: double.infinity,
-      dropdownMenuEntries: controller.categories.map((e) => DropdownMenuEntry(
-        value: e,
-        label: e,
-        style: MenuItemButton.styleFrom(
-          textStyle: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
-        ),
-      )).toList(),
+      dropdownMenuEntries:
+          controller.categories
+              .map(
+                (e) => DropdownMenuEntry(
+                  value: e,
+                  label: e,
+                  style: MenuItemButton.styleFrom(
+                    textStyle: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -224,12 +288,17 @@ class ExpenseForm extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: theme.colorScheme.primary,
         ),
-        semanticsLabel: controller.trip['currency'] == 'INR' ? 'Indian Rupee' : 'Dollar',
+        semanticsLabel:
+            controller.trip['currency'] == 'INR' ? 'Indian Rupee' : 'Dollar',
       ),
     );
   }
 
-  Widget _amountField(ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _amountField(
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return TextFormField(
       onChanged: (value) {
         controller.updateAmount(value);
@@ -241,14 +310,19 @@ class ExpenseForm extends StatelessWidget {
         hintText: '0.00',
         filled: true,
         fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
+          borderSide: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -256,7 +330,9 @@ class ExpenseForm extends StatelessWidget {
         ),
       ),
       validator: (value) {
-        if (value == null || double.tryParse(value) == null || double.parse(value) <= 0) {
+        if (value == null ||
+            double.tryParse(value) == null ||
+            double.parse(value) <= 0) {
           return 'Please enter a valid amount';
         }
         return null;
@@ -264,223 +340,282 @@ class ExpenseForm extends StatelessWidget {
     );
   }
 
-  Widget _payerDropdown(BuildContext context, ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _payerDropdown(
+    BuildContext context,
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         showDialog(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            backgroundColor: theme.colorScheme.surfaceContainer,
-            title: Text(
-              'Select Payers',
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            content: Container(
-              width: double.maxFinite,
-              constraints: const BoxConstraints(maxHeight: 300),
-              child: Obx(() => ListView(
-                children: controller.participants.map((name) {
-                  return CheckboxListTile(
-                    value: controller.transactionPayers.contains(name),
-                    onChanged: (value) {
-                      controller.togglePayer(name);
-                      transactionController.hasChanges.value = true;
-                    },
-                    title: Text(
-                      name == "Viren" ? "$name (me)" : name,
-                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
-                    ),
-                    activeColor: theme.colorScheme.primary,
-                    checkColor: theme.colorScheme.onPrimary,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  );
-                }).toList(),
-              )),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(
-                  'Done',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+          builder:
+              (dialogContext) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                backgroundColor: theme.colorScheme.surfaceContainer,
+                title: Text(
+                  'Select Payers',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+                content: Container(
+                  width: double.maxFinite,
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  child: Obx(
+                    () => ListView(
+                      children:
+                          controller.participants.map((name) {
+                            return CheckboxListTile(
+                              value: controller.transactionPayers.contains(
+                                name,
+                              ),
+                              onChanged: (value) {
+                                controller.togglePayer(name);
+                                transactionController.hasChanges.value = true;
+                              },
+                              title: Text(
+                                name == "Viren" ? "$name (me)" : name,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: 14,
+                                ),
+                              ),
+                              activeColor: theme.colorScheme.primary,
+                              checkColor: theme.colorScheme.onPrimary,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(
+                      'Done',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       },
       child: IgnorePointer(
-        child: Obx(() => TextFormField(
-          readOnly: true,
-          decoration: InputDecoration(
-            hintText: controller.transactionPayers.isEmpty
-                ? 'Select payers'
-                : 'Paid by ${controller.transactionPayers.length} people',
-            hintStyle: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+        child: Obx(
+          () => TextFormField(
+            readOnly: true,
+            decoration: InputDecoration(
+              hintText:
+                  controller.transactionPayers.isEmpty
+                      ? 'Select payers'
+                      : 'Paid by ${controller.transactionPayers.length} people',
+              hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(
+                0.6,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.outline.withOpacity(0.3),
+                ),
+              ),
+              suffixIcon: Icon(
+                Icons.arrow_drop_down,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
-            ),
-            suffixIcon: Icon(
-              Icons.arrow_drop_down,
-              color: theme.colorScheme.primary,
-            ),
+            validator:
+                (value) =>
+                    controller.transactionPayers.isEmpty
+                        ? 'Please select at least one payer'
+                        : null,
           ),
-          validator: (value) => controller.transactionPayers.isEmpty ? 'Please select at least one payer' : null,
-        )),
+        ),
       ),
     );
   }
 
-  Widget _payerAmountInputs(ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _payerAmountInputs(
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.8),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          width: 0.5,
+        ),
       ),
-      child: Obx(() => ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: controller.transactionPayers.length,
-        itemBuilder: (context, index) {
-          final name = controller.transactionPayers[index];
-          final textController = controller.getPayerTextController(name);
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.remove_circle_outline, color: theme.colorScheme.error),
-                  onPressed: () {
-                    controller.removePayer(name);
-                    transactionController.hasChanges.value = true;
-                  },
-                ),
-                Expanded(
-                  child: Text(
-                    name,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
+      child: Obx(
+        () => ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: controller.transactionPayers.length,
+          itemBuilder: (context, index) {
+            final name = controller.transactionPayers[index];
+            final textController = controller.getPayerTextController(name);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.remove_circle_outline,
+                      color: theme.colorScheme.error,
                     ),
-                    semanticsLabel: name,
-                  ),
-                ),
-                SizedBox(
-                  width: 120,
-                  child: TextField(
-                    controller: textController,
-                    onChanged: (val) {
-                      final amount = double.tryParse(val.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
-                      controller.updatePayerAmount(name, amount);
+                    onPressed: () {
+                      controller.removePayer(name);
                       transactionController.hasChanges.value = true;
                     },
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
-                    decoration: InputDecoration(
-                      prefixText: controller.trip['currency'] == 'INR' ? '₹ ' : '\$ ',
-                      prefixStyle: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
+                  ),
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerLow,
-                      hintText: "0.00",
+                      semanticsLabel: name,
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      )),
+                  SizedBox(
+                    width: 120,
+                    child: TextField(
+                      controller: textController,
+                      onChanged: (val) {
+                        final amount =
+                            double.tryParse(
+                              val.replaceAll(RegExp(r'[^\d.]'), ''),
+                            ) ??
+                            0.0;
+                        controller.updatePayerAmount(name, amount);
+                        transactionController.hasChanges.value = true;
+                      },
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
+                      decoration: InputDecoration(
+                        prefixText:
+                            controller.trip['currency'] == 'INR' ? '₹ ' : '\$ ',
+                        prefixStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceContainerHighest,
+                        hintText: "0.00",
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
   Widget _splitOptions(
-      ThemeData theme,
-      TripDetailController controller,
-      TransactionScreenController transactionController,
-      ) {
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return Obx(
-          () => Row(
-        children: controller.splitTypes.map((type) {
-          final isSelected = controller.transactionSplitType.value == type;
+      () => Row(
+        children:
+            controller.splitTypes.map((type) {
+              final isSelected = controller.transactionSplitType.value == type;
 
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.3),
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    controller.updateSplitType(type);
-                    transactionController.hasChanges.value = true;
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isSelected
-                        ? theme.colorScheme.primary.withOpacity(0.15)
-                        : theme.colorScheme.surfaceContainer,
-                    foregroundColor: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.8),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.outline.withOpacity(0.3),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        controller.updateSplitType(type);
+                        transactionController.hasChanges.value = true;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            isSelected
+                                ? theme.colorScheme.primary.withOpacity(0.15)
+                                : theme.colorScheme.surfaceContainer,
+                        foregroundColor:
+                            isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withOpacity(0.8),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        type,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    type,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
 
-  Widget _shareInputs(ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _shareInputs(
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return Obx(() {
       final isEqual = controller.transactionSplitType.value == 'Equally';
       return ListView.builder(
@@ -507,32 +642,52 @@ class ExpenseForm extends StatelessWidget {
                   width: 100,
                   child: TextFormField(
                     enabled: !isEqual,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: isEqual ? controller.formatCurrency(amount) : 'Enter',
+                      hintText:
+                          isEqual ? controller.formatCurrency(amount) : 'Enter',
                       filled: true,
                       fillColor: theme.colorScheme.surfaceContainerLow,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.colorScheme.outline.withOpacity(0.3)),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.outline.withOpacity(0.3),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.primary,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     onChanged: (val) {
-                      controller.updateCustomShare(name, double.tryParse(val.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0);
+                      controller.updateCustomShare(
+                        name,
+                        double.tryParse(
+                              val.replaceAll(RegExp(r'[^\d.]'), ''),
+                            ) ??
+                            0.0,
+                      );
                       transactionController.hasChanges.value = true;
                     },
                     validator: (value) {
-                      if (!isEqual && (value == null || double.tryParse(value) == null || double.parse(value) <= 0)) {
+                      if (!isEqual &&
+                          (value == null ||
+                              double.tryParse(value) == null ||
+                              double.parse(value) <= 0)) {
                         return 'Enter a valid share';
                       }
                       return null;
@@ -549,23 +704,34 @@ class ExpenseForm extends StatelessWidget {
 
   Widget _amountValidation(ThemeData theme, TripDetailController controller) {
     return Obx(() {
-      final totalAmount = double.tryParse(controller.transactionAmount.value) ?? 0.0;
-      final total = controller.payerAmounts.values.fold(0.0, (sum, amt) => sum + amt);
+      final totalAmount =
+          double.tryParse(controller.transactionAmount.value) ?? 0.0;
+      final total = controller.payerAmounts.values.fold(
+        0.0,
+        (sum, amt) => sum + amt,
+      );
       final diff = totalAmount - total;
       final hasError = diff != 0 || total == 0;
-      final message = hasError
-          ? (diff > 0 ? 'Remaining: ${controller.formatCurrency(diff)}' : 'Over by: ${controller.formatCurrency(-diff)}')
-          : 'Total matches: ${controller.formatCurrency(total)}';
+      final message =
+          hasError
+              ? (diff > 0
+                  ? 'Remaining: ${controller.formatCurrency(diff)}'
+                  : 'Over by: ${controller.formatCurrency(-diff)}')
+              : 'Total matches: ${controller.formatCurrency(total)}';
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: hasError ? theme.colorScheme.error.withOpacity(0.1) : theme.colorScheme.primary.withOpacity(0.1),
+          color:
+              hasError
+                  ? theme.colorScheme.error.withOpacity(0.1)
+                  : theme.colorScheme.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(
           message,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: hasError ? theme.colorScheme.error : theme.colorScheme.primary,
+            color:
+                hasError ? theme.colorScheme.error : theme.colorScheme.primary,
             fontWeight: FontWeight.w600,
           ),
           semanticsLabel: message,
@@ -574,7 +740,12 @@ class ExpenseForm extends StatelessWidget {
     });
   }
 
-  Widget _extras(BuildContext context, ThemeData theme, TripDetailController controller, TransactionScreenController transactionController) {
+  Widget _extras(
+    BuildContext context,
+    ThemeData theme,
+    TripDetailController controller,
+    TransactionScreenController transactionController,
+  ) {
     return Row(
       children: [
         ElevatedButton.icon(
@@ -582,7 +753,11 @@ class ExpenseForm extends StatelessWidget {
             controller.pickImage();
             transactionController.hasChanges.value = true;
           },
-          icon: Icon(Icons.image_outlined, size: 20, color: theme.colorScheme.primary),
+          icon: Icon(
+            Icons.image_outlined,
+            size: 20,
+            color: theme.colorScheme.primary,
+          ),
           label: Text(
             "Bill Image",
             style: theme.textTheme.labelLarge?.copyWith(
@@ -591,7 +766,8 @@ class ExpenseForm extends StatelessWidget {
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.6),
+            backgroundColor: theme.colorScheme.surfaceContainerHighest
+                .withOpacity(0.6),
             foregroundColor: theme.colorScheme.primary,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             shape: RoundedRectangleBorder(
@@ -605,11 +781,12 @@ class ExpenseForm extends StatelessWidget {
           onPressed: () async {
             final picked = await showDialog<DateTime>(
               context: context,
-              builder: (dialogContext) => DatePickerDialog(
-                initialDate: controller.transactionDate.value,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-              ),
+              builder:
+                  (dialogContext) => DatePickerDialog(
+                    initialDate: controller.transactionDate.value,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  ),
             );
             if (picked != null) {
               controller.updateDate(picked);
@@ -621,14 +798,18 @@ class ExpenseForm extends StatelessWidget {
             size: 18,
             color: theme.colorScheme.primary,
           ),
-          label: Obx(() => Text(
-            controller.formatDate(controller.transactionDate.value),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+          label: Obx(
+            () => Text(
+              controller.formatDate(controller.transactionDate.value),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              semanticsLabel: controller.formatDate(
+                controller.transactionDate.value,
+              ),
             ),
-            semanticsLabel: controller.formatDate(controller.transactionDate.value),
-          )),
+          ),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -637,7 +818,13 @@ class ExpenseForm extends StatelessWidget {
     );
   }
 
-  Widget _submitButton(String label, ThemeData theme, TripDetailController controller, GlobalKey<FormState> formKey, TransactionScreenController transactionController) {
+  Widget _submitButton(
+    String label,
+    ThemeData theme,
+    TripDetailController controller,
+    GlobalKey<FormState> formKey,
+    TransactionScreenController transactionController,
+  ) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(

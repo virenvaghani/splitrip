@@ -84,21 +84,14 @@ class MaintainTripScreen extends StatelessWidget {
           boxShadow: [AppShadows.defaultShadow(theme)],
         ),
         padding: AppPaddings.buttonPadding,
-        child: ElevatedButton(
+        child:ElevatedButton(
           style: AppStyles.elevatedButtonStyle(theme),
-          onPressed: () {
-            final tripId = int.tryParse(argumentData['trip_id']?.toString() ?? '');
-            if (tripId != null) {
-              tripController.saveTripData(tripId: tripId);
-            } else {
-              // Handle the case where tripId is not a valid integer
-              print('Error: trip_id is not a valid integer');
-              // Optionally, show a user-friendly error message or take alternative action
-            }
-          },
+          onPressed: () => Get.find<TripController>().saveTrip(argumentData: argumentData),
           child: Center(
             child: Text(
-              AppStrings.createTrip,
+              int.tryParse(argumentData['trip_id']?.toString() ?? '') != null
+                  ? AppStrings.updateTrip
+                  : AppStrings.createTrip,
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.onPrimary,
                 fontWeight: FontWeight.w600,

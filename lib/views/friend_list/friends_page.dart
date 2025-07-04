@@ -6,14 +6,14 @@ import '../../controller/friend/friend_controller.dart';
 import '../../controller/trip/trip_controller.dart';
 
 class FriendsPage extends StatelessWidget {
-   FriendsPage({super.key});
+  FriendsPage({super.key});
 
   final TripController tripController = Get.find<TripController>();
+  final FriendController controller = Get.find<FriendController>();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final FriendController controller = Get.put(FriendController());
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -26,14 +26,17 @@ class FriendsPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: theme.colorScheme.primary),
-            onPressed: () => controller.fetchFriends(),
+            onPressed: () => controller.fetchLinkedParticipants(),
             tooltip: 'Refresh',
             splashRadius: 20,
           ),
           IconButton(
-            icon: Icon(Icons.person_add_alt_1, color: theme.colorScheme.primary),
+            icon: Icon(
+              Icons.person_add_alt_1,
+              color: theme.colorScheme.primary,
+            ),
             onPressed: () {
-             _addFriend(context:context, theme:theme);
+              _addFriend(context: context, theme: theme);
             },
             tooltip: 'Add Friend',
             splashRadius: 20,
@@ -42,31 +45,40 @@ class FriendsPage extends StatelessWidget {
       ),
       body: GetBuilder<FriendController>(
         init: controller,
-        initState: (_) => controller.fetchFriends(),
-        builder: (_) => Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        initState: (_) => controller.fetchLinkedParticipants(),
+        builder:
+            (_) => Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (controller.errorMessage.isNotEmpty) {
-            return _stateMessage(controller.errorMessage.value, theme.colorScheme.error, context);
-          }
+              if (controller.errorMessage.isNotEmpty) {
+                return _stateMessage(
+                  controller.errorMessage.value,
+                  theme.colorScheme.error,
+                  context,
+                );
+              }
 
-          if (controller.friendsList.isEmpty) {
-            return _stateMessage("No friends added yet.", theme.colorScheme.outline, context);
-          }
+              if (controller.friendsList.isEmpty) {
+                return _stateMessage(
+                  "No friends added yet.",
+                  theme.colorScheme.outline,
+                  context,
+                );
+              }
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            itemCount: controller.friendsList.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final friend = controller.friendsList[index];
-              final name = friend.participant?.name ?? 'Unknown';
-              return _FriendTile(name: name);
-            },
-          );
-        }),
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                itemCount: controller.friendsList.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final friend = controller.friendsList[index];
+                  final name = friend.participant.name ?? 'Unknown';
+                  return _FriendTile(name: name);
+                },
+              );
+            }),
       ),
     );
   }
@@ -119,7 +131,9 @@ class FriendsPage extends StatelessWidget {
                   controller: tripController.newParticipantNameController,
                   decoration: InputDecoration(
                     labelText: 'Name',
-                    labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                    labelStyle: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     filled: true,
                     fillColor: theme.colorScheme.surfaceContainerHighest,
                     border: OutlineInputBorder(
@@ -144,7 +158,9 @@ class FriendsPage extends StatelessWidget {
                   controller: tripController.newParticipantMembersController,
                   decoration: InputDecoration(
                     labelText: 'Member',
-                    labelStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                    labelStyle: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     filled: true,
                     fillColor: theme.colorScheme.surfaceContainerHighest,
                     border: OutlineInputBorder(
@@ -186,7 +202,6 @@ class FriendsPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     TextButton(
-
                       style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
@@ -199,10 +214,21 @@ class FriendsPage extends StatelessWidget {
                         ),
                       ),
                       onPressed: () {
-                        tripController.addNewParticipant(context: context, theme: theme, participantData:  {
-                          'name': tripController.newParticipantNameController.text.trim(),
-                          'member': int.parse(tripController.newParticipantMembersController.text.trim()),
-                        },);
+                        tripController.addNewParticipant(
+                          context: context,
+                          theme: theme,
+                          participantData: {
+                            'name':
+                                tripController.newParticipantNameController.text
+                                    .trim(),
+                            'member': int.parse(
+                              tripController
+                                  .newParticipantMembersController
+                                  .text
+                                  .trim(),
+                            ),
+                          },
+                        );
                         tripController.newParticipantNameController.clear();
                         tripController.newParticipantMembersController.clear();
                       },
@@ -222,7 +248,6 @@ class FriendsPage extends StatelessWidget {
       },
     );
   }
-
 }
 
 class _FriendTile extends StatelessWidget {
@@ -236,10 +261,15 @@ class _FriendTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.4),
-        border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.1))),
+        border: Border(
+          bottom: BorderSide(color: theme.colorScheme.outline.withOpacity(0.1)),
+        ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         leading: CircleAvatar(
           radius: 22,
           backgroundColor: theme.colorScheme.primaryContainer,

@@ -9,72 +9,72 @@ TextTheme buildTextTheme(Color textColor) {
   return TextTheme(
     // Large Displays
     displayLarge: baseTextStyle.copyWith(
-      fontSize: 54,
+      fontSize: 58,
       fontWeight: FontWeight.w300,
       letterSpacing: -0.5,
     ),
     displayMedium: baseTextStyle.copyWith(
-      fontSize: 42,
+      fontSize: 46,
       fontWeight: FontWeight.w300,
     ),
     displaySmall: baseTextStyle.copyWith(
-      fontSize: 34,
+      fontSize: 38,
       fontWeight: FontWeight.w400,
     ),
 
     // Headlines
     headlineLarge: baseTextStyle.copyWith(
-      fontSize: 28,
+      fontSize: 32,
       fontWeight: FontWeight.w600,
     ),
     headlineMedium: baseTextStyle.copyWith(
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: FontWeight.w600,
     ),
     headlineSmall: baseTextStyle.copyWith(
-      fontSize: 20,
+      fontSize: 24,
       fontWeight: FontWeight.w600,
     ),
 
     // Titles
     titleLarge: baseTextStyle.copyWith(
-      fontSize: 18,
+      fontSize: 22,
       fontWeight: FontWeight.w600,
     ),
     titleMedium: baseTextStyle.copyWith(
-      fontSize: 16,
+      fontSize: 20,
       fontWeight: FontWeight.w500,
     ),
     titleSmall: baseTextStyle.copyWith(
-      fontSize: 14,
+      fontSize: 18,
       fontWeight: FontWeight.w500,
     ),
 
     // Body Text
     bodyLarge: baseTextStyle.copyWith(
-      fontSize: 16,
+      fontSize: 20,
       fontWeight: FontWeight.w400,
     ),
     bodyMedium: baseTextStyle.copyWith(
-      fontSize: 14,
+      fontSize: 18,
       fontWeight: FontWeight.w400,
     ),
     bodySmall: baseTextStyle.copyWith(
-      fontSize: 12,
+      fontSize: 16,
       fontWeight: FontWeight.w400,
     ),
 
     // Labels
     labelLarge: baseTextStyle.copyWith(
-      fontSize: 14,
+      fontSize: 18,
       fontWeight: FontWeight.w500,
     ),
     labelMedium: baseTextStyle.copyWith(
-      fontSize: 12,
+      fontSize: 16,
       fontWeight: FontWeight.w500,
     ),
     labelSmall: baseTextStyle.copyWith(
-      fontSize: 10,
+      fontSize: 14,
       fontWeight: FontWeight.w500,
     ),
   );

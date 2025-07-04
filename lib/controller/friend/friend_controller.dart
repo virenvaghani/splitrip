@@ -1,57 +1,67 @@
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:splitrip/data/token.dart';
 import 'dart:convert';
 import '../../data/constants.dart';
-import '../../data/token.dart';
 import '../../model/friend/friend_model.dart';
+import '../../model/trip/participant_model.dart';
 
 class FriendController extends GetxController {
   // Observable list to store FriendModel objects
   var friendsList = <FriendModel>[].obs;
   var isLoading = false.obs;
-  var errorMessage = ''.obs; // Added for error display in FriendsPage
+  var errorMessage = ''.obs;
 
   // Method to fetch friends from the database via API
-  Future<void> fetchFriends() async {
+  Future<List<FriendModel>> fetchLinkedParticipants() async {
     try {
       isLoading.value = true;
-      errorMessage.value = ''; // Reset error message
+      errorMessage.value = '';
 
-      final token = await TokenStorage.getToken();
-      if (token == null || token.isEmpty) {
-        errorMessage.value = 'Authentication token is missing';
-        Get.snackbar('Error', 'Please log in to fetch friends');
-        return;
+      final token = await TokenStorage.getToken(); // Await the async call
+
+      if (token == null) {
+        print('No authentication token found');
+        Get.snackbar('Error', 'Authentication token not found');
+        throw Exception('Authentication token not found');
       }
 
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/participants/'),
         headers: {
+          'Authorization': 'Token ${token.trim()}', // Use Bearer and trim token
           'Content-Type': 'application/json',
-          'Authorization': 'Token $token',
         },
       );
 
       if (response.statusCode == 200) {
-        // Assuming the API returns a list of friend objects
         final List<dynamic> data = jsonDecode(response.body);
-        friendsList.assignAll(data.map((json) => FriendModel.fromJson(json)).toList());
+        // Map Django response to ParticipantModel, then wrap in FriendModel
+        friendsList.value = data.map((json) {
+          final participant = ParticipantModel.fromJson(json);
+          return FriendModel(participant: participant);
+        }).toList();
+        print('Friend list fetched successfully: ${friendsList.length} friends');
+        return friendsList;
       } else {
-        errorMessage.value = 'Failed to fetch friends: ${response.statusCode}';
-        Get.snackbar('Error', 'Failed to fetch friends: ${response.statusCode}');
+        print('Failed to fetch friend list: ${response.statusCode} ${response.body}');
+        Get.snackbar('Error', 'Failed to fetch friend list');
+        throw Exception('Failed to fetch friend list: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
-      errorMessage.value = 'An error occurred: $e';
-      Get.snackbar('Error', 'An error occurred: $e');
+      print('Error fetching friend list: $e');
+      errorMessage.value = e.toString();
+      Get.snackbar('Error', 'Error fetching friend list: $e');
+      throw Exception('Error fetching friend list: $e');
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Optional: Method to remove a friend (for future implementation)
-  void removeFriend(String? id) {
-    if (id != null) {
-      friendsList.removeWhere((friend) => friend.participant?.id == id);
+  void removeFriend(String? referenceId) {
+    if (referenceId != null) {
+      friendsList.removeWhere((friend) => friend.participant.referenceId == referenceId);
+      print('Removed friend with referenceId: $referenceId');
     }
   }
 }

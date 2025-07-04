@@ -6,7 +6,9 @@ class Trip {
   final String? inviteCode;
   final String? createdBy;
   final List<String> participantReferenceIds;
-  final int? totalParticipants; // <-- new field
+  final int? totalParticipants;
+  final bool isArchived;
+  final bool isDeleted;
 
   Trip({
     this.id,
@@ -17,15 +19,16 @@ class Trip {
     this.createdBy,
     required this.participantReferenceIds,
     this.totalParticipants,
+    this.isArchived = false,
+    this.isDeleted = false,
   });
 
   factory Trip.fromJson(Map<String, dynamic> json) {
-    // This method now handles both flat and nested trip objects
-    final tripData = json['trip'] ?? json; // if nested under 'trip', unwrap it
+    final tripData = json['trip'] ?? json;
 
     return Trip(
       id: tripData['id']?.toString(),
-      tripEmoji: tripData['trip_emoji']?.toString() ?? '🏝️',
+      tripEmoji: tripData['trip_emoji']?.toString() ?? '🌍',
       tripName: tripData['trip_name']?.toString() ?? '',
       tripCurrency: tripData['trip_currency']?.toString() ?? 'USD',
       inviteCode: tripData['invite_code']?.toString(),
@@ -33,7 +36,9 @@ class Trip {
       participantReferenceIds: tripData['participants'] != null && tripData['participants'] is List
           ? List<String>.from(tripData['participants'].map((p) => p.toString()))
           : [],
-      totalParticipants: json['total_participants'], // from wrapper
+      totalParticipants: json['total_participants'],
+      isArchived: (tripData['is_archived'] as bool?) ?? false,
+      isDeleted: (tripData['is_deleted'] as bool?) ?? false,
     );
   }
 
@@ -44,7 +49,8 @@ class Trip {
       'trip_name': tripName,
       'trip_currency': tripCurrency,
       'participants': participantReferenceIds,
-      // inviteCode, createdBy, and totalParticipants are backend-managed
+      'is_archived': isArchived,
+      'is_deleted': isDeleted,
     };
   }
 
@@ -57,6 +63,8 @@ class Trip {
     String? createdBy,
     List<String>? participantReferenceIds,
     int? totalParticipants,
+    bool? isArchived,
+    bool? isDeleted,
   }) {
     return Trip(
       id: id ?? this.id,
@@ -67,6 +75,8 @@ class Trip {
       createdBy: createdBy ?? this.createdBy,
       participantReferenceIds: participantReferenceIds ?? this.participantReferenceIds,
       totalParticipants: totalParticipants ?? this.totalParticipants,
+      isArchived: isArchived ?? this.isArchived,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 }

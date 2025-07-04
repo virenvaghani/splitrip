@@ -20,9 +20,10 @@ class TripScreen extends StatelessWidget {
       builder: (_) {
         return Scaffold(
           appBar: _buildAppBar(context, theme),
-          body: tripController.isTripScreenLoading.value
-              ? const Center(child: CircularProgressIndicator())
-              : _buildBody(context, theme),
+          body:
+              tripController.isTripScreenLoading.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildBody(context, theme),
         );
       },
     );
@@ -31,10 +32,23 @@ class TripScreen extends StatelessWidget {
   Widget _buildBody(BuildContext context, ThemeData theme) {
     if (tripController.isAuthenticated.value) {
       if (tripController.tripModelList.isNotEmpty) {
+        final visibleTrips = tripController.tripModelList
+            .where((trip) => !(trip.isArchived || trip.isDeleted))
+            .toList();
+        if (visibleTrips.isEmpty) {
+          return _buildEmptyState(
+            theme,
+            'No Active Trips 😕',
+            'All trips are either archived or deleted.',
+            'Create a new trip to start planning again!',
+            'Create Trip',
+            PageConstant.MaintainTripPage,
+          );
+        }
         return ListView.builder(
-          itemCount: tripController.tripModelList.length,
+          itemCount: visibleTrips.length,
           itemBuilder: (context, index) {
-            final trip = tripController.tripModelList[index];
+            final trip = visibleTrips[index];
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
               child: Builder(
@@ -65,7 +79,9 @@ class TripScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.onSurface.withOpacity(0.05),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.05,
+                              ),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -79,20 +95,24 @@ class TripScreen extends StatelessWidget {
                               Row(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: theme.scaffoldBackgroundColor,
+                                    backgroundColor:
+                                        theme.scaffoldBackgroundColor,
                                     child: Text(trip.tripEmoji ?? ""),
                                   ),
                                   const SizedBox(width: 12),
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         trip.tripName,
-                                        style: theme.textTheme.bodyLarge?.copyWith(
-                                          color: theme.colorScheme.onSurface,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                        style: theme.textTheme.bodyLarge
+                                            ?.copyWith(
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                       ),
                                       Text(
                                         "Currency: ${trip.tripCurrency}",
@@ -104,7 +124,9 @@ class TripScreen extends StatelessWidget {
                               ),
                               Icon(
                                 Icons.arrow_forward_ios,
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
                                 size: 20,
                               ),
                             ],
@@ -119,16 +141,35 @@ class TripScreen extends StatelessWidget {
           },
         );
       } else {
-        return _buildEmptyState(theme, 'Welcome 👋', 'Looks like you haven’t added any trips yet.',
-            'Tap the button below to start your first journey!', 'Get Started', PageConstant.MaintainTripPage);
+        return _buildEmptyState(
+          theme,
+          'Welcome 👋',
+          'Looks like you haven’t added any trips yet.',
+          'Tap the button below to start your first journey!',
+          'Get Started',
+          PageConstant.MaintainTripPage,
+        );
       }
     } else {
-      return _buildEmptyState(theme, 'Welcome Aboard! ✨', 'It looks like you haven’t signed up yet.',
-          'Tap the button below to join and start your journey!', 'Sign Up Now', PageConstant.ProfilePage);
+      return _buildEmptyState(
+        theme,
+        'Welcome Aboard! ✨',
+        'It looks like you haven’t signed up yet.',
+        'Tap the button below to join and start your journey!',
+        'Sign Up Now',
+        PageConstant.ProfilePage,
+      );
     }
   }
 
-  Widget _buildEmptyState(ThemeData theme, String title, String subtitle, String message, String buttonText, String route) {
+  Widget _buildEmptyState(
+    ThemeData theme,
+    String title,
+    String subtitle,
+    String message,
+    String buttonText,
+    String route,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       padding: const EdgeInsets.all(28),
@@ -159,27 +200,34 @@ class TripScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(title,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
-              ),
-              textAlign: TextAlign.center),
+          Text(
+            title,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 12),
-          Text(subtitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-              textAlign: TextAlign.center),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 8),
-          Text(message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
-              ),
-              textAlign: TextAlign.center),
+          Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 24),
           TextButton(
-            onPressed: () => Get.toNamed(route, arguments: {"Call From": "Add"}),
+            onPressed:
+                () => Get.toNamed(route, arguments: {"Call From": "Add"}),
             style: TextButton.styleFrom(
               backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
               foregroundColor: theme.colorScheme.primary,
@@ -197,13 +245,19 @@ class TripScreen extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(buttonText,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
-                    )),
+                Text(
+                  buttonText,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 16, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.arrow_forward,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
               ],
             ),
           ),
@@ -216,26 +270,27 @@ class TripScreen extends StatelessWidget {
     return CustomAppBar(
       title: "Trips",
       CenterTitle: false,
-      actions: tripController.tripModelList.isNotEmpty
-          ? [
-        IconButton(
-          onPressed: () {
-            CustomSnackBar.show(title: "title", message: "message");
-          },
-          icon: Icon(Icons.archive_outlined, color: theme.primaryColor),
-          tooltip: 'Archive',
-        ),
-        IconButton(
-          onPressed: () {
-            Get.toNamed(
-              PageConstant.MaintainTripPage,
-              arguments: {"Call From": "Add"},
-            );
-          },
-          icon: Icon(Icons.add, color: theme.primaryColor),
-        ),
-      ]
-          : null,
+      actions:
+          tripController.tripModelList.isNotEmpty
+              ? [
+                IconButton(
+                  onPressed: () {
+                    CustomSnackBar.show(title: "title", message: "message");
+                  },
+                  icon: Icon(Icons.archive_outlined, color: theme.primaryColor),
+                  tooltip: 'Archive',
+                ),
+                IconButton(
+                  onPressed: () {
+                    Get.toNamed(
+                      PageConstant.MaintainTripPage,
+                      arguments: {"Call From": "Add"},
+                    );
+                  },
+                  icon: Icon(Icons.add, color: theme.primaryColor),
+                ),
+              ]
+              : null,
     );
   }
 
@@ -245,18 +300,28 @@ class TripScreen extends StatelessWidget {
 
     final selected = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(position.dy, position.dy + 30, position.dx, position.dy),
+      position: RelativeRect.fromLTRB(
+        position.dy,
+        position.dy + 30,
+        position.dx,
+        position.dy,
+      ),
       items: [
         const PopupMenuItem(value: 'edit', child: Text('Edit')),
         const PopupMenuItem(value: 'archive', child: Text('Archive')),
         PopupMenuItem(
           value: 'delete',
-          child: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          child: Text(
+            'Delete',
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
         ),
       ],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+        ),
       ),
     );
 
@@ -264,18 +329,26 @@ class TripScreen extends StatelessWidget {
       switch (selected) {
         case 'edit':
           try {
-            Get.toNamed(PageConstant.MaintainTripPage, arguments: {"trip_id": trip.id});
+            Get.toNamed(
+              PageConstant.MaintainTripPage,
+              arguments: {"trip_id": trip.id},
+            );
           } catch (e) {
-            CustomSnackBar.show(title: 'Error', message: 'Failed to open edit page: $e');
+            CustomSnackBar.show(
+              title: 'Error',
+              message: 'Failed to open edit page: $e',
+            );
           }
           break;
 
         case 'archive':
           try {
-            // tripController.archiveTrip(trip);
-            CustomSnackBar.show(title: 'Archived', message: '${trip.tripName} archived successfully');
+           tripController.addToArchive(trip);
           } catch (e) {
-            CustomSnackBar.show(title: 'Error', message: 'Failed to archive trip: $e');
+            CustomSnackBar.show(
+              title: 'Error',
+              message: 'Failed to archive trip: $e',
+            );
           }
           break;
 
@@ -290,9 +363,15 @@ class TripScreen extends StatelessWidget {
               try {
                 // await tripController.deleteTrip(trip);
                 Get.back();
-                CustomSnackBar.show(title: 'Deleted', message: '${trip.tripName} deleted');
+                CustomSnackBar.show(
+                  title: 'Deleted',
+                  message: '${trip.tripName} deleted',
+                );
               } catch (e) {
-                CustomSnackBar.show(title: 'Error', message: 'Failed to delete trip: $e');
+                CustomSnackBar.show(
+                  title: 'Error',
+                  message: 'Failed to delete trip: $e',
+                );
               }
             },
           );

@@ -7,6 +7,7 @@ class UserController extends GetxController {
   final RxString _userName = ''.obs;
   final RxString _userEmail = ''.obs;
   final RxString _photoURL = ''.obs;
+  final Rxn<User> firebaseUser = Rxn<User>();
 
   UserController() {
     _loadUser();
@@ -72,6 +73,7 @@ class UserController extends GetxController {
 
   void listenToAuthChanges() {
     FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+      firebaseUser.value = user;
       if (user != null) {
         await _syncWithFirebase();
       } else {

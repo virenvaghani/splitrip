@@ -8,6 +8,7 @@ import '../theme/theme_colors.dart';
 class AppStrings {
   static const String newTripTitle = 'New Trip';
   static const String createTrip = 'Create Trip';
+  static const String updateTrip = "Update Trip";
   static const String selectEmojiLabel = 'Select trip emoji';
   static const String defaultEmoji = '😊';
   static const String titleLabel = 'Title';
@@ -26,6 +27,8 @@ class AppStrings {
   static const String  memberInvalid = "member is invalid";
   static const String  nameValidation = "Name is invalid";
   static const String  tripNameValidation = "Trip Name  is invalid";
+
+
 
 }
 
