@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:splitrip/controller/user_controller.dart';
-import 'package:splitrip/controller/theme_controller.dart';
+import 'package:splitrip/controller/profile/user_controller.dart';
+import 'package:splitrip/controller/theme/theme_controller.dart';
 import 'package:splitrip/data/trip_constant.dart';
 
 class ProfileDetailsPage extends StatelessWidget {
@@ -74,7 +74,7 @@ class ProfileDetailsPage extends StatelessWidget {
               onTap: () {
                 if (photoUrl.isNotEmpty) _showProfileImage(context, photoUrl);
               },
-              child: CircleAvatar(
+              child:CircleAvatar(
                 radius: 48,
                 backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
                 backgroundColor: theme.colorScheme.primaryContainer,
@@ -91,7 +91,7 @@ class ProfileDetailsPage extends StatelessWidget {
             ),
             AppSpacers.medium,
             Text(
-              displayName,
+              user.displayName.toString(),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
@@ -99,7 +99,7 @@ class ProfileDetailsPage extends StatelessWidget {
             ),
             AppSpacers.tiny,
             Text(
-              email,
+              user.email.toString(),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),

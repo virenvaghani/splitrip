@@ -9,7 +9,10 @@ class EmojiController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    selectedEmoji.value = getRandomEmoji();
+    // Only set default emoji if none is selected (e.g., for new trips)
+    if (selectedEmoji.value == null) {
+      selectedEmoji.value = getDefaultEmoji();
+    }
   }
 
   void updateEmoji(EmojiData emoji) {
@@ -18,12 +21,41 @@ class EmojiController extends GetxController {
 
   EmojiData? getEmojiDataByString(String? emojiString) {
     if (emojiString == null || emojiString.isEmpty) {
+      print('Emoji string is null or empty, using default emoji');
       return _getDefaultEmoji();
     }
 
+    // Log the raw emoji string for debugging
+    print('Received emoji string: "$emojiString" (length: ${emojiString.length}, code units: ${emojiString.codeUnits})');
+
+    // Check if emojiString is a valid emoji character
+    if (RegExp(
+      r'[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1FAFF}\u{FE0F}]' +
+          r'|[\u{1F1E6}-\u{1F1FF}]{2}' + // Regional indicators (flags)
+          r'|[\u{1F466}-\u{1F469}][\u{1F3FB}-\u{1F3FF}]' + // Skin tone modifiers
+          r'|\u{200D}[\u{1F466}-\u{1F469}\u{1F9D1}-\u{1F9D5}]', // Zero-width joiner sequences
+      unicode: true,
+    ).hasMatch(emojiString)) {
+      print('Using raw emoji from database: $emojiString');
+      return EmojiData(
+        id: 'custom',
+        char: emojiString,
+        name: 'Custom Emoji',
+        unified: 'custom',
+        category: 'Custom',
+        skin: 0,
+      );
+    }
+
+    // Try to match unified code or name in _emojiList
     final matchedEmoji = _emojiList.firstWhere(
-          (emoji) => emoji['char'] == emojiString || emoji['unified'] == emojiString,
-      orElse: () => _getDefaultMap(),
+          (emoji) =>
+      emoji['unified'].toLowerCase() == emojiString.toLowerCase() ||
+          emoji['name'].toLowerCase() == emojiString.toLowerCase(),
+      orElse: () {
+        print('No matching emoji found for: "$emojiString", using default emoji');
+        return _getDefaultMap();
+      },
     );
 
     return EmojiData(
@@ -34,6 +66,10 @@ class EmojiController extends GetxController {
       category: matchedEmoji['category'] ?? 'Unknown',
       skin: matchedEmoji['skin'] ?? 0,
     );
+  }
+
+  EmojiData getDefaultEmoji() {
+    return _getDefaultEmoji();
   }
 
   EmojiData getRandomEmoji() {
@@ -50,7 +86,14 @@ class EmojiController extends GetxController {
   }
 
   // Helpers
-  EmojiData _getDefaultEmoji() => getEmojiDataByString('🧳')!;
+  EmojiData _getDefaultEmoji() => EmojiData(
+    id: 'luggage',
+    char: '🧳',
+    name: 'Luggage',
+    unified: '1F9F3',
+    category: 'Travel & Places',
+    skin: 0,
+  );
 
   Map<String, dynamic> _getDefaultMap() => {
     'id': 'default',
@@ -131,6 +174,54 @@ class EmojiController extends GetxController {
       'char': '🧳',
       'name': 'Luggage',
       'unified': '1F9F3',
+      'category': 'Travel & Places',
+      'skin': 0,
+    },
+    {
+      'id': 'sunglasses',
+      'char': '😎',
+      'name': 'Smiling Face with Sunglasses',
+      'unified': '1F60E',
+      'category': 'Smileys & People',
+      'skin': 0,
+    },
+    {
+      'id': 'beach',
+      'char': '🏖️',
+      'name': 'Beach with Umbrella',
+      'unified': '1F3D6-FE0F',
+      'category': 'Travel & Places',
+      'skin': 0,
+    },
+    {
+      'id': 'airplane',
+      'char': '✈️',
+      'name': 'Airplane',
+      'unified': '2708-FE0F',
+      'category': 'Travel & Places',
+      'skin': 0,
+    },
+    {
+      'id': 'camera',
+      'char': '📸',
+      'name': 'Camera with Flash',
+      'unified': '1F4F8',
+      'category': 'Objects',
+      'skin': 0,
+    },
+    {
+      'id': 'world_map',
+      'char': '🗺️',
+      'name': 'World Map',
+      'unified': '1F5FA-FE0F',
+      'category': 'Travel & Places',
+      'skin': 0,
+    },
+    {
+      'id': 'compass',
+      'char': '🧭',
+      'name': 'Compass',
+      'unified': '1F9ED',
       'category': 'Travel & Places',
       'skin': 0,
     },

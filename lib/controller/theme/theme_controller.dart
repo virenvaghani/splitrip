@@ -1,8 +1,8 @@
 // lib/controller/theme_controller.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../data/constants.dart';
-import '../theme/theme2.dart';
+import '../../data/constants.dart';
+import '../../theme/theme.dart';
 
 class ThemeController extends ChangeNotifier {
   bool _isDarkMode = false;

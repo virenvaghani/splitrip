@@ -1,39 +1,59 @@
 // lib/main.dart
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:splitrip/controller/emoji_controller.dart';
-import 'package:splitrip/controller/friend/friend_controller.dart';
-import 'package:splitrip/controller/profile_controller.dart';
-import 'package:splitrip/controller/trip/trip_controller.dart';
-import 'package:splitrip/data/constants.dart';
-import 'package:splitrip/services/auth_service.dart';
-import 'package:splitrip/views/profile/profile_page.dart';
-import 'package:splitrip/views/trip/maintain_trip_screen_.dart';
-import 'package:splitrip/views/trip/transaction/add_transaction_screen.dart';
-import 'package:splitrip/views/trip/trip_screen.dart';
-import 'controller/animation_controller.dart';
-import 'controller/button_controller.dart';
-import 'controller/theme_controller.dart';
-import 'controller/user_controller.dart';
-import 'controller/app_page_controller.dart';
+import 'package:splitrip/controller/splash_screen/splash_screen_controller.dart';
+import 'package:splitrip/controller/trip/trip_screen_controller.dart';
+
+import 'firebase_options.dart';
+import 'data/constants.dart';
+
+// Services & Controllers
+import 'services/auth_service.dart';
+import 'controller/loginButton/button_controller.dart';
+import 'controller/theme/theme_controller.dart';
+import 'controller/profile/user_controller.dart';
+import 'controller/profile/profile_controller.dart';
+import 'controller/friend/friend_controller.dart';
+import 'controller/trip/emoji_controller.dart';
+import 'controller/trip/trip_controller.dart';
+import 'controller/trip/trip_detail_controller.dart';
+import 'controller/trip/transaction_controller.dart';
+import 'controller/appPageController/app_page_controller.dart';
+import 'controller/participant/participent_selection_controller.dart';
+
+// Views
 import 'views/dashboard.dart';
-import 'firebase_options.dart'; // Import AnimationProvider
+import 'views/splash_screen.dart';
+import 'views/profile/profile_page.dart';
+import 'views/trip/trip_screen.dart';
+import 'views/trip/maintain_trip_screen_.dart';
+import 'views/trip/transaction/transaction_screen.dart';
+import 'views/trip/archive_screen.dart';
+import 'views/trip/trip_detail_screen.dart';
+import 'views/participant/participant_selection_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Register GetX controllers
+  // ✅ Global GetX controller registration
   Get.put(AuthService());
   Get.put(UserController());
   Get.put(TripController());
+  Get.put(TripScreenController());
   Get.put(FriendController());
   Get.put(AppPageController());
-  Get.lazyPut(() => ProfileController(),);
-
+  Get.put(TripDetailController());
+  Get.put(TransactionScreenController());
   Get.put(EmojiController());
+  Get.lazyPut(() => SplashScreenController());
+  Get.lazyPut(
+    () => TripParticipantSelectorController(0),
+  ); // Initialized with dummy tripId
 
   runApp(const MyApp());
 }
@@ -51,31 +71,49 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeController>(
         builder: (context, themeController, child) {
           return GetMaterialApp(
+
+            debugShowCheckedModeBanner: false,
             defaultTransition: Transition.rightToLeftWithFade,
             transitionDuration: const Duration(milliseconds: 300),
-            debugShowCheckedModeBanner: false,
             themeMode:
                 themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             theme: themeController.currentTheme,
             darkTheme: themeController.currentTheme,
-            home: DashBoard(),
+            initialRoute: PageConstant.SplashScreen,
             getPages: [
-              /* GetPage(
-                name: Constant().routeSplashActivity,
-                page: () => const SplashActivity(),
-                //page: () => const DashboardActivity(), IDENTITY_INSERT is set to OFF.
-              ),*/
+              GetPage(
+                name: PageConstant.SplashScreen,
+                page: () => const SplashScreen(),
+              ),
+              GetPage(
+                name: PageConstant.SelectionPage,
+                page: () => TripParticipantSelectorPage(),
+              ),
               GetPage(
                 name: PageConstant.MaintainTripPage,
                 page: () => MaintainTripScreen(),
               ),
-              GetPage(name: PageConstant.ProfilePage, page: () => ProfilePage(),),
-              GetPage(name: PageConstant.TripScreen, page: () => TripScreen(),),
+              GetPage(
+                name: PageConstant.ProfilePage,
+                page: () => ProfilePage(),
+              ),
+              GetPage(name: PageConstant.TripScreen, page: () => TripScreen()),
               GetPage(
                 name: PageConstant.AddTransactionScreen,
-                page: () =>  AddTransactionScreen(),
+                page: () => TransactionScreen(),
               ),
-
+              GetPage(
+                name: PageConstant.ArchiveScreen,
+                page: () => ArchiveScreen(),
+              ),
+              GetPage(
+                name: PageConstant.TripDetailScreen,
+                page: () => TripDetailScreen(),
+              ),
+              GetPage(
+                name: PageConstant.Dashboard,
+                page: () => const DashBoard(),
+              ),
             ],
           );
         },
@@ -83,4 +121,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -1,7 +1,7 @@
 import 'package:emoji_selector/emoji_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controller/emoji_controller.dart';
+import '../controller/trip/emoji_controller.dart';
 
 class EmojiSelectorBottomSheet extends StatelessWidget {
   const EmojiSelectorBottomSheet({super.key});

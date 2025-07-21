@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:splitrip/data/authenticate_value.dart';
 import 'package:splitrip/data/token.dart';
 
 class ApiService {
@@ -27,12 +28,21 @@ class ApiService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print('User: ${response.body}');
         final responseData = jsonDecode(response.body);
-        final token = responseData['token']?.trim(); // Trim to avoid spaces
+        final token = responseData['token']?.trim();
+        final userId = responseData['user']['id'].toString();
+        final userName = responseData['user']['username']?.toString() ?? displayName;
+        final userEmail = responseData['user']['email']?.toString() ?? email;
+        final userImage = responseData['user']['image']?.toString() ?? photoUrl;
 
         if (token != null && token.isNotEmpty) {
-          await TokenStorage.saveToken(token); // Save the actual token
-          print('User data saved and token stored: $token');
+          await TokenStorage.saveToken(token);
+          await AuthStatusStorage.saveUserImage(userImage);
+          await AuthStatusStorage.saveUserName(userName);
+          await AuthStatusStorage.saveUserEmail(userEmail);
+          await AuthStatusStorage.saveUserId(userId);
+          print('All user data saved successfully');
         } else {
           print('Token not found or invalid in response');
           Get.snackbar('Error', 'Token not found in backend response');
@@ -46,4 +56,5 @@ class ApiService {
       Get.snackbar('Error', 'Error saving user data: $e');
     }
   }
+
 }

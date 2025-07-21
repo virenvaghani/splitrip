@@ -1,7 +1,8 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../data/constants.dart';
+import 'package:splitrip/data/authenticate_value.dart';
+import '../../data/constants.dart';
 
 class UserController extends GetxController {
   final RxString _userName = ''.obs;
@@ -18,30 +19,45 @@ class UserController extends GetxController {
   String get userEmail => _userEmail.value;
   String get photoUrl => _photoURL.value;
 
-  Future<void> setUser(String name, String email, [String? photoURL]) async {
+  Future<void> setUserFromProvider({
+    required String provider,
+    required Map<String, dynamic> providerData,
+  }) async {
     try {
-      _userName.value = name.isNotEmpty ? name : 'Guest';
-      _userEmail.value = email.isNotEmpty ? email : 'Email';
-      _photoURL.value = photoURL?.isNotEmpty == true ? photoURL! : '';
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString(Kconstant.UserNameKey, _userName.value);
-      await prefs.setString(Kconstant.UserEmail, _userEmail.value);
-      await prefs.setString(Kconstant.photoURL, _photoURL.value);
+      String name = 'Guest';
+      String email = 'Email';
+      String imageUrl = '';
+
+
+      if (provider == 'facebook') {
+        name = providerData['name'] ?? 'Facebook User';
+        email = providerData['email'] ?? 'Email';
+        imageUrl = providerData['picture']?['data']?['url'] ?? '';
+      } else if (provider == 'google') {
+        name = providerData['displayName'] ?? 'Google User';
+        email = providerData['email'] ?? 'Email';
+        imageUrl = providerData['photoUrl'] ?? '';
+      }
+      _loadUser();
+
     } catch (e) {
-      Get.snackbar('Error', 'Failed to save user data: $e');
+      Get.snackbar('Error', 'Failed to save user data: \$e');
     }
   }
 
   Future<void> _loadUser() async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      _userName.value = prefs.getString(Kconstant.UserNameKey) ?? 'Guest';
-      _userEmail.value = prefs.getString(Kconstant.UserEmail) ?? 'Email';
-      _photoURL.value = prefs.getString(Kconstant.photoURL) ?? '';
+      _userName.value = (await AuthStatusStorage.getUserName()) ?? 'Guest';
+      _userEmail.value = (await AuthStatusStorage.getUserEmail()) ?? 'Email';
+      _photoURL.value = (await AuthStatusStorage.getUserImage()) ?? '';
+      if (_userName.value.isNotEmpty && _userName.value != 'Guest') {
+        print('User loaded: ${_userName.value}');
+      }
     } catch (e) {
       Get.snackbar('Error', 'Failed to load user data: $e');
     }
   }
+
 
   Future<void> _syncWithFirebase() async {
     try {
@@ -50,10 +66,13 @@ class UserController extends GetxController {
         final String name = user.displayName ?? 'Guest';
         final String email = user.email ?? 'Email';
         final String? photoURL = user.photoURL;
-        await setUser(name, email, photoURL);
+        _userName.value = name;
+        _userEmail.value = email;
+        _photoURL.value = photoURL ?? '';
+
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to sync with Firebase: $e');
+      Get.snackbar('Error', 'Failed to sync with Firebase: \$e');
     }
   }
 
@@ -62,12 +81,9 @@ class UserController extends GetxController {
       _userName.value = 'Guest';
       _userEmail.value = 'Email';
       _photoURL.value = '';
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove(Kconstant.UserNameKey);
-      await prefs.remove(Kconstant.UserEmail);
-      await prefs.remove(Kconstant.photoURL);
+      await AuthStatusStorage.clearAllUserData();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to clear user data: $e');
+      Get.snackbar('Error', 'Failed to clear user data: \$e');
     }
   }
 
@@ -86,5 +102,6 @@ class UserController extends GetxController {
   void onInit() {
     super.onInit();
     listenToAuthChanges();
+    _loadUser();
   }
 }

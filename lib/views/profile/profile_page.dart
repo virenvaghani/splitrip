@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:splitrip/controller/profile_controller.dart';
+import 'package:splitrip/controller/profile/profile_controller.dart';
 import 'package:splitrip/views/profile/profie_detail_page.dart';
 import 'package:splitrip/views/profile/sign_up_page.dart';
 import 'package:splitrip/widgets/myappbar.dart';
@@ -25,6 +25,7 @@ class ProfilePage extends StatelessWidget {
 
   _appar({required BuildContext context}) {
     return CustomAppBar(
+      centerTitle: true,
       title: "Profile",
       CenterTitle: false,
       actions: [

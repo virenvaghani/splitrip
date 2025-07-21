@@ -1,249 +1,254 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:splitrip/data/constants.dart';
-
 import '../../controller/trip/trip_detail_controller.dart';
 
-class TripPage extends StatelessWidget {
-  const TripPage({super.key});
+class TripDetailScreen extends StatelessWidget {
+  const TripDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final TripDetailController controller = Get.put(TripDetailController());
-
-    return Obx(() {
-      if (controller.isLoading.value) {
-        controller.fetchTripData(); // Fetch once
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
-
-      final theme = Theme.of(context);
-      final trip = controller.trip;
-      final summary = controller.summary;
-      final todayExpenses = controller.todayTransactions;
-
-      return Scaffold(
-        appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(trip['emoji'], style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 8),
-              Text(
-                trip['name'],
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          centerTitle: true,
-          backgroundColor: theme.colorScheme.surface,
-          elevation: 0,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Obx(
-                () => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildTab(context, controller, 'Expenses', 0, 0),
-                    _buildTab(
-                      context,
-                      controller,
-                      'Balances',
-                      1,
-                      controller.tabs['balances_notification'],
-                    ),
-                    _buildTab(
-                      context,
-                      controller,
-                      'Photos',
-                      2,
-                      controller.tabs['photos_notification'],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        body: Obx(() {
-          switch (controller.selectedTabIndex.value) {
-            case 1:
-              return const Center(child: Text('Balances coming soon'));
-            case 2:
-              return const Center(child: Text('Photos coming soon'));
-            default:
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildSummaryCard(context, controller),
-                  if (todayExpenses.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Text('Today', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    ...todayExpenses.map(
-                      (expense) =>
-                          _buildExpenseCard(context, controller, expense),
-                    ),
-                  ],
-                ],
-              );
-          }
-        }),
-        floatingActionButton: FloatingActionButton(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
-          onPressed: () {
-            final tab = controller.selectedTabIndex.value;
-            if (tab == 0) {
-              Get.toNamed(
-                PageConstant.AddTransactionScreen,
-                arguments: {'type': 'Expense'},
-              );
-            } else if (tab == 1) {
-              Get.snackbar("Balances", "Balances screen coming soon");
-            } else {
-              Get.snackbar("Photos", "Photos screen coming soon");
-            }
-          },
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.secondary,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Center(child: Icon(Icons.add, color: Colors.white)),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildTab(
-    BuildContext context,
-    TripDetailController controller,
-    String title,
-    int index,
-    int? badgeCount,
-  ) {
     final theme = Theme.of(context);
-    final isActive = controller.selectedTabIndex.value == index;
+    final tripDetailController = Get.put(TripDetailController());
+    final int tripId = int.tryParse(Get.arguments['tripId'].toString()) ?? 0;
 
-    return GestureDetector(
-      onTap: () => controller.changeTab(index),
-      child: Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color:
-                  isActive
-                      ? theme.colorScheme.primary.withOpacity(0.1)
-                      : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              title,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color:
-                    isActive
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.6),
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-          if ((badgeCount ?? 0) > 0)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  badgeCount.toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-        ],
+    tripDetailController.fetchTripDetailById(context: context, tripId: tripId);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: theme.scaffoldBackgroundColor,
+        statusBarColor: theme.scaffoldBackgroundColor,
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: SafeArea(
+        child: Scaffold(
+          appBar: _buildAppBar(context, tripDetailController),
+          body: Obx(() {
+            if (tripDetailController.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            return _buildBodyContent(context, tripDetailController);
+          }),
+          floatingActionButton: _buildFAB(context, tripDetailController),
+        ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context,
-    TripDetailController controller,
-  ) {
+  PreferredSizeWidget _buildAppBar(BuildContext context,
+      TripDetailController controller) {
     final theme = Theme.of(context);
+    return AppBar(
+      actions: [
+        Obx(() {
+          return controller.isLoading.value ? SizedBox.shrink() : IconButton(
+            onPressed: () {},
+            icon: Icon(Bootstrap.three_dots_vertical),
+          );
+        },)
+      ],
+      title: Obx(() {
+        final trip = controller.trip;
+        return controller.isLoading.value ? SizedBox.shrink() : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+                trip['trip_emoji'] ?? '', style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 8),
+            Text(
+              trip['trip_name'] ?? 'Unnamed Trip',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                  color: theme.colorScheme.onSurface),
+            ),
+          ],
+        );
+      }),
+      centerTitle: true,
+      backgroundColor: theme.colorScheme.surface,
+      elevation: 0,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Obx(() {
+            return controller.isLoading.value ? SizedBox.shrink() : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(3, (index) {
+                final titles = ['Expenses', 'Balances', 'Photos'];
+                return _buildTab(context, controller, titles[index], index);
+              }),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBodyContent(BuildContext context,
+      TripDetailController controller) {
+    final todayExpenses = controller.todayTransactions;
+    switch (controller.selectedTabIndex.value) {
+      case 1:
+        return const Center(child: Text('Balances coming soon'));
+      case 2:
+        return const Center(child: Text('Photos coming soon'));
+      default:
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildSummaryCard(context, controller),
+            const SizedBox(height: 24),
+
+            if (controller.todayTransactions.isNotEmpty) ...[
+              Text('Today', style: Theme
+                  .of(context)
+                  .textTheme
+                  .titleMedium),
+              const SizedBox(height: 8),
+              ...controller.todayTransactions.map((expense) =>
+                  _buildExpenseCard(context, controller, expense)),
+              const SizedBox(height: 16),
+            ],
+
+            if (controller.yesterdayTransactions.isNotEmpty) ...[
+              Text('Yesterday', style: Theme
+                  .of(context)
+                  .textTheme
+                  .titleMedium),
+              const SizedBox(height: 8),
+              ...controller.yesterdayTransactions.map((expense) =>
+                  _buildExpenseCard(context, controller, expense)),
+              const SizedBox(height: 16),
+            ],
+
+            if (controller.olderTransactions.isNotEmpty) ...[
+              Text('Earlier', style: Theme
+                  .of(context)
+                  .textTheme
+                  .titleMedium),
+              const SizedBox(height: 8),
+              ...controller.olderTransactions.map((expense) =>
+                  _buildExpenseCard(context, controller, expense)),
+            ],
+          ],
+        );
+    }
+  }
+
+  Widget _buildFAB(BuildContext context, TripDetailController controller) {
+    final theme = Theme.of(context);
+    return FloatingActionButton(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+      onPressed: () {
+        final tab = controller.selectedTabIndex.value;
+        if (tab == 0) {
+          Get.toNamed(PageConstant.AddTransactionScreen,
+              arguments: {'type': 'Expense'});
+        } else {
+          Get.snackbar(tab == 1 ? "Balances" : "Photos", "Screen coming soon");
+        }
+      },
+      backgroundColor: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: const Center(child: Icon(Icons.add, color: Colors.white)),
+      ),
+    );
+  }
+
+  Widget _buildTab(BuildContext context, TripDetailController controller,
+      String title, int index) {
+    final theme = Theme.of(context);
+    final isActive = controller.selectedTabIndex.value == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.changeTab(index),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive
+                ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: isActive ? theme.colorScheme.primary : theme.colorScheme
+                  .onSurface.withValues(alpha: 0.6),
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(BuildContext context,
+      TripDetailController controller) {
+    final theme = Theme.of(context);
+    final summary = controller.summary;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primary.withOpacity(0.1),
-            theme.colorScheme.secondary.withOpacity(0.1),
+            theme.colorScheme.primary.withValues(alpha: 0.05),
+            theme.colorScheme.secondary.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildSummaryRow(
-            context,
-            'Total Expenses',
-            controller.formatCurrency(controller.summary['total_expenses']),
-          ),
+          _buildSummaryRow(context, 'Total Expenses', controller.formatCurrency(
+              (summary['total_expenses'] ?? 0.0) as double)),
           const Divider(),
-          _buildSummaryRow(
-            context,
-            'My Expenses',
-            controller.formatCurrency(controller.summary['my_expenses']),
-          ),
+          _buildSummaryRow(context, 'My Expenses', controller.formatCurrency(
+              (summary['my_expenses'] ?? 0.0) as double)),
           const Divider(),
-          _buildSummaryRow(
-            context,
-            'You are owed',
-            controller.formatCurrency(controller.summary['amount_owed']),
-            highlight: true,
-          ),
+          _buildSummaryRow(context, 'You are owed', controller.formatCurrency(
+              (summary['amount_owed'] ?? 0.0) as double), highlight: true),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(
-    BuildContext context,
-    String label,
-    String value, {
-    bool highlight = false,
-  }) {
+  Widget _buildSummaryRow(BuildContext context, String label, String value,
+      {bool highlight = false}) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: theme.textTheme.bodyLarge),
+          Text(label, style: theme.textTheme.titleMedium),
           Text(
             value,
-            style: theme.textTheme.bodyLarge?.copyWith(
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
               color: highlight ? theme.colorScheme.primary : null,
             ),
@@ -253,70 +258,159 @@ class TripPage extends StatelessWidget {
     );
   }
 
-  Widget _buildExpenseCard(
-    BuildContext context,
-    TripDetailController controller,
-    Map<String, dynamic> expense,
-  ) {
+  Widget _buildExpenseCard(BuildContext context,
+      TripDetailController controller, Map<String, dynamic> expense) {
     final theme = Theme.of(context);
+
+    final String category = expense['category'] ?? 'Uncategorized';
+    final String paidBy = expense['paid_by'] ?? 'Unknown';
+    final double amount = (expense['amount'] as num?)?.toDouble() ?? 0.0;
+    final double userShare = (expense['user_share'] as num?)?.toDouble() ?? 0.0;
+    final String dateString = expense['date'] ?? '';
+    final String transactionType = (expense['type'] ?? 'expense').toLowerCase();
+
+    DateTime? date;
+    try {
+      date = DateTime.parse(dateString);
+    } catch (_) {}
+
+    String formattedDate = '';
+    if (date != null) {
+      final now = DateTime.now();
+      if (controller.isSameDate(date, now)) {
+        formattedDate = "Today";
+      } else
+      if (controller.isSameDate(date, now.subtract(const Duration(days: 1)))) {
+        formattedDate = "Yesterday";
+      } else {
+        formattedDate = controller.formatDate(date);
+      }
+    }
+
+    Color categoryColor = theme.colorScheme.primary;
+    IconData categoryIcon = Icons.category;
+
+    switch (category.toLowerCase()) {
+      case 'food':
+        categoryColor = Colors.orange;
+        categoryIcon = Icons.restaurant;
+        break;
+      case 'transport':
+        categoryColor = Colors.blue;
+        categoryIcon = Icons.directions_car;
+        break;
+      case 'shopping':
+        categoryColor = Colors.purple;
+        categoryIcon = Icons.shopping_bag;
+        break;
+      case 'hotel':
+        categoryColor = Colors.green;
+        categoryIcon = Icons.hotel;
+        break;
+      case 'entertainment':
+        categoryColor = Colors.red;
+        categoryIcon = Icons.movie;
+        break;
+      case 'salary':
+      case 'freelance payment':
+      case 'bonus':
+        categoryColor = Colors.green;
+        categoryIcon = Icons.attach_money;
+        break;
+      case 'bank transfer':
+      case 'payback':
+        categoryColor = Colors.orange;
+        categoryIcon = Icons.swap_horiz;
+        break;
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-        ),
+        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.15)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.orange,
-              child: Icon(Icons.local_drink, color: Colors.white),
+              radius: 24,
+              backgroundColor: categoryColor.withValues(alpha: 0.2),
+              child: Icon(categoryIcon, color: categoryColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    expense['category'],
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          category,
+                          style: theme.textTheme.labelLarge,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: getTypeColor(transactionType, theme),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          transactionType.toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "paid by ${expense['paid_by']}",
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
+                  Text(transactionType ==  'transfer' ? 'from $paidBy' : 'Paid by $paidBy ' ,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
+                  if (formattedDate.isNotEmpty)
+                    Text(formattedDate,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha:
+                                0.4))),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  controller.formatCurrency(expense['amount']),
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  controller.formatCurrency(expense['user_share']),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
+                Text(controller.formatCurrency(amount),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold)),
+                Text(controller.formatCurrency(userShare),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Color getTypeColor(String type, ThemeData theme) {
+    switch (type.toLowerCase()) {
+      case 'expense':
+        return theme.colorScheme.error.withValues(alpha: 0.5);
+      case 'income':
+        return Colors.green.withValues(alpha: 0.5);
+      case 'transfer':
+        return Colors.orange.withValues(alpha: 0.5);
+      default:
+        return theme.colorScheme.primary.withValues(alpha: 0.5);
+    }
   }
 }

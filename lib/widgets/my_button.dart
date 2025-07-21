@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../controller/button_controller.dart';
+import '../controller/loginButton/button_controller.dart';
 
 class CustomAnimatedButton extends StatelessWidget {
   final String buttonId;

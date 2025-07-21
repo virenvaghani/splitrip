@@ -75,57 +75,29 @@ class AuthService extends GetxService {
         final OAuthCredential facebookAuthCredential =
         FacebookAuthProvider.credential(loginResult.accessToken!.tokenString);
 
-        try {
-          final userCredential = await _auth.signInWithCredential(facebookAuthCredential);
-          final facebookData = await _facebookAuth.getUserData(
-            fields: "name,email,picture.width(200)",
-          );
+        final userCredential = await _auth.signInWithCredential(facebookAuthCredential);
+        final facebookData = await _facebookAuth.getUserData(
+          fields: "name,email,picture.width(200)",
+        );
 
-          print('Facebook Sign-In successful, user data: $facebookData');
+        // Always call backend after successful sign in
+        await ApiService().saveUserToBackend(
+          email: facebookData['email'] ?? userCredential.user?.email ?? '',
+          displayName: facebookData['name'] ?? userCredential.user?.displayName ?? 'Facebook User',
+          photoUrl: facebookData['picture']?['data']?['url'] ?? userCredential.user?.photoURL ?? '',
+          provider: 'facebook',
+        );
 
-          return {
-            'firebaseUser': userCredential.user,
-            'providerData': {
-              'displayName': facebookData['name'] ?? userCredential.user?.displayName ?? 'Facebook User',
-              'email': facebookData['email'] ?? userCredential.user?.email ?? 'Email',
-              'photoUrl': facebookData['picture']?['data']?['url'] ?? userCredential.user?.photoURL,
-            },
-          };
-        } on FirebaseAuthException catch (e) {
-          print('Firebase Auth error: $e');
-          if (e.code == 'account-exists-with-different-credential') {
-            print('Existing account found for email: ${e.email}, creating new account');
-            // Since multiple accounts are allowed, retry with a new credential
-            try {
-              final userCredential = await _auth.signInWithCredential(facebookAuthCredential);
-              final facebookData = await _facebookAuth.getUserData(
-                fields: "name,email,picture.width(200)",
-              );
-              await ApiService().saveUserToBackend(
-                email: facebookData['email'] ?? userCredential.user?.email ?? '',
-                displayName: facebookData['name'] ?? userCredential.user?.displayName ?? 'Facebook User',
-                photoUrl: facebookData['picture']?['data']?['url'] ?? userCredential.user?.photoURL ?? '',
-                provider: 'facebook',
-              );
-              print('New Facebook account created, user data: $facebookData');
-              return {
-                'firebaseUser': userCredential.user,
-                'providerData': {
-                  'displayName': facebookData['name'] ?? userCredential.user?.displayName ?? 'Facebook User',
-                  'email': facebookData['email'] ?? userCredential.user?.email ?? 'Email',
-                  'photoUrl': facebookData['picture']?['data']?['url'] ?? userCredential.user?.photoURL,
-                },
-              };
-            } catch (retryError) {
-              print('Failed to create new Facebook account: $retryError');
-              Get.snackbar('Error', 'Failed to create Facebook account: $retryError');
-              return null;
-            }
-          } else {
-            Get.snackbar('Error', 'Facebook Sign-In failed: $e');
-            return null;
-          }
-        }
+        print('Facebook Sign-In successful, user data: $facebookData');
+
+        return {
+          'firebaseUser': userCredential.user,
+          'providerData': {
+            'displayName': facebookData['name'] ?? userCredential.user?.displayName ?? 'Facebook User',
+            'email': facebookData['email'] ?? userCredential.user?.email ?? 'Email',
+            'photoUrl': facebookData['picture']?['data']?['url'] ?? userCredential.user?.photoURL,
+          },
+        };
       } else if (loginResult.status == LoginStatus.cancelled) {
         print('Facebook Sign-In cancelled');
         return null;
@@ -140,6 +112,7 @@ class AuthService extends GetxService {
     }
   }
 
+
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
@@ -149,6 +122,13 @@ class AuthService extends GetxService {
       print('Sign-out error: $e');
       Get.snackbar('Error', 'Sign-out failed: $e');
     }
+  }
+
+  bool isLoggedIn() {
+    return _auth.currentUser != null;
+  }
+  Stream<bool> get isLoggedInStream {
+    return _auth.authStateChanges().map((User? user) => user != null);
   }
 }
 

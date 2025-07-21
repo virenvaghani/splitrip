@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
-import '../controller/app_page_controller.dart';
+import '../controller/appPageController/app_page_controller.dart';
 
 class MyNavigationBar extends StatelessWidget {
   const MyNavigationBar({super.key});
@@ -11,42 +10,102 @@ class MyNavigationBar extends StatelessWidget {
     final theme = Theme.of(context);
     final AppPageController pageController = Get.find<AppPageController>();
 
-    return Obx(
-          () => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: GNav(
-          tabs: const [
-            GButton(icon: Icons.group, text: "Friends"),
-            GButton(icon: Icons.home, text: "Home"),
-            GButton(icon: Icons.person, text: "Profile"),
-          ],
-          onTabChange: (index) {
-            pageController.changePage(index);
+    final items = [
+      {'icon': Icons.group, 'label': 'Friends'},
+      {'icon': Icons.home, 'label': 'Home'},
+      {'icon': Icons.person, 'label': 'Profile'},
+    ];
+
+    return Obx(() {
+      final selectedIndex = pageController.pageIndex.value;
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final totalWidth = constraints.maxWidth;
+            final itemWidth = totalWidth / items.length;
+            return Container(
+              height: 80,
+              clipBehavior: Clip.none,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Sliding background indicator behind the row only
+                  Positioned.fill(
+                    child: Row(
+                      children: List.generate(items.length, (index) {
+                        final isSelected = selectedIndex == index;
+                        return Expanded(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 8),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                  // Foreground content
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(items.length, (index) {
+                      final isSelected = selectedIndex == index;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => pageController.changePage(index),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                items[index]['icon'] as IconData,
+                                color: isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.iconTheme.color?.withValues(alpha: 0.6),
+                                size: 24,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                items[index]['label'].toString(),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: isSelected
+                                      ? theme.colorScheme.primary
+                                      : theme.textTheme.labelSmall!.color
+                                      ?.withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            );
           },
-          activeColor: theme.colorScheme.onPrimary,
-          tabBackgroundGradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.secondary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          gap: 8,
-          padding: const EdgeInsets.all(16),
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          selectedIndex: pageController.pageIndex.value,
-          textStyle: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.onPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-          tabBorderRadius: 30,
-          iconSize: 24,
         ),
-      ),
-    );
+      );
+    });
   }
 }

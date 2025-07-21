@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:splitrip/controller/profile_controller.dart';
-import 'package:splitrip/controller/theme_controller.dart';
+import 'package:splitrip/controller/profile/profile_controller.dart';
+import 'package:splitrip/controller/theme/theme_controller.dart';
 import 'package:splitrip/widgets/my_button.dart';
 
 class SignUpPage extends StatelessWidget {

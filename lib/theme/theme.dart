@@ -9,72 +9,72 @@ TextTheme buildTextTheme(Color textColor) {
   return TextTheme(
     // Large Displays
     displayLarge: baseTextStyle.copyWith(
-      fontSize: 58,
+      fontSize: 30, // Reduced from 54
       fontWeight: FontWeight.w300,
       letterSpacing: -0.5,
     ),
     displayMedium: baseTextStyle.copyWith(
-      fontSize: 46,
+      fontSize: 28, // Reduced from 42
       fontWeight: FontWeight.w300,
     ),
     displaySmall: baseTextStyle.copyWith(
-      fontSize: 38,
+      fontSize: 26, // Reduced from 34
       fontWeight: FontWeight.w400,
     ),
 
     // Headlines
     headlineLarge: baseTextStyle.copyWith(
-      fontSize: 32,
-      fontWeight: FontWeight.w600,
+      fontSize: 22, // Reduced from 28
+      fontWeight: FontWeight.w400,
     ),
     headlineMedium: baseTextStyle.copyWith(
-      fontSize: 28,
-      fontWeight: FontWeight.w600,
+      fontSize: 20, // Reduced from 24
+      fontWeight: FontWeight.w400,
     ),
     headlineSmall: baseTextStyle.copyWith(
-      fontSize: 24,
-      fontWeight: FontWeight.w600,
+      fontSize: 18, // Reduced from 20
+      fontWeight: FontWeight.w400,
     ),
 
     // Titles
     titleLarge: baseTextStyle.copyWith(
-      fontSize: 22,
+      fontSize: 16, // Reduced from 18
       fontWeight: FontWeight.w600,
     ),
     titleMedium: baseTextStyle.copyWith(
-      fontSize: 20,
+      fontSize: 14, // Reduced from 16
       fontWeight: FontWeight.w500,
     ),
     titleSmall: baseTextStyle.copyWith(
-      fontSize: 18,
+      fontSize: 12, // Reduced from 14
       fontWeight: FontWeight.w500,
     ),
 
     // Body Text
     bodyLarge: baseTextStyle.copyWith(
-      fontSize: 20,
+      fontSize: 16, // Reduced from 16
       fontWeight: FontWeight.w400,
     ),
     bodyMedium: baseTextStyle.copyWith(
-      fontSize: 18,
+      fontSize: 14, // Reduced from 14
       fontWeight: FontWeight.w400,
     ),
     bodySmall: baseTextStyle.copyWith(
-      fontSize: 16,
+      fontSize: 12, // Reduced from 12
       fontWeight: FontWeight.w400,
     ),
 
     // Labels
     labelLarge: baseTextStyle.copyWith(
-      fontSize: 18,
+      fontSize: 14, // Reduced from 14
       fontWeight: FontWeight.w500,
     ),
     labelMedium: baseTextStyle.copyWith(
-      fontSize: 16,
+      fontSize: 12, // Reduced from 12
       fontWeight: FontWeight.w500,
     ),
     labelSmall: baseTextStyle.copyWith(
-      fontSize: 14,
+      fontSize: 10, // Reduced from 10
       fontWeight: FontWeight.w500,
     ),
   );

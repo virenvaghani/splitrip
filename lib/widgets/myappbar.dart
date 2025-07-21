@@ -11,7 +11,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.actions,
     this.leading,
-    this. CenterTitle = true, TextStyle? titleTextStyle,
+    this. CenterTitle = true, TextStyle? titleTextStyle, required bool centerTitle,
   });
 
   @override
@@ -23,7 +23,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           Text(
             title,
             style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.1),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
             ),
           ),
           Text(title, style: theme.textTheme.headlineSmall),
@@ -37,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 gradient: LinearGradient(
                   colors: [
                     theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.3),
+                    theme.colorScheme.primary.withValues(alpha: 0.3),
                   ],
                 ),
               ),

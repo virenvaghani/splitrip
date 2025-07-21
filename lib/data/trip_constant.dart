@@ -27,9 +27,6 @@ class AppStrings {
   static const String  memberInvalid = "member is invalid";
   static const String  nameValidation = "Name is invalid";
   static const String  tripNameValidation = "Trip Name  is invalid";
-
-
-
 }
 
 
@@ -39,7 +36,7 @@ class AppPaddings {
   static const EdgeInsets smallPadding = EdgeInsets.all(8);
   static const EdgeInsets tinyPadding = EdgeInsets.all(4);
   static const EdgeInsets smallBottom = EdgeInsets.only(bottom: 2);
-  static const EdgeInsets tableCellPadding = EdgeInsets.symmetric(horizontal: 10, vertical: 12);
+  static const EdgeInsets tableCellPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 12);
 }
 
 class AppSpacers {
@@ -129,7 +126,12 @@ class AppStyles {
 }
 
 class AppConstants {
-  static const List<String> currencies = ['INR', 'USD', 'EUR', 'GBP', 'JPY'];
+  static const Map<String, String> currencies = {
+    'Indian Rupee': '₹',
+    'Euro': '€',
+    'British Pound': '£',
+    'US Dollar': '\$',
+  };
   static const Map<int, TableColumnWidth> tableColumnWidths = {
     0: FractionColumnWidth(0.50),
     1: FractionColumnWidth(0.20),

@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:splitrip/controller/app_page_controller.dart';
 import 'package:splitrip/controller/friend/friend_controller.dart';
+import 'package:splitrip/controller/profile/user_controller.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
-import 'package:splitrip/controller/user_controller.dart';
+import 'package:splitrip/controller/trip/trip_screen_controller.dart';
 import 'package:splitrip/services/auth_service.dart';
-import '../widgets/my_snackbar.dart';
+
+import '../../widgets/my_snackbar.dart';
+import '../appPageController/app_page_controller.dart';
 
 class ProfileController extends GetxController {
   RxBool isloading = false.obs;
@@ -17,6 +19,7 @@ class ProfileController extends GetxController {
   final TripController tripController = Get.find<TripController>();
   final FriendController friendController = Get.find<FriendController>();
   final AppPageController appPageController = Get.find<AppPageController>();
+  final TripScreenController tripScreenController = Get.find<TripScreenController>();
 
 
   // Reactive properties for user data
@@ -54,20 +57,16 @@ class ProfileController extends GetxController {
       if (result != null) {
         final user = result['firebaseUser'] as User;
         final providerData = result['providerData'] as Map<String, dynamic>;
-        await userController.setUser(
-          providerData['displayName'] ?? user.displayName ?? 'Google User',
-          providerData['email'] ?? user.email ?? 'Email',
-          providerData['photoUrl'] ?? user.photoURL,
-        );
+        await userController.setUserFromProvider(provider: 'google', providerData: providerData);
+        await tripScreenController.fetchAndSetToken();
+        await friendController.fetchAndSetToken();
         tripController.isAuthenticated.value = true;
-        tripController.iniStateMethodForTripScreen(context: context);
-        friendController.fetchLinkedParticipants();
+        appPageController.pageIndex.value = 1;
         Get.back();
         CustomSnackBar.show(
           title: 'Success',
           message: 'Logged in successfully',
         );
-        appPageController.pageIndex.value = 1;
       } else {
         Get.back();
         CustomSnackBar.show(
@@ -105,19 +104,21 @@ class ProfileController extends GetxController {
       if (result != null) {
         final user = result['firebaseUser'] as User;
         final providerData = result['providerData'] as Map<String, dynamic>;
-        await userController.setUser(
-          providerData['displayName'] ?? user.displayName ?? 'Facebook User',
-          providerData['email'] ?? user.email ?? 'Email',
-          providerData['photoUrl'] ?? user.photoURL,
+
+        await userController.setUserFromProvider(
+          provider: 'facebook',
+          providerData: providerData,
         );
+        await tripScreenController.fetchAndSetToken();
+        await friendController.fetchAndSetToken();
         tripController.isAuthenticated.value = true;
-        tripController.iniStateMethodForTripScreen(context: context);
+        appPageController.pageIndex.value = 1;
         Get.back();
         CustomSnackBar.show(
           title: 'Success',
           message: 'Logged in successfully',
         );
-        appPageController.pageIndex.value = 1;
+
       } else {
         Get.back();
         CustomSnackBar.show(
@@ -134,20 +135,19 @@ class ProfileController extends GetxController {
             errorMessage = 'Facebook login was canceled';
             break;
           case 'account-exists-with-different-credential':
-            errorMessage =
-                'An account already exists with a different credential';
+            errorMessage = 'An account already exists with a different credential';
             break;
           default:
-            errorMessage =
-                'Failed to sign in with Facebook: ${e.message ?? e.toString()}';
+            errorMessage = 'Failed to sign in with Facebook: \${e.message ?? e.toString()}';
         }
       } else {
-        errorMessage = 'Failed to sign in with Facebook: $e';
+        errorMessage = 'Failed to sign in with Facebook: \$e';
       }
       CustomSnackBar.show(title: 'Error', message: errorMessage);
-      print('Facebook sign-in error: $e');
+      print('Facebook sign-in error: \$e');
     }
   }
+
 
   Future<void> signOut() async {
     isloading.value = true;
@@ -158,6 +158,9 @@ class ProfileController extends GetxController {
       await userController.clearUser();
       isloading.value = false;
       tripController.isAuthenticated.value = false;
+      isloading.value = false;
+      friendController.clearAllData();
+      tripScreenController.clearAllData();
     } catch (e) {
       Get.snackbar('Error', 'Failed to sign out: $e');
     }

@@ -1,4 +1,4 @@
-import '../trip/participant_model.dart';
+import 'participant_model.dart';
 
 class FriendModel {
   final ParticipantModel participant;

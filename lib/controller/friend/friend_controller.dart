@@ -1,67 +1,95 @@
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:splitrip/data/token.dart';
 import 'dart:convert';
 import '../../data/constants.dart';
+import '../../data/token.dart';
 import '../../model/friend/friend_model.dart';
-import '../../model/trip/participant_model.dart';
+import '../../model/friend/participant_model.dart';
 
 class FriendController extends GetxController {
-  // Observable list to store FriendModel objects
-  var friendsList = <FriendModel>[].obs;
-  var isLoading = false.obs;
-  var errorMessage = ''.obs;
+  final friendsList = <FriendModel>[].obs;
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
+  final authToken = RxnString();
+  final isTokenLoading = true.obs;
 
-  // Method to fetch friends from the database via API
-  Future<List<FriendModel>> fetchLinkedParticipants() async {
+  @override
+  void onInit() {
+    super.onInit();
+    fetchAndSetToken();
+  }
+
+  Future<void> fetchAndSetToken() async {
+    isTokenLoading.value = true;
+
     try {
-      isLoading.value = true;
-      errorMessage.value = '';
+      final token = await TokenStorage.getToken();
+      authToken.value = token;
+      isTokenLoading.value = false;
 
-      final token = await TokenStorage.getToken(); // Await the async call
-
-      if (token == null) {
-        print('No authentication token found');
-        Get.snackbar('Error', 'Authentication token not found');
-        throw Exception('Authentication token not found');
+      if (token != null && token.isNotEmpty) {
+        await fetchLinkedParticipants();
+      } else {
+        clearFriendsData();
       }
+    } catch (e) {
+      authToken.value = null;
+      isTokenLoading.value = false;
+      errorMessage.value = 'Failed to fetch token: $e';
+    }
+  }
 
+  Future<void> fetchLinkedParticipants() async {
+    final token = authToken.value;
+    if (token == null || token.isEmpty) {
+      return;
+    }
+
+    isLoading.value = true;
+    errorMessage.value = '';
+
+    try {
       final response = await http.get(
         Uri.parse('${ApiConstants.baseUrl}/participants/'),
         headers: {
-          'Authorization': 'Token ${token.trim()}', // Use Bearer and trim token
+          'Authorization': 'Token $token',
           'Content-Type': 'application/json',
         },
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        // Map Django response to ParticipantModel, then wrap in FriendModel
-        friendsList.value = data.map((json) {
-          final participant = ParticipantModel.fromJson(json);
+        print(data);
+        friendsList.value = data.map((participantData) {
+          final participant = ParticipantModel.fromJson(participantData);
           return FriendModel(participant: participant);
         }).toList();
-        print('Friend list fetched successfully: ${friendsList.length} friends');
-        return friendsList;
       } else {
-        print('Failed to fetch friend list: ${response.statusCode} ${response.body}');
-        Get.snackbar('Error', 'Failed to fetch friend list');
-        throw Exception('Failed to fetch friend list: ${response.statusCode} ${response.body}');
+        errorMessage.value = 'Failed to fetch linked participants: ${response.statusCode}';
+        friendsList.clear();
       }
-    } catch (e) {
-      print('Error fetching friend list: $e');
-      errorMessage.value = e.toString();
-      Get.snackbar('Error', 'Error fetching friend list: $e');
-      throw Exception('Error fetching friend list: $e');
-    } finally {
-      isLoading.value = false;
+    } catch (data) {
+      errorMessage.value = 'Error fetching linked participants: ${data}';
+      print('$data');
+      friendsList.clear();
     }
+
+    isLoading.value = false;
   }
 
-  void removeFriend(String? referenceId) {
-    if (referenceId != null) {
-      friendsList.removeWhere((friend) => friend.participant.referenceId == referenceId);
-      print('Removed friend with referenceId: $referenceId');
-    }
+  void refreshFriends() {
+    fetchAndSetToken();
+  }
+
+  void clearFriendsData() {
+    friendsList.clear();
+    errorMessage.value = '';
+  }
+
+  void clearAllData() {
+    friendsList.clear();
+    authToken.value = null;
+    isTokenLoading.value = false;
+    errorMessage.value = '';
   }
 }

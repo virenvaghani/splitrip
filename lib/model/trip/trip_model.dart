@@ -1,3 +1,5 @@
+import 'package:splitrip/model/friend/linkuser_model.dart';
+
 class Trip {
   final String? id;
   final String tripEmoji;
@@ -9,6 +11,10 @@ class Trip {
   final int? totalParticipants;
   final bool isArchived;
   final bool isDeleted;
+  final List<LinkedUserModel>?
+  linkedUsers;
+
+
 
   Trip({
     this.id,
@@ -21,13 +27,14 @@ class Trip {
     this.totalParticipants,
     this.isArchived = false,
     this.isDeleted = false,
+    this.linkedUsers,
   });
 
   factory Trip.fromJson(Map<String, dynamic> json) {
     final tripData = json['trip'] ?? json;
 
     return Trip(
-      id: tripData['id']?.toString(),
+      id: tripData['id'].toString() ?? tripData['trip_id'].toString(),
       tripEmoji: tripData['trip_emoji']?.toString() ?? '🌍',
       tripName: tripData['trip_name']?.toString() ?? '',
       tripCurrency: tripData['trip_currency']?.toString() ?? 'USD',
@@ -39,12 +46,16 @@ class Trip {
       totalParticipants: json['total_participants'],
       isArchived: (tripData['is_archived'] as bool?) ?? false,
       isDeleted: (tripData['is_deleted'] as bool?) ?? false,
+      linkedUsers: (json['linked_users'] as List<dynamic>?)
+          ?.map((user) => LinkedUserModel.fromJson(user))
+          .toList() ??
+          [],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'id': id,
+      if (id != null) 'trip_id' ?? 'id': id,
       'trip_emoji': tripEmoji,
       'trip_name': tripName,
       'trip_currency': tripCurrency,
@@ -65,6 +76,7 @@ class Trip {
     int? totalParticipants,
     bool? isArchived,
     bool? isDeleted,
+
   }) {
     return Trip(
       id: id ?? this.id,

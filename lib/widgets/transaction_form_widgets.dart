@@ -1,12 +1,8 @@
-
-
-import 'dart:math';
-
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/Material.dart';
 
 class FunLoadingWidget extends StatelessWidget {
-  const FunLoadingWidget();
+  const FunLoadingWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +18,11 @@ class FunLoadingWidget extends StatelessWidget {
             builder: (context, value, child) {
               return Transform.translate(
                 offset: Offset(0, -10 * (1 - value.abs().sign)),
-                child: Icon(Icons.flight_takeoff_rounded,
-                    size: 64, color: Theme.of(context).colorScheme.primary),
+                child: Icon(
+                  Icons.flight_takeoff_rounded,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               );
             },
             onEnd: () => {},
@@ -34,7 +33,9 @@ class FunLoadingWidget extends StatelessWidget {
             width: 200,
             child: DefaultTextStyle(
               style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
               child: AnimatedTextKit(
                 repeatForever: true,
                 animatedTexts: [

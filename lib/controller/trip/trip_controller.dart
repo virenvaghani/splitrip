@@ -2,13 +2,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:splitrip/controller/friend/friend_controller.dart';
+import 'package:splitrip/data/authenticate_value.dart';
 import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/data/token.dart';
-import 'package:splitrip/model/trip/participant_model.dart';
+import 'package:splitrip/model/friend/participant_model.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/model/friend/friend_model.dart';
-import '../emoji_controller.dart';
+import '../../model/friend/linkuser_model.dart';
+import 'emoji_controller.dart';
 
 class TripController extends GetxController {
   RxBool isFriendPageLoading = false.obs;
@@ -20,9 +22,9 @@ class TripController extends GetxController {
   final TextEditingController tripNameController = TextEditingController();
   final TextEditingController newParticipantNameController = TextEditingController();
   final TextEditingController newParticipantMembersController = TextEditingController();
-  final RxString selectedCurrency = "INR".obs;
-  final RxList<ParticipantModel> participantModelList = RxList();
-  final RxList<FriendModel> selectedfriendModelList = RxList();
+  final RxString selectedCurrencyCode = "INR".obs; // Store currency code
+  final RxList<Map<String, dynamic>> availableCurrencies = RxList(); // Store currency data
+
   final RxString validationMsgForSelectFriend = "".obs;
   final RxBool isVisibleAddFriendForm = false.obs;
   Trip? tripModel;
@@ -30,6 +32,15 @@ class TripController extends GetxController {
   final formKey = GlobalKey<FormState>();
   final addParticipantFormKey = GlobalKey<FormState>();
   RxBool isTripScreenLoading = false.obs;
+
+  final RxList<FriendModel> availableParticipantModel = RxList();
+  final RxList<ParticipantModel> selectedParticipantModel = RxList();
+  final RxList<Trip> archivedTripList = RxList();
+  final isTokenLoading = true.obs;
+
+  final searchText = ''.obs;
+  final authToken = RxnString();
+
   @override
   void onClose() {
     tripNameController.dispose();
@@ -38,66 +49,27 @@ class TripController extends GetxController {
     super.onClose();
   }
 
-  // Helper to get current user's participant ID
-  Future<String?> getCurrentUserParticipantId() async {
-
-    final token = await TokenStorage.getToken();
-
-    if (token == Null) {
-      print("Invalid or missing token");
-      showSnackBar(Get.context!, Get.theme, "Please log in again");
-      return null;
-    }
-
-    final Uri url = Uri.parse('${ApiConstants.baseUrl}/trip/maintain/');
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Token $token',
-    };
-
-    try {
-      final response = await http.get(url, headers: headers);
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final availableParticipants = data["available_participants"] as List;
-        // Assuming the current user is identified by a field like 'is_current_user' or 'user'
-        final currentUserParticipant = availableParticipants.firstWhere(
-              (participant) => participant['user'] != null, // Adjust based on API response
-          orElse: () => null,
-        );
-        return currentUserParticipant?['reference_id'] as String?;
-      } else {
-        print("Failed to fetch participants: ${response.statusCode} - ${response.body}");
-        return null;
-      }
-    } catch (e) {
-      print("Exception fetching participants: $e");
-      return null;
-    }
-  }
-
   Future<List<String>> fetchValidParticipantIds() async {
-
     final token = await TokenStorage.getToken();
 
-    if (token == Null) {
+    if (token == null) {
       print("Invalid or missing token");
       return [];
     }
 
-    final Uri url = Uri.parse('${ApiConstants.baseUrl}/participants/');
+    final Uri url = Uri.parse('${ApiConstants.baseUrl}/trip/maintain/');
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Token $token',
-        },
-      );
+      final response = await http.get(url, headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      });
 
       if (response.statusCode == 200) {
-        final List<dynamic> participants = jsonDecode(response.body);
-        return participants
+        final data = jsonDecode(response.body);
+        final availableParticipants = data["available_participants"] as List;
+        // Store currencies
+        availableCurrencies.value = List<Map<String, dynamic>>.from(data["currency"]);
+        return availableParticipants
             .map((p) => p['reference_id'] as String?)
             .where((id) => id != null && id.isNotEmpty)
             .cast<String>()
@@ -125,26 +97,87 @@ class TripController extends GetxController {
     if (data != null) {
       final isEdit = data["trip"] != null;
 
+      // Map selected participants
+      final List<ParticipantModel> selectedList = (data["selected_participants"] as List)
+          .map((e) => ParticipantModel(
+        referenceId: e["participant_reference_id"],
+        name: e["participant_name"],
+        member: e["member"],
+        customMemberCount: e["custom_member_count"],
+        linkedUsers: [],
+      ))
+          .toList();
+
+      // Map available participants
+      final List<FriendModel> availableList = (data["available_participants"] as List)
+          .map((e) => FriendModel.fromJson({
+        ...e,
+        "participant": e,
+        "isSelected": false,
+      }))
+          .where((friend) => !selectedList.any(
+            (selected) => selected.referenceId == friend.participant.referenceId,
+      ))
+          .toList();
+
+      // Store currencies
+      availableCurrencies.value = List<Map<String, dynamic>>.from(data["currency"]);
+
       if (isEdit) {
         final trip = data["trip"];
+        if (trip["is_deleted"] == true || trip["is_archive"] == true) {
+          isMantainTripLoading.value = false;
+          showSnackBar(Get.context!, Get.theme, "Trip is deleted or archived");
+          return;
+        }
+
         tripNameController.text = trip["trip_name"] ?? "";
-        selectedCurrency.value = trip["trip_currency"] ?? "INR";
+        // Set currency code from database, default to INR if null
+        selectedCurrencyCode.value = trip["trip_currency"]?.toString() ?? "INR";
         emojiController.selectedEmoji.value =
-            emojiController.getEmojiDataByString(trip["trip_emoji"]) ??
-                emojiController.getRandomEmoji();
+            emojiController.getEmojiDataByString(trip["trip_emoji"]) ?? emojiController.getDefaultEmoji();
       } else {
         tripNameController.clear();
-        selectedCurrency.value = "INR";
+        selectedCurrencyCode.value = "INR";
         emojiController.selectedEmoji.value = emojiController.getRandomEmoji();
+
+        final userIdString = await AuthStatusStorage.getUserId();
+        final parsedUserId = int.tryParse(userIdString ?? "");
+        print("🔍 Parsed User ID: $parsedUserId");
+
+        if (parsedUserId != null) {
+          final friendController = Get.find<FriendController>();
+
+          final List<FriendModel> matchingFriends = friendController.friendsList.where((friend) {
+            return friend.participant.participatedTrips!.any((trip) {
+              return trip.linkedUsers!.any((user) => user.id.toString() == parsedUserId.toString());
+            });
+          }).toList();
+
+
+          print("✅ Matching Friends For Create Only:");
+          for (var f in matchingFriends) {
+            print("Friend Ref ID: ${f.participant.referenceId}");
+          }
+
+          for (var match in matchingFriends) {
+            final existsInAvailable = availableList.any(
+                    (f) => f.participant.referenceId == match.participant.referenceId);
+            final alreadySelected = selectedList.any(
+                    (p) => p.referenceId == match.participant.referenceId);
+
+            if (existsInAvailable && !alreadySelected) {
+              selectedList.add(match.participant);
+              availableList.removeWhere(
+                      (f) => f.participant.referenceId == match.participant.referenceId);
+              print("➡️ Moved ${match.participant.referenceId} to selected.");
+            }
+          }
+        }
       }
 
-      participantModelList.value = (data["selected_participants"] as List)
-          .map((e) => ParticipantModel.fromJson(e))
-          .toList();
-
-      selectedfriendModelList.value = (data["available_participants"] as List)
-          .map((e) => FriendModel.fromJson(e))
-          .toList();
+      availableParticipantModel.value = availableList;
+      selectedParticipantModel.value = selectedList;
     } else {
       showSnackBar(Get.context!, Get.theme, "Failed to load trip data");
     }
@@ -156,11 +189,9 @@ class TripController extends GetxController {
     required int? tripId,
     Map<String, dynamic>? tripData,
   }) async {
-
     final token = await TokenStorage.getToken();
 
-    if (token == Null) {
-      print("Invalid or missing token");
+    if (token == null) {
       showSnackBar(Get.context!, Get.theme, "Please log in again");
       return null;
     }
@@ -180,24 +211,10 @@ class TripController extends GetxController {
         'Content-Type': 'application/json',
         'Authorization': 'Token $token',
       };
-      print("Headers: $headers");
 
       if (isSaving) {
-        // Fetch current user's participant ID
-        final currentUserParticipantId = await getCurrentUserParticipantId();
-        if (currentUserParticipantId == null) {
-          showSnackBar(Get.context!, Get.theme, "Failed to identify current user as participant");
-          return null;
-        }
-
-        // Ensure participants field exists and add current user's participant ID
-        tripData!['participants'] = tripData['participants'] ?? [];
-        if (!tripData['participants'].contains(currentUserParticipantId)) {
-          tripData['participants'].add(currentUserParticipantId);
-        }
-
         final String body = jsonEncode(tripData);
-        print("Sending POST/PUT to $url with body: $body");
+        print("Sending ${isCreate ? 'POST' : 'PUT'} to $url with body: $body");
 
         response = isCreate
             ? await http.post(url, headers: headers, body: body)
@@ -208,10 +225,10 @@ class TripController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print("Trip ${isSaving ? (isCreate ? 'created' : 'updated') : 'fetched'} successfully");
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        return data;
       } else {
-        print("Failed to ${isSaving ? (isCreate ? 'create' : 'update') : 'fetch'} trip: ${response.statusCode} - ${response.body}");
-        showSnackBar(Get.context!, Get.theme, "Server error: ${response.statusCode}- ${response.body}");
+        showSnackBar(Get.context!, Get.theme, "Server error: ${response.statusCode} - ${response.body}");
         return null;
       }
     } catch (e) {
@@ -221,61 +238,31 @@ class TripController extends GetxController {
     }
   }
 
-  // Updated saveTrip method
-  Future<void> saveTrip({
-    required Map<String, dynamic> argumentData,
-  }) async {
+  Future<void> saveTrip({required Map<String, dynamic> argumentData}) async {
     if (formKey.currentState?.validate() ?? false) {
       isMantainTripLoading.value = true;
 
-      final participantRefIds = participantModelList
-          .where((p) => p.referenceId != null && p.referenceId!.isNotEmpty)
-          .map((p) => p.referenceId!)
-          .toList();
+      final participantMaps = selectedParticipantModel.map((p) => {
+        "participant_reference_id": p.referenceId,
+        "custom_member_count": p.customMemberCount ?? p.member ?? 1,
+      }).toList();
 
-      // Validate inputs
-      if (emojiController.selectedEmoji.value?.char == null ||
+      if (participantMaps.isEmpty ||
           tripNameController.text.trim().isEmpty ||
-          selectedCurrency.value.isEmpty ||
-          participantRefIds.isEmpty) {
+          selectedCurrencyCode.value.isEmpty ||
+          emojiController.selectedEmoji.value?.char == null) {
         showSnackBar(Get.context!, Get.theme, "Please provide valid trip details and participants");
         isMantainTripLoading.value = false;
         return;
       }
 
-      // Fetch current user's participant ID and ensure it's included
-      final currentUserParticipantId = await getCurrentUserParticipantId();
-      if (currentUserParticipantId == null) {
-        showSnackBar(Get.context!, Get.theme, "Failed to identify current user as participant");
-        isMantainTripLoading.value = false;
-        return;
-      }
-
-      if (!participantRefIds.contains(currentUserParticipantId)) {
-        participantRefIds.add(currentUserParticipantId);
-      }
-
-      // Validate participant IDs against server
-      final validServerIds = await fetchValidParticipantIds();
-      final validParticipantIds = participantRefIds.where((id) => validServerIds.contains(id)).toList();
-
-      if (validParticipantIds.isEmpty) {
-        print("No valid participants selected. Participant refIds: $participantRefIds");
-        print("Valid server participant IDs: $validServerIds");
-        showSnackBar(Get.context!, Get.theme, "No valid participants selected or participants not found on server");
-        isMantainTripLoading.value = false;
-        return;
-      }
-
-      // Prepare trip data
       final tripData = {
         'trip_name': tripNameController.text.trim(),
-        'trip_currency': selectedCurrency.value,
+        'trip_currency': selectedCurrencyCode.value, // Use currency code
         'trip_emoji': emojiController.selectedEmoji.value?.char ?? '🧳',
-        'participants': validParticipantIds,
+        'participants': participantMaps,
       };
 
-      // Save or update trip
       final tripId = int.tryParse(argumentData['trip_id']?.toString() ?? '');
       final response = await fetchOrSaveTripData(tripId: tripId, tripData: tripData);
 
@@ -298,8 +285,7 @@ class TripController extends GetxController {
     required ThemeData theme,
   }) async {
     validationMsgForSelectFriend.value = "";
-
-    final selectedFriends = selectedfriendModelList.where((friend) => friend.isSelected).toList();
+    final selectedFriends = availableParticipantModel.where((friend) => friend.isSelected).toList();
 
     if (selectedFriends.isEmpty) {
       validationMsgForSelectFriend.value = "Please select at least one friend";
@@ -307,62 +293,37 @@ class TripController extends GetxController {
       return;
     }
 
-    bool participantAdded = false;
-
     for (var friend in selectedFriends) {
-      if (friend.participant.referenceId == null || friend.participant.referenceId!.isEmpty) {
-        print("Invalid participant data for ${friend.participant.name}: referenceId is null or empty");
-        showSnackBar(context, theme, "Invalid participant data for ${friend.participant.name}");
-        continue;
-      }
+      final participant = friend.participant;
 
-      final alreadyExists = participantModelList.any(
-            (p) => p.referenceId == friend.participant.referenceId,
-      );
+      final alreadyExists = selectedParticipantModel.any(
+              (p) => p.referenceId == participant.referenceId);
 
       if (!alreadyExists) {
-        final participant = ParticipantModel(
-          id: friend.participant.id,
-          name: friend.participant.name,
-          member: friend.participant.member,
-          referenceId: friend.participant.referenceId,
-          user: friend.participant.user,
-        );
-        participantModelList.add(participant);
-        participantAdded = true;
-        print("Added participant: ${participant.name} (referenceId: ${participant.referenceId})");
+        selectedParticipantModel.add(participant);
       }
+
+      availableParticipantModel.remove(friend);
     }
 
-    if (!participantAdded && selectedFriends.isNotEmpty) {
-      showSnackBar(context, theme, "Selected friends are already added");
-    }
+    selectedParticipantModel.refresh();
+    availableParticipantModel.refresh();
 
-    participantModelList.refresh();
-    for (var friend in selectedfriendModelList) {
-      friend.isSelected = false;
-    }
-    selectedfriendModelList.refresh();
-
-    if (participantAdded) {
-      showSnackBar(context, theme, "Participants added successfully");
-      Get.back();
-    }
+    showSnackBar(context, theme, "Participants added successfully");
+    Get.back();
   }
 
   Future<void> addNewParticipant({
-    required BuildContext context,
-    required ThemeData theme,
-    required Map<String, dynamic> participantData,
+    required Map<String, dynamic> participantData, required BuildContext context, required ThemeData theme,
   }) async {
     if (participantData['name'] == null || participantData['name'].toString().trim().isEmpty) {
-      showSnackBar(context, theme, "Participant name is required");
+      showSnackBar(Get.context!, Get.theme, "Participant name is required");
       isAddparticipantLoading.value = false;
       isFriendPageLoading.value = false;
       return;
     }
-    if (participantData['member'] == null || participantData['member'] <= 0) {
-      showSnackBar(context, theme, "Valid number of members is required");
+    if (participantData['member'] == null || int.tryParse(participantData['member'].toString())! <= 0) {
+      showSnackBar(Get.context!, Get.theme, "Valid number of members is required");
       isAddparticipantLoading.value = false;
       isFriendPageLoading.value = false;
       return;
@@ -371,12 +332,11 @@ class TripController extends GetxController {
     isAddparticipantLoading.value = true;
     isFriendPageLoading.value = true;
 
+    final token = await TokenStorage.getToken();
 
-    final token = TokenStorage.getToken();
-
-    if (token == Null) {
+    if (token == null) {
       print("Invalid or missing token");
-      showSnackBar(context, theme, "Please log in again");
+      showSnackBar(Get.context!, Get.theme, "Please log in again");
       isAddparticipantLoading.value = false;
       isFriendPageLoading.value = false;
       return;
@@ -391,7 +351,7 @@ class TripController extends GetxController {
       };
       final body = jsonEncode({
         'name': participantData['name'],
-        'member': participantData['member'],
+        'member': int.tryParse(participantData['member'].toString()) ?? 1,
       });
 
       print("Sending POST to $url with body: $body");
@@ -406,37 +366,75 @@ class TripController extends GetxController {
           member: responseData['member'],
           referenceId: responseData['reference_id'],
           user: responseData['user'],
+          linkedUsers: responseData['linked_users']?.map((u) => LinkedUserModel.fromJson(u)).toList() ?? [],
         );
-        selectedfriendModelList.add(FriendModel(participant: participant, isSelected: true));
-        selectedfriendModelList.refresh();
-        showSnackBar(context, theme, "Participant added successfully");
+        availableParticipantModel.add(FriendModel(participant: participant));
+        availableParticipantModel.refresh();
+        showSnackBar(Get.context!, Get.theme, "Participant added successfully");
       } else {
         print("Failed to add participant: ${response.statusCode} - ${response.body}");
-        showSnackBar(context, theme, "Failed to add participant: ${response.statusCode}");
+        showSnackBar(Get.context!, Get.theme, "Failed to add participant: ${response.statusCode}");
       }
     } catch (e) {
       print("Exception during participant creation: $e");
-      showSnackBar(context, theme, "Error adding participant");
+      showSnackBar(Get.context!, Get.theme, "Error adding participant");
     }
 
     isAddparticipantLoading.value = false;
     isFriendPageLoading.value = false;
   }
 
-  void removeFromParticipantList({
+  Future<void> removeFromParticipantList({
     required BuildContext context,
     required ThemeData theme,
     required String? participantReferenceId,
-  }) {
+  }) async {
     if (participantReferenceId == null || participantReferenceId.isEmpty) {
       showSnackBar(context, theme, "Invalid participant ID");
       return;
     }
 
-    final index = participantModelList.indexWhere((p) => p.referenceId == participantReferenceId);
+    final userIdString = await AuthStatusStorage.getUserId();
+    final parsedUserId = int.tryParse(userIdString ?? "");
+    print("🔍 Parsed User ID: $parsedUserId");
+
+    if (parsedUserId == null) {
+      showSnackBar(context, theme, "User not authenticated");
+      return;
+    }
+
+    final friendController = Get.find<FriendController>();
+
+    final isParticipantLinked = friendController.friendsList.any((friend) {
+      return friend.participant.referenceId == participantReferenceId &&
+          friend.participant.participatedTrips!.any((trip) {
+            return trip.linkedUsers!.any((user) {
+              return user.id.toString() == parsedUserId.toString();
+            },);
+          });
+    });
+
+    if (isParticipantLinked) {
+      showSnackBar(context, theme, "Cannot remove a linked participant");
+      return;
+    }
+
+    final index = selectedParticipantModel.indexWhere(
+            (p) => p.referenceId == participantReferenceId);
+
     if (index != -1) {
-      participantModelList.removeAt(index);
-      participantModelList.refresh();
+      final removedParticipant = selectedParticipantModel.removeAt(index);
+
+      availableParticipantModel.add(
+        FriendModel(
+          participant: removedParticipant,
+          isSelected: false,
+        ),
+      );
+
+      selectedParticipantModel.refresh();
+      availableParticipantModel.refresh();
+
       showSnackBar(context, theme, "Participant removed successfully");
     } else {
       showSnackBar(context, theme, "Participant not found");
@@ -450,69 +448,19 @@ class TripController extends GetxController {
         backgroundColor: theme?.snackBarTheme.backgroundColor ?? Colors.grey[800],
         content: Text(
           message,
-          style: TextStyle(color: theme?.snackBarTheme.contentTextStyle?.color ?? Colors.white),
+          style: TextStyle(
+            color: theme?.snackBarTheme.contentTextStyle?.color ?? Colors.white,
+          ),
         ),
       ),
     );
   }
 
-  Future<void> iniStateMethodForTripScreen({
-    required BuildContext context,
-  }) async {
-    isTripScreenLoading.value = true;
-    try {
-
-      final token = await TokenStorage.getToken();
-
-      if (token == Null) {
-        Get.snackbar("Error", "Authentication token is missing.");
-        return;
-      }
-
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/trips/'),
-        headers: {
-          'Authorization': 'Token $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final tripsData = data['trips'] as List;
-        tripModelList.value = tripsData.map((json) => Trip.fromJson(json)).toList();
-      } else {
-        Get.snackbar("Error", "Failed to fetch trips: ${response.statusCode}");
-      }
-    } catch (e) {
-      Get.snackbar("Error", "Something went wrong: $e");
-    } finally {
-      isTripScreenLoading.value = false;
-    }
-  }
-
-  Future<void> addToArchive(Trip trip) async {
-    try {
-      final token = await TokenStorage.getToken();
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
-
-      final response = await http.put(
-        Uri.parse('${ApiConstants.baseUrl}/trips/${trip.id}/archive/'),
-        headers: {
-          'Authorization': 'Token $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        tripModelList.refresh();
-      } else {
-        throw Exception('Failed to archive trip: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error archiving trip: $e');
-    }
+  // Helper to get currency name from code
+  String getCurrencyName(String code) {
+    return availableCurrencies.firstWhere(
+          (c) => c["code"] == code,
+      orElse: () => {"name": "Indian Rupee"},
+    )["name"];
   }
 }
