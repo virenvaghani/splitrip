@@ -399,8 +399,10 @@ class TripController extends GetxController {
     print("🔍 Parsed User ID: $parsedUserId");
 
     if (parsedUserId == null) {
+      if(context.mounted){
       showSnackBar(context, theme, "User not authenticated");
       return;
+      }
     }
 
     final friendController = Get.find<FriendController>();
@@ -415,8 +417,10 @@ class TripController extends GetxController {
     });
 
     if (isParticipantLinked) {
-      showSnackBar(context, theme, "Cannot remove a linked participant");
-      return;
+      if(context.mounted){
+        showSnackBar(context, theme, "Cannot remove a linked participant");
+        return;
+      }
     }
 
     final index = selectedParticipantModel.indexWhere(
@@ -435,9 +439,17 @@ class TripController extends GetxController {
       selectedParticipantModel.refresh();
       availableParticipantModel.refresh();
 
-      showSnackBar(context, theme, "Participant removed successfully");
+      if(context.mounted){
+        showSnackBar(context, theme, "Participant removed successfully");
+        return;
+      }
+
     } else {
-      showSnackBar(context, theme, "Participant not found");
+      if(context.mounted){
+        showSnackBar(context, theme, "Participant not found");
+        return;
+      }
+
     }
   }
 

@@ -3,10 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/controller/profile/profile_controller.dart';
 import 'package:splitrip/controller/theme/theme_controller.dart';
-import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/widgets/myappbar.dart';
 import 'package:splitrip/widgets/my_button.dart';
 
@@ -18,9 +16,6 @@ class TripParticipantSelectorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profileController = Get.find<ProfileController>();
-    final themeController = Provider.of<ThemeController>(context);
-    final tripController = Get.find<TripController>();
     final theme = Theme.of(context);
 
     final tripId = _parseTripId();
@@ -125,13 +120,13 @@ class TripParticipantSelectorPage extends StatelessWidget {
           Icon(
             Icons.group_off,
             size: 48,
-            color: theme.colorScheme.onSurface.withOpacity(0.4),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 12),
           Text(
             'No participants found',
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -143,16 +138,16 @@ class TripParticipantSelectorPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.95),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.06),
+            color: theme.shadowColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.08)),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +160,7 @@ class TripParticipantSelectorPage extends StatelessWidget {
           Text(
             'Tap your name below to join this trip as that participant.',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -190,12 +185,12 @@ class TripParticipantSelectorPage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.95),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.08)),
+            border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.08)),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.shadow.withOpacity(0.05),
+                color: theme.colorScheme.shadow.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -221,7 +216,7 @@ class TripParticipantSelectorPage extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 12,
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ],
           ),
@@ -288,7 +283,7 @@ class TripParticipantSelectorPage extends StatelessWidget {
         Text(
           'Join or log in to manage your trips',
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           textAlign: TextAlign.center,
         ),
@@ -320,7 +315,7 @@ class TripParticipantSelectorPage extends StatelessWidget {
           foregroundColor: const Color(0xFF1877F2),
         ),
         const SizedBox(height: 32),
-        Divider(color: theme.dividerColor.withOpacity(0.3), thickness: 0.5),
+        Divider(color: theme.dividerColor.withValues(alpha: 0.3), thickness: 0.5),
         const SizedBox(height: 16),
         _buildThemeToggle(themeController, theme),
       ],
@@ -354,7 +349,7 @@ class TripParticipantSelectorPage extends StatelessWidget {
       ),
       backgroundColor: Colors.transparent,
       foregroundColor: foregroundColor ?? theme.colorScheme.onSurface,
-      borderColor: theme.colorScheme.outline.withOpacity(0.2),
+      borderColor: theme.colorScheme.outline.withValues(alpha: 0.2),
       borderRadius: 10,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       minimumSize: const Size(double.infinity, 48),

@@ -10,7 +10,7 @@ class ProfilePage extends StatelessWidget {
   ProfilePage({super.key});
 
 
-  final ProfileController profileController = Get.find<ProfileController>();
+  final ProfileController profileController = Get.put(ProfileController());
 
   @override
   Widget build(BuildContext context) {
@@ -18,16 +18,15 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: Theme
             .of(context)
             .scaffoldBackgroundColor,
-        appBar: _appar(context: context),
+        appBar: _appbar(context: context),
         body: _body(context: context)
     );
   }
 
-  _appar({required BuildContext context}) {
+  _appbar({required BuildContext context}) {
     return CustomAppBar(
-      centerTitle: true,
       title: "Profile",
-      CenterTitle: false,
+      centerTitle: false,
       actions: [
         StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),

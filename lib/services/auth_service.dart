@@ -25,6 +25,8 @@ class AuthService extends GetxService {
     try {
       print('Starting Google Sign-In');
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      print("-----------------------------------------------user");
+      print(googleUser);
       if (googleUser == null) {
         print('Google Sign-In cancelled by user');
         return null;

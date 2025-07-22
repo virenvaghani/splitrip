@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/src/material/theme_data.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/Material.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
@@ -59,7 +58,7 @@ class TripParticipantSelectorController extends GetxController {
       }
 
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/participants/selection_list/${tripId}/'),
+        Uri.parse('${ApiConstants.baseUrl}/participants/selection_list/$tripId/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -110,7 +109,7 @@ class TripParticipantSelectorController extends GetxController {
 
       if (response.statusCode == 200) {
         Get.snackbar('Success', 'Participant linked successfully');
-        Get.offAndToNamed(PageConstant.TripDetailScreen, arguments: {
+        Get.offAndToNamed(PageConstant.tripDetailScreen, arguments: {
           'tripId': tripId.toString(),
         });
       } else {

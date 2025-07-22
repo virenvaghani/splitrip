@@ -45,7 +45,7 @@ class AppSpacers {
   static const SizedBox medium = SizedBox(height: 16);
   static const double smallSpacing = 8;
   static const SizedBox horizontalSmall = SizedBox(width: 10); // Changed to SizedBox
-  static const SizedBox BigSpacing = SizedBox(height: 36);
+  static const SizedBox bigSpacing = SizedBox(height: 36);
 
 }
 
@@ -76,7 +76,7 @@ class AppBorders {
 
 class AppShadows {
   static BoxShadow defaultShadow(ThemeData theme) => BoxShadow(
-    color: theme.colorScheme.onSurface.withOpacity(0.05),
+    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
     blurRadius: 8,
     offset: const Offset(0, 4),
   );

@@ -1,20 +1,20 @@
 class Kconstant {
-  static const String ThemeModeKey = 'theme_mode';
-  static const String UserNameKey = 'user_name';
-  static const String UserEmail = 'user_email';
+  static const String themeModeKey = 'theme_mode';
+  static const String userNameKey = 'user_name';
+  static const String userEmail = 'user_email';
   static const String photoURL = 'Image';
 }
 
 class PageConstant {
-  static const String MaintainTripPage = "/MaintainTripScreen";
-  static const String ProfilePage = "/ProfilePage";
-  static const String TripScreen = "/TripScreen";
-  static const String AddTransactionScreen = "/AddTransactionScreen";
-  static const String ArchiveScreen = "/ArchiveScreen";
-  static const String TripDetailScreen = "/TripDetailscreen";
-  static const String SelectionPage = "/trip";
-  static const String Dashboard = "/Dashboard";
-  static const String SplashScreen = "/SplashScreen";
+  static const String maintainTripPage = "/MaintainTripScreen";
+  static const String profilePage = "/ProfilePage";
+  static const String tripScreen = "/TripScreen";
+  static const String addTransactionScreen = "/AddTransactionScreen";
+  static const String archiveScreen = "/ArchiveScreen";
+  static const String tripDetailScreen = "/TripDetailscreen";
+  static const String selectionPage = "/trip";
+  static const String dashboard = "/Dashboard";
+  static const String splashScreen = "/SplashScreen";
 }
 
 class ApiConstants {

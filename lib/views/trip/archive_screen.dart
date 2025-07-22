@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/controller/trip/trip_screen_controller.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/widgets/myappbar.dart';
@@ -62,7 +61,7 @@ class ArchiveScreen extends StatelessWidget {
           child: Text(
             "No archived trips found",
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         );
@@ -188,16 +187,22 @@ class ArchiveScreen extends StatelessWidget {
           try {
             tripScreenController.addToArchive(trip);
           } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to unarchive trip: $e'),
-                backgroundColor: theme.colorScheme.error,
-              ),
-            );
+            if(context.mounted){
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to unarchive trip: $e'),
+                  backgroundColor: theme.colorScheme.error,
+                ),
+              );
+              return;
+            }
+
           }
           break;
         case 'delete':
-          _showDeleteConfirmationDialog(context, trip, theme);
+          if(context.mounted){
+            _showDeleteConfirmationDialog(context, trip, theme);
+          }
           break;
       }
     });
@@ -220,9 +225,9 @@ class ArchiveScreen extends StatelessWidget {
               ),
             ),
             content: Text(
-              'Are you sure you want to delete "${trip.tripName ?? 'Unnamed Trip'}"? This action cannot be undone.',
+              'Are you sure you want to delete "${trip.tripName}" This action cannot be undone.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
             actions: [
@@ -231,7 +236,7 @@ class ArchiveScreen extends StatelessWidget {
                 child: Text(
                   'Cancel',
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -284,7 +289,7 @@ class _TripListItem extends StatelessWidget {
       color: theme.cardTheme.color,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.2)),
+        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: ReorderableDelayedDragStartListener(
         index: index,
@@ -292,17 +297,17 @@ class _TripListItem extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           leading: CircleAvatar(
             backgroundColor: theme.scaffoldBackgroundColor,
-            child: Text(trip.tripEmoji ?? "🌍"),
+            child: Text(trip.tripEmoji ),
           ),
           title: Text(
-            trip.tripName ?? "Unnamed Trip",
+            trip.tripName,
             style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w500,
               color: theme.colorScheme.onSurface,
             ),
           ),
           subtitle: Text(
-            "Currency: ${trip.tripCurrency ?? 'Unknown'}",
+            "Currency: ${trip.tripCurrency}",
             style: theme.textTheme.bodyMedium,
           ),
           trailing: IconButton(

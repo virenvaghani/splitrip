@@ -1,5 +1,5 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:flutter/Material.dart';
+import 'package:flutter/material.dart';
 
 class FunLoadingWidget extends StatelessWidget {
   const FunLoadingWidget({super.key});

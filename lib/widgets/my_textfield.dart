@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,7 +11,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
-  final TextInputAction;
+  final TextInputAction? textInputAction;
   final FocusNode? focusNode;
   final List<TextInputFormatter>? inputFormatters;
   final Function(String)? onFieldSubmitted;
@@ -33,7 +34,7 @@ class CustomTextField extends StatelessWidget {
     this.suffixIcon,
     this.validator,
     this.onChanged,
-    this.TextInputAction,
+    this.textInputAction,
     this.focusNode,
     this.inputFormatters,
     this.onFieldSubmitted,
@@ -58,7 +59,7 @@ class CustomTextField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       onChanged: onChanged,
-      textInputAction: TextInputAction,
+      textInputAction: textInputAction,
       focusNode: focusNode,
       inputFormatters: inputFormatters,
       onSubmitted: onFieldSubmitted,

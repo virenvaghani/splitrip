@@ -4,12 +4,9 @@ import 'package:splitrip/controller/appPageController/app_page_controller.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
 import 'package:splitrip/controller/trip/trip_screen_controller.dart';
-import 'package:splitrip/data/token.dart';
 import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
-import 'package:splitrip/views/trip/trip_detail_screen.dart';
 import 'package:splitrip/widgets/myappbar.dart';
-import 'package:splitrip/widgets/my_snackbar.dart';
 
 class TripScreen extends StatelessWidget {
   TripScreen({super.key});
@@ -46,7 +43,7 @@ class TripScreen extends StatelessWidget {
             'Looks like you haven’t added any trips yet.',
             'Tap the button below to start your first journey!',
             'Get Started',
-            PageConstant.MaintainTripPage,
+            PageConstant.maintainTripPage,
             tripScreenController,
           ),
         );
@@ -61,15 +58,14 @@ class TripScreen extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context, ThemeData theme, {required bool showActions}) {
     return CustomAppBar(
-      centerTitle: true,
       title: "Trips",
-      CenterTitle: false,
+      centerTitle: false,
       actions: showActions
           ? [
         tripScreenController.archivedTripList.isNotEmpty
             ? IconButton(
           onPressed: () {
-            Get.toNamed(PageConstant.ArchiveScreen);
+            Get.toNamed(PageConstant.archiveScreen);
           },
           icon: Icon(Icons.archive_outlined, color: theme.primaryColor),
           tooltip: 'Archive',
@@ -78,7 +74,7 @@ class TripScreen extends StatelessWidget {
         IconButton(
           onPressed: () async {
             final result = await Get.toNamed(
-              PageConstant.MaintainTripPage,
+              PageConstant.maintainTripPage,
               arguments: {"Call From": "Add"},
             );
 
@@ -101,7 +97,7 @@ class TripScreen extends StatelessWidget {
       final visibleTrips = tripScreenController.tripModelList.toList();
       if (visibleTrips.isEmpty) {
         return _buildEmptyState(theme, 'No Active Trips 😕', 'All trips are either archived or deleted.',
-            'Create a new trip to start planning again!', 'Create Trip', PageConstant.MaintainTripPage, tripScreenController);
+            'Create a new trip to start planning again!', 'Create Trip', PageConstant.maintainTripPage, tripScreenController);
       }
       return ListView.builder(
         itemCount: visibleTrips.length,
@@ -113,7 +109,7 @@ class TripScreen extends StatelessWidget {
               builder: (itemContext) {
                 return GestureDetector(
                   onTap: () {
-                    Get.toNamed(PageConstant.TripDetailScreen, arguments: {'tripId':trip.id});
+                    Get.toNamed(PageConstant.tripDetailScreen, arguments: {'tripId':trip.id});
                   },
                   onLongPress: () => _showTripContextMenu(itemContext, trip),
                   child: Card(
@@ -121,15 +117,15 @@ class TripScreen extends StatelessWidget {
                     color: theme.cardTheme.color,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.2)),
+                      side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
                     ),
                     child: Container(
                       height: 80,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            theme.colorScheme.primary.withOpacity(0.05),
-                            theme.colorScheme.secondary.withOpacity(0.05),
+                            theme.colorScheme.primary.withValues(alpha: 0.05),
+                            theme.colorScheme.secondary.withValues(alpha: 0.05),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -137,7 +133,7 @@ class TripScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.onSurface.withOpacity(0.05),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -152,7 +148,7 @@ class TripScreen extends StatelessWidget {
                               children: [
                                 CircleAvatar(
                                   backgroundColor: theme.scaffoldBackgroundColor,
-                                  child: Text(trip.tripEmoji ?? ""),
+                                  child: Text(trip.tripEmoji),
                                 ),
                                 const SizedBox(width: 12),
                                 Column(
@@ -169,7 +165,7 @@ class TripScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            Icon(Icons.arrow_forward_ios, color: theme.colorScheme.onSurface.withOpacity(0.6), size: 20),
+                            Icon(Icons.arrow_forward_ios, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), size: 20),
                           ],
                         ),
                       ),
@@ -183,7 +179,7 @@ class TripScreen extends StatelessWidget {
       );
     } else {
       return _buildEmptyState(theme, 'Welcome 👋', 'Looks like you haven’t added any trips yet.',
-          'Tap the button below to start your first journey!', 'Get Started', PageConstant.MaintainTripPage, tripScreenController);
+          'Tap the button below to start your first journey!', 'Get Started', PageConstant.maintainTripPage, tripScreenController);
     }
   }
 
@@ -199,11 +195,11 @@ class TripScreen extends StatelessWidget {
           Text('Welcome Aboard! ✨', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface), textAlign: TextAlign.center),
           const SizedBox(height: 12),
           Text('It looks like you haven’t signed up yet.',
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
               textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Text('Tap the button below to join and start your journey!',
-              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
               textAlign: TextAlign.center),
           const SizedBox(height: 24),
           TextButton(
@@ -238,9 +234,9 @@ class TripScreen extends StatelessWidget {
         children: [
           Text(title, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          Text(subtitle, style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6)), textAlign: TextAlign.center),
+          Text(subtitle, style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)), textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          Text(message, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5)), textAlign: TextAlign.center),
+          Text(message, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)), textAlign: TextAlign.center),
           const SizedBox(height: 24),
           TextButton(
             onPressed: () async {
@@ -273,25 +269,25 @@ class TripScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       gradient: LinearGradient(
         colors: [
-          theme.colorScheme.primary.withOpacity(0.05),
-          theme.colorScheme.secondary.withOpacity(0.05),
+          theme.colorScheme.primary.withValues(alpha: 0.05),
+          theme.colorScheme.secondary.withValues(alpha: 0.05),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 1),
-      boxShadow: [BoxShadow(color: theme.colorScheme.onSurface.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2), width: 1),
+      boxShadow: [BoxShadow(color: theme.colorScheme.onSurface.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))],
     );
   }
 
   ButtonStyle _buttonStyle(ThemeData theme) {
     return TextButton.styleFrom(
-      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
       foregroundColor: theme.colorScheme.primary,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.3), width: 1),
+        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3), width: 1),
       ),
       splashFactory: NoSplash.splashFactory,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -320,7 +316,9 @@ class TripScreen extends StatelessWidget {
     );
 
     if (selected != null) {
-      _handleContextMenuSelection(selected, trip, context, theme);
+      if(context.mounted){
+        _handleContextMenuSelection(selected, trip, context, theme);
+      }
     }
   }
 
@@ -340,7 +338,7 @@ class TripScreen extends StatelessWidget {
   void _handleContextMenuSelection(String selected, Trip trip, BuildContext context, ThemeData theme) async {
     switch (selected) {
       case 'edit':
-        final result = await Get.toNamed(PageConstant.MaintainTripPage, arguments: {"trip_id": trip.id});
+        final result = await Get.toNamed(PageConstant.maintainTripPage, arguments: {"trip_id": trip.id});
         if (result != null && result is Map<String, dynamic>) {
           final Trip newTrip = Trip.fromJson(result);
           final index = tripController.tripModelList.indexWhere((t) => t.id == newTrip.id);
@@ -368,12 +366,12 @@ class TripScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: Text('Delete Trip', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface)),
         content: Text(
-            'Are you sure you want to delete "${trip.tripName ?? 'Unnamed Trip'}"? This action cannot be undone.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.8))),
+            'Are you sure you want to delete "${trip.tripName}"? This action cannot be undone.',
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.8))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.6))),
+            child: Text('Cancel', style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
           ),
           TextButton(
             onPressed: () {

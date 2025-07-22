@@ -21,7 +21,7 @@ class TransactionScreen extends StatelessWidget {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
 
         final hasChanges = transactionController.hasChanges.value;
@@ -84,12 +84,12 @@ class TransactionScreen extends StatelessWidget {
           if (shouldDiscard) {
             transactionController.discardTransaction();
             transactionController.hasChanges.value = false;
-            Navigator.pop(context);
+            Get.back();
           }
         } else {
           transactionController.discardTransaction();
           transactionController.hasChanges.value = false;
-          Navigator.pop(context);
+          Get.back();
         }
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(

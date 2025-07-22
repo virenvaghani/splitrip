@@ -18,7 +18,6 @@ class TripScreenController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('TripScreenController initialized: ${this.hashCode}');
     fetchAndSetToken();
   }
 

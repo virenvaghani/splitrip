@@ -22,7 +22,7 @@ class ThemeController extends ChangeNotifier {
 
     _isDarkMode = value;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(Kconstant.ThemeModeKey, value);
+    await prefs.setBool(Kconstant.themeModeKey, value);
 
     await Future.delayed(const Duration(milliseconds: 300));
     _isTransitioning = false;
@@ -31,7 +31,7 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    _isDarkMode = prefs.getBool(Kconstant.ThemeModeKey) ?? false;
+    _isDarkMode = prefs.getBool(Kconstant.themeModeKey) ?? false;
     notifyListeners();
   }
 }

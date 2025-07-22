@@ -23,8 +23,8 @@ class MyNavigationBar extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final totalWidth = constraints.maxWidth;
-            final itemWidth = totalWidth / items.length;
+            // final totalWidth = constraints.maxWidth;
+            // final itemWidth = totalWidth / items.length;
             return Container(
               height: 80,
               clipBehavior: Clip.none,

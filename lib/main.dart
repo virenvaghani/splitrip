@@ -2,7 +2,6 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:splitrip/controller/splash_screen/splash_screen_controller.dart';
@@ -16,7 +15,6 @@ import 'services/auth_service.dart';
 import 'controller/loginButton/button_controller.dart';
 import 'controller/theme/theme_controller.dart';
 import 'controller/profile/user_controller.dart';
-import 'controller/profile/profile_controller.dart';
 import 'controller/friend/friend_controller.dart';
 import 'controller/trip/emoji_controller.dart';
 import 'controller/trip/trip_controller.dart';
@@ -79,40 +77,40 @@ class MyApp extends StatelessWidget {
                 themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             theme: themeController.currentTheme,
             darkTheme: themeController.currentTheme,
-            initialRoute: PageConstant.SplashScreen,
+            initialRoute: PageConstant.splashScreen,
             getPages: [
               GetPage(
-                name: PageConstant.SplashScreen,
-                page: () => const SplashScreen(),
+                name: PageConstant.splashScreen,
+                page: () =>  SplashScreen(),
               ),
               GetPage(
-                name: PageConstant.SelectionPage,
+                name: PageConstant.selectionPage,
                 page: () => TripParticipantSelectorPage(),
               ),
               GetPage(
-                name: PageConstant.MaintainTripPage,
+                name: PageConstant.maintainTripPage,
                 page: () => MaintainTripScreen(),
               ),
               GetPage(
-                name: PageConstant.ProfilePage,
+                name: PageConstant.profilePage,
                 page: () => ProfilePage(),
               ),
-              GetPage(name: PageConstant.TripScreen, page: () => TripScreen()),
+              GetPage(name: PageConstant.tripScreen, page: () => TripScreen()),
               GetPage(
-                name: PageConstant.AddTransactionScreen,
+                name: PageConstant.addTransactionScreen,
                 page: () => TransactionScreen(),
               ),
               GetPage(
-                name: PageConstant.ArchiveScreen,
+                name: PageConstant.archiveScreen,
                 page: () => ArchiveScreen(),
               ),
               GetPage(
-                name: PageConstant.TripDetailScreen,
+                name: PageConstant.tripDetailScreen,
                 page: () => TripDetailScreen(),
               ),
               GetPage(
-                name: PageConstant.Dashboard,
-                page: () => const DashBoard(),
+                name: PageConstant.dashboard,
+                page: () =>  DashBoard(),
               ),
             ],
           );

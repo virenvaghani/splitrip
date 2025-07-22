@@ -69,7 +69,7 @@ class FriendController extends GetxController {
         friendsList.clear();
       }
     } catch (data) {
-      errorMessage.value = 'Error fetching linked participants: ${data}';
+      errorMessage.value = 'Error fetching linked participants: $data';
       print('$data');
       friendsList.clear();
     }

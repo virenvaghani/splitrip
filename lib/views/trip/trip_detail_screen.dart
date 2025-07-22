@@ -90,7 +90,7 @@ class TripDetailScreen extends StatelessWidget {
 
   Widget _buildBodyContent(BuildContext context,
       TripDetailController controller) {
-    final todayExpenses = controller.todayTransactions;
+    // final todayExpenses = controller.todayTransactions;
     switch (controller.selectedTabIndex.value) {
       case 1:
         return const Center(child: Text('Balances coming soon'));
@@ -146,7 +146,7 @@ class TripDetailScreen extends StatelessWidget {
       onPressed: () {
         final tab = controller.selectedTabIndex.value;
         if (tab == 0) {
-          Get.toNamed(PageConstant.AddTransactionScreen,
+          Get.toNamed(PageConstant.addTransactionScreen,
               arguments: {'type': 'Expense'});
         } else {
           Get.snackbar(tab == 1 ? "Balances" : "Photos", "Screen coming soon");

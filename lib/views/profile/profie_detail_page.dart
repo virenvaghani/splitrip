@@ -46,8 +46,8 @@ class ProfileDetailsPage extends StatelessWidget {
 
     final isDarkMode = themeController.isDarkMode;
     final borderColor = isDarkMode
-        ? theme.colorScheme.onSurface.withOpacity(0.2)
-        : theme.colorScheme.primary.withOpacity(0.2);
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+        : theme.colorScheme.primary.withValues(alpha: 0.2);
 
     return Scaffold(
       body: LayoutBuilder(
@@ -101,10 +101,10 @@ class ProfileDetailsPage extends StatelessWidget {
             Text(
               user.email.toString(),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
-           AppSpacers.BigSpacing,
+           AppSpacers.bigSpacing,
             _preferenceCard(theme, themeController, borderColor, context),
           ],
         ),
@@ -157,7 +157,7 @@ class ProfileDetailsPage extends StatelessWidget {
                   Text(
                     email,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -182,7 +182,7 @@ class ProfileDetailsPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: borderColor),
       ),
-      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.95),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.95),
       child: Column(
         children: [
           SwitchListTile.adaptive(
@@ -214,7 +214,7 @@ class ProfileDetailsPage extends StatelessWidget {
             contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
           ),
           Divider(
-            color: theme.colorScheme.onSurface.withOpacity(0.1),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
             indent: 16,
             endIndent: 16,
           ),

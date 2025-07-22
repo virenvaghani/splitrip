@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:splitrip/data/authenticate_value.dart';
-import '../../data/constants.dart';
 
 class UserController extends GetxController {
   final RxString _userName = ''.obs;
@@ -19,40 +17,38 @@ class UserController extends GetxController {
   String get userEmail => _userEmail.value;
   String get photoUrl => _photoURL.value;
 
-  Future<void> setUserFromProvider({
-    required String provider,
-    required Map<String, dynamic> providerData,
-  }) async {
-    try {
-      String name = 'Guest';
-      String email = 'Email';
-      String imageUrl = '';
-
-
-      if (provider == 'facebook') {
-        name = providerData['name'] ?? 'Facebook User';
-        email = providerData['email'] ?? 'Email';
-        imageUrl = providerData['picture']?['data']?['url'] ?? '';
-      } else if (provider == 'google') {
-        name = providerData['displayName'] ?? 'Google User';
-        email = providerData['email'] ?? 'Email';
-        imageUrl = providerData['photoUrl'] ?? '';
-      }
-      _loadUser();
-
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to save user data: \$e');
-    }
-  }
+  // Future<void> setUserFromProvider({
+  //   required String provider,
+  //   required Map<String, dynamic> providerData,
+  // }) async {
+  //   String name = 'Guest';
+  //   String email = 'Email';
+  //   String imageUrl = '';
+  //   try {
+  //
+  //
+  //     if (provider == 'facebook') {
+  //       name = providerData['name'] ?? 'Facebook User';
+  //       email = providerData['email'] ?? 'Email';
+  //       imageUrl = providerData['picture']?['data']?['url'] ?? '';
+  //     } else if (provider == 'google') {
+  //       name = providerData['displayName'] ?? 'Google User';
+  //       email = providerData['email'] ?? 'Email';
+  //       imageUrl = providerData['photoUrl'] ?? '';
+  //     }
+  //     _loadUser();
+  //
+  //   } catch (e) {
+  //     Get.snackbar('Error', 'Failed to save user data: \$e');
+  //   }
+  // }
 
   Future<void> _loadUser() async {
     try {
       _userName.value = (await AuthStatusStorage.getUserName()) ?? 'Guest';
       _userEmail.value = (await AuthStatusStorage.getUserEmail()) ?? 'Email';
       _photoURL.value = (await AuthStatusStorage.getUserImage()) ?? '';
-      if (_userName.value.isNotEmpty && _userName.value != 'Guest') {
-        print('User loaded: ${_userName.value}');
-      }
+
     } catch (e) {
       Get.snackbar('Error', 'Failed to load user data: $e');
     }

@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:splitrip/controller/profile/profile_controller.dart';
-import 'package:splitrip/widgets/My_navigation_bar.dart';
+import 'package:splitrip/widgets/my_navigation_bar.dart';
 import '../controller/appPageController/app_page_controller.dart';
-import '../controller/trip/trip_controller.dart';
-import '../controller/profile/user_controller.dart';
 
 class DashBoard extends StatelessWidget {
-  const DashBoard({super.key});
+   DashBoard({super.key});
 
+  final AppPageController pageController = Get.find<AppPageController>();
   @override
   Widget build(BuildContext context) {
 
-    final ProfileController profileController = Get.put(ProfileController());
-    final AppPageController pageController = Get.find<AppPageController>();
-    final TripController tripController = Get.find<TripController>();
-    final UserController userController = Get.find<UserController>();
-
-    return Obx(() {
+    return GetX<AppPageController>(initState: (state) {
+    },builder: (controller) {
       return Scaffold(
         body:AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
@@ -39,6 +33,6 @@ class DashBoard extends StatelessWidget {
         ),
         bottomNavigationBar: SafeArea(child: const MyNavigationBar()),
       );
-    });
+    },);
   }
 }

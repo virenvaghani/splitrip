@@ -8,6 +8,7 @@ class SplashScreenController extends GetxController {
   bool _hasNavigated = false;
   StreamSubscription<Uri>? _linkSubscription;
   Uri? _pendingLink;
+  RxString appName = "Splitrip".obs;
 
   @override
   void onInit() {
@@ -97,7 +98,7 @@ class SplashScreenController extends GetxController {
     if (!_hasNavigated) {
       _hasNavigated = true;
       try {
-        Get.offAllNamed(PageConstant.Dashboard);
+        Get.offAllNamed(PageConstant.dashboard);
         print('SplashScreenController: Navigated to Dashboard');
       } catch (e) {
         print('SplashScreenController: Navigation to Dashboard failed: $e');
@@ -109,7 +110,7 @@ class SplashScreenController extends GetxController {
     if (!_hasNavigated) {
       _hasNavigated = true;
       try {
-        Get.toNamed(PageConstant.SelectionPage, parameters: {
+        Get.toNamed(PageConstant.selectionPage, parameters: {
           'tripId': tripId.toString(),
         });
         print('SplashScreenController: Navigated to SelectionPage with tripId: $tripId');

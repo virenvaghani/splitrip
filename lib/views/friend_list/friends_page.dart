@@ -85,20 +85,20 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primary.withOpacity(0.1),
-            theme.colorScheme.secondary.withOpacity(0.1),
+            theme.colorScheme.primary.withValues(alpha: 0.1),
+            theme.colorScheme.secondary.withValues(alpha: 0.1),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.3),
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.onSurface.withOpacity(0.1),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -119,7 +119,7 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
                         child: Text(
                           participant.name != null
                               ? participant.name![0].toUpperCase()
@@ -148,10 +148,10 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.2),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: theme.colorScheme.primary.withOpacity(0.4),
+                                color: theme.colorScheme.primary.withValues(alpha: 0.4),
                               ),
                             ),
                             child: Text(
@@ -184,10 +184,10 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surface.withOpacity(0.8),
+                                      color: theme.colorScheme.surface.withValues(alpha: 0.8),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: theme.colorScheme.primary.withOpacity(0.2),
+                                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
                                       ),
                                     ),
                                     child: Material(
@@ -230,7 +230,7 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                                                       children: [
                                                         const SizedBox(height: 8),
                                                         Divider(
-                                                          color: theme.colorScheme.primary.withOpacity(0.2),
+                                                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
                                                           thickness: 1,
                                                         ),
                                                         const SizedBox(height: 8),
@@ -257,7 +257,7 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                                                                     child: Text(
                                                                       user.name.isNotEmpty ? user.name : "Unknown User",
                                                                       style: theme.textTheme.bodyMedium?.copyWith(
-                                                                        color: theme.colorScheme.onSurface.withOpacity(0.8),
+                                                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                                                                         fontSize: 14,
                                                                       ),
                                                                       overflow: TextOverflow.ellipsis,
@@ -266,14 +266,14 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                                                                 ],
                                                               ),
                                                             );
-                                                          }).toList()
+                                                          })
                                                         else
                                                           Padding(
                                                             padding: const EdgeInsets.only(left: 16),
                                                             child: Text(
                                                               'No linked users',
                                                               style: theme.textTheme.bodySmall?.copyWith(
-                                                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                                                 fontSize: 13,
                                                               ),
                                                             ),
@@ -295,14 +295,14 @@ Widget _buildFriendTile(FriendModel friend, ThemeData theme) {
                                     ),
                                   ),
                                 );
-                              }).toList()
+                              })
                             else
                               Padding(
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Text(
                                   'No participated trips',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -505,8 +505,8 @@ void _addFriend({required BuildContext context, required ThemeData theme}) {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                theme.colorScheme.primary.withOpacity(0.05),
-                theme.colorScheme.secondary.withOpacity(0.05),
+                theme.colorScheme.primary.withValues(alpha: 0.05),
+                theme.colorScheme.secondary.withValues(alpha: 0.05),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -514,7 +514,7 @@ void _addFriend({required BuildContext context, required ThemeData theme}) {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.onSurface.withOpacity(0.05),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -637,13 +637,13 @@ Widget _customInputField({
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: theme.colorScheme.primary.withOpacity(0.2),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: theme.colorScheme.primary.withOpacity(0.4),
+          color: theme.colorScheme.primary.withValues(alpha: 0.4),
         ),
       ),
     ),
@@ -661,12 +661,12 @@ Widget _customDialogButton({
     onPressed: onPressed,
     style: TextButton.styleFrom(
       backgroundColor:
-      backgroundColor ?? theme.colorScheme.primary.withOpacity(0.1),
+      backgroundColor ?? theme.colorScheme.primary.withValues(alpha: 0.1),
       foregroundColor: textColor ?? theme.colorScheme.primary,
       padding: const EdgeInsets.symmetric(vertical: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.3)),
+        side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
       ),
     ),
     child: Text(

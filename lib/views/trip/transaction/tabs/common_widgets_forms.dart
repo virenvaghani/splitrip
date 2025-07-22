@@ -380,8 +380,9 @@ class CommonFormWidgets {
                                             ? null
                                             : (checked) {
                                               controller.togglePayer(name);
-                                              if (isSingleSelection)
-                                                Navigator.pop(dialogContext);
+                                              if (isSingleSelection) {
+                                                Get.back();
+                                              }
                                             },
                                     title: Text(
                                       name == "Viren" ? "$name (me)" : name,

@@ -67,8 +67,8 @@ class CustomAnimatedButton extends StatelessWidget {
                 ? LinearGradient(
               colors: gradientColors ??
                   [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.1),
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0.1),
                   ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -77,7 +77,7 @@ class CustomAnimatedButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: borderColor ??
-                  theme.colorScheme.outline.withOpacity(0.2),
+                  theme.colorScheme.outline.withValues(alpha: 0.2),
               width: 1,
             ),
           ),

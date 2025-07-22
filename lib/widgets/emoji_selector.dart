@@ -20,7 +20,7 @@ class EmojiSelectorBottomSheet extends StatelessWidget {
               width: 40,
               height: 5,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withOpacity(
+                color: theme.colorScheme.onSurface.withValues(alpha:
                   0.3,
                 ), // Match CreateTrip subtle colors
                 borderRadius: BorderRadius.circular(10),
@@ -65,8 +65,8 @@ class EmojiSelectorBottomSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.1),
-                      theme.colorScheme.secondary.withOpacity(0.1),
+                      theme.colorScheme.primary.withValues(alpha: 0.1),
+                      theme.colorScheme.secondary.withValues(alpha: 0.1),
                     ], // Match CreateTrip gradient
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -75,7 +75,7 @@ class EmojiSelectorBottomSheet extends StatelessWidget {
                     12,
                   ), // Match CreateTrip radius
                   border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: SizedBox(

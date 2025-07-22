@@ -34,7 +34,7 @@ class Trip {
     final tripData = json['trip'] ?? json;
 
     return Trip(
-      id: tripData['id'].toString() ?? tripData['trip_id'].toString(),
+      id: tripData['id'] == null ?  tripData['trip_id'].toString() :tripData['id'].toString(),
       tripEmoji: tripData['trip_emoji']?.toString() ?? '🌍',
       tripName: tripData['trip_name']?.toString() ?? '',
       tripCurrency: tripData['trip_currency']?.toString() ?? 'USD',

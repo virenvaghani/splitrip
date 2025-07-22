@@ -67,7 +67,7 @@ class SignUpPage extends StatelessWidget {
         Text(
           "Join or log in to manage your trips",
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           textAlign: TextAlign.center,
         ),
@@ -99,7 +99,7 @@ class SignUpPage extends StatelessWidget {
           foregroundColor: const Color(0xFF1877F2),
         ),
         const SizedBox(height: 32),
-        Divider(color: theme.dividerColor.withOpacity(0.3), thickness: 0.5),
+        Divider(color: theme.dividerColor.withValues(alpha: 0.3), thickness: 0.5),
         const SizedBox(height: 16),
         _minimalPreferenceToggle(themeController, theme),
       ],
@@ -133,7 +133,7 @@ class SignUpPage extends StatelessWidget {
       ),
       backgroundColor: Colors.transparent,
       foregroundColor: foregroundColor ?? theme.colorScheme.onSurface,
-      borderColor: theme.colorScheme.outline.withOpacity(0.2),
+      borderColor: theme.colorScheme.outline.withValues(alpha: 0.2),
       borderRadius: 10,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       minimumSize: const Size(double.infinity, 48),

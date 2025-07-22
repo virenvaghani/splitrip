@@ -641,14 +641,10 @@ class MaintainTripScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 16),
-                                    Container(
+                                    SizedBox(
                                       height: 52,
                                       width: double.infinity,
                                       child: Obx(() {
-                                        final isLoading =
-                                            tripController
-                                                .isAddparticipantLoading
-                                                .value;
                                         return Row(
                                           children: [
                                             Expanded(
@@ -1086,7 +1082,7 @@ class MaintainTripScreen extends StatelessWidget {
                       Padding(
                         padding: AppPaddings.tableCellPadding,
                         child: Text(
-                          selectedFriends[index].displayName ?? 'Unknown',
+                          selectedFriends[index].displayName,
                           maxLines: 1,
                           style: theme.textTheme.titleMedium!.copyWith(
                             color: theme.colorScheme.onSurface,

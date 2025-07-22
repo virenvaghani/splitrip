@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -54,10 +54,9 @@ class ProfileController extends GetxController {
       );
 
       final result = await authService.signInWithGoogle();
+      print("--------------------------------------------------");
+      print(result);
       if (result != null) {
-        final user = result['firebaseUser'] as User;
-        final providerData = result['providerData'] as Map<String, dynamic>;
-        await userController.setUserFromProvider(provider: 'google', providerData: providerData);
         await tripScreenController.fetchAndSetToken();
         await friendController.fetchAndSetToken();
         tripController.isAuthenticated.value = true;
@@ -102,13 +101,6 @@ class ProfileController extends GetxController {
 
       final result = await authService.signInWithFacebook();
       if (result != null) {
-        final user = result['firebaseUser'] as User;
-        final providerData = result['providerData'] as Map<String, dynamic>;
-
-        await userController.setUserFromProvider(
-          provider: 'facebook',
-          providerData: providerData,
-        );
         await tripScreenController.fetchAndSetToken();
         await friendController.fetchAndSetToken();
         tripController.isAuthenticated.value = true;
