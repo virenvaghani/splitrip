@@ -3,17 +3,23 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
+import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/model/friend/friend_model.dart';
 import 'package:splitrip/widgets/myappbar.dart';
-import '../../../widgets/emoji_selector.dart';
-import '../../data/trip_constant.dart';
-import '../../theme/theme_colors.dart';
-import '../../widgets/my_textfield.dart';
+import '../../../../widgets/emoji_selector.dart';
+import '../../../controller/splash_screen/splash_screen_controller.dart';
+import '../../../data/trip_constant.dart';
+import '../../../model/currency/currency_model.dart';
+import '../../../theme/theme_colors.dart';
+import '../../../widgets/my_textfield.dart';
 
 class MaintainTripScreen extends StatelessWidget {
   MaintainTripScreen({super.key});
 
   final TripController tripController = Get.find<TripController>();
+  final SplashScreenController splashScreenController = Get.put(
+      SplashScreenController());
+
   final argumentData = Get.arguments;
 
   @override
@@ -41,7 +47,8 @@ class MaintainTripScreen extends StatelessWidget {
           ),
           child: SafeArea(
             child: Scaffold(
-              appBar: CustomAppBar(title: AppStrings.newTripTitle,centerTitle: true,),
+              appBar: CustomAppBar(
+                title: AppStrings.newTripTitle, centerTitle: true,),
               body:
               tripController.isMantainTripLoading.value
                   ? const Center(child: CircularProgressIndicator())
@@ -218,27 +225,32 @@ class MaintainTripScreen extends StatelessWidget {
         Padding(
           padding: AppPaddings.smallBottom,
           child: Obx(() {
-            // Find the symbol for the selected currency code
-            final selectedCurrency = tripController.availableCurrencies
-                .firstWhere(
-                  (currency) =>
-              currency['code'] == tripController.selectedCurrencyCode.value,
-              orElse: () =>
-              {
-                'symbol': '₹',
-                'name': 'Indian Rupee',
-                'code': 'INR'
-              },
+            final selectedId = tripController.selectedCurrencyId.value;
+
+            final selectedCurrency = Kconstant.currencyModelList.firstWhere(
+                  (currency) => currency.id == selectedId,
+              orElse: () => CurrencyModel(
+                id: 0, // Use a unique ID that doesn't exist in the list
+                code: 'INR',
+                name: 'Indian Rupee',
+                symbol: '₹',
+              ),
             );
+
+            final double fontSize =
+            selectedCurrency.symbol.length > 2 ? 18.0 : 24.0;
+
             return Container(
               height: 50,
               width: 50,
               decoration: AppStyles.kBoxDecoration,
               child: Center(
                 child: Text(
-                  selectedCurrency['symbol'],
+                  selectedCurrency.symbol,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     color: theme.primaryColor,
+                    fontSize: fontSize,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -259,21 +271,20 @@ class MaintainTripScreen extends StatelessWidget {
                   ),
                 ),
                 Obx(() {
-                  // Filter INR, USD, EUR, and include selectedCurrencyCode if not in the main three
-                  final selectedCode = tripController.selectedCurrencyCode
-                      .value;
-                  final dropdownCurrencies = tripController.availableCurrencies
-                      .where((currency) {
-                    final code = currency['code'];
-                    return ['INR', 'USD', 'EUR'].contains(code) ||
-                        code == selectedCode;
-                  })
-                      .toList();
-                  // Ensure unique items by code
-                  final uniqueCurrencies = {
-                    for (var currency in dropdownCurrencies) currency['code']: currency
-                  }.values.toList();
-                  return DropdownButtonFormField2<String>(
+                  final selectedId = tripController.selectedCurrencyId.value;
+
+                  // Ensure unique items in the dropdown
+                  final uniqueCurrencies = Kconstant.currencyModelList
+                      .asMap()
+                      .entries
+                      .fold<List<CurrencyModel>>([], (list, entry) {
+                    if (!list.any((c) => c.id == entry.value.id)) {
+                      list.add(entry.value);
+                    }
+                    return list;
+                  });
+
+                  return DropdownButtonFormField2<int>(
                     iconStyleData: AppStyles.dropdownIconStyle,
                     decoration: AppStyles.dropdownDecoration(theme),
                     hint: Text(
@@ -282,50 +293,24 @@ class MaintainTripScreen extends StatelessWidget {
                     ),
                     items: [
                       ...uniqueCurrencies.map(
-                            (currency) =>
-                            DropdownMenuItem<String>(
-                              value: currency['code'],
-                              child: Text(
-                                currency['name'],
-                                style: theme.textTheme.bodyLarge,
-                              ),
-                            ),
-                      ),
-                      DropdownMenuItem<String>(
-                        value: 'more',
-                        child: Text(
-                          'More...',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.primary,
+                            (currency) => DropdownMenuItem<int>(
+                          value: currency.id,
+                          child: Text(
+                            currency.name,
+                            style: theme.textTheme.bodyLarge,
                           ),
                         ),
                       ),
                     ],
-                    value: tripController.selectedCurrencyCode.value.isEmpty
-                        ? null
-                        : tripController.selectedCurrencyCode.value,
+                    value: selectedId == 0 ? null : selectedId,
                     onChanged: (value) {
-                      if (value == 'more') {
-                        selectCurrencyBottomSheetMethod(
-                          context: context,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
-                          ),
-                          selectedCurrencyCode: tripController
-                              .selectedCurrencyCode.value,
-                          onCurrencySelected: (code, symbol) {
-                            tripController.selectedCurrencyCode.value = code;
-                            Get.back();
-                          },
-                        );
+                      if (value == -1) {
                       } else if (value != null) {
-                        tripController.selectedCurrencyCode.value = value;
+                        tripController.selectedCurrencyId.value = value;
                       }
                     },
                     validator: (value) {
-                      if (value == null || value.isEmpty || value == 'more') {
+                      if (value == null || value <= 0) {
                         return AppStrings.currencyValidation;
                       }
                       return null;
@@ -335,6 +320,7 @@ class MaintainTripScreen extends StatelessWidget {
                         borderRadius: AppBorders.defaultRadius,
                         color: theme.cardTheme.color,
                       ),
+                      maxHeight: 500.0,
                       elevation: 1,
                     ),
                   );
@@ -346,7 +332,6 @@ class MaintainTripScreen extends StatelessWidget {
       ],
     );
   }
-
 
   Widget selectParticipantWidget({
     required BuildContext context,
@@ -369,7 +354,7 @@ class MaintainTripScreen extends StatelessWidget {
           ),
           boxShadow: [AppShadows.defaultShadow(theme)],
           borderRadius: AppBorders.largeRadius,
-          //border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2))
+          //border: Border.all(color: theme.colorScheme.primary.withValues(alpha: )(0.2))
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacers.smallSpacing),
@@ -467,8 +452,10 @@ class MaintainTripScreen extends StatelessWidget {
                             ),
                             onPressed: () {
                               Get.back();
-                              tripController.newParticipantMembersController.clear();
-                              tripController.newParticipantNameController.clear();
+                              tripController.newParticipantMembersController
+                                  .clear();
+                              tripController.newParticipantNameController
+                                  .clear();
                             },
                           ),
                         ],
@@ -927,7 +914,8 @@ class MaintainTripScreen extends StatelessWidget {
                           ),
                         ),
                       const SizedBox(height: 8.0),
-                      tripController.isVisibleAddFriendForm.value ? SizedBox.shrink() :SizedBox(
+                      tripController.isVisibleAddFriendForm.value ? SizedBox
+                          .shrink() : SizedBox(
                         width: double.infinity,
                         child: TextButton(
                           style: TextButton.styleFrom(
@@ -1061,13 +1049,17 @@ class MaintainTripScreen extends StatelessWidget {
         ),
         Column(
           children: List.generate(selectedFriends.length, (index) {
+            final participant = selectedFriends[index];
+            // final isLinked = participant.name!.contains('(Linked)');
+            // final nameWithoutTag = isLinked ? participant.name!.replaceAll(
+            //     ' (Linked)', '') : participant.name;
+
             return Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 color: theme.scaffoldBackgroundColor,
-                borderRadius:
-                tripController.selectedParticipantModel.length - 1 ==
-                    index
+                borderRadius: tripController.selectedParticipantModel.length -
+                    1 == index
                     ? AppBorders.tableBottomRadius
                     : null,
                 boxShadow: [AppShadows.defaultShadow(theme)],
@@ -1081,12 +1073,39 @@ class MaintainTripScreen extends StatelessWidget {
                     children: [
                       Padding(
                         padding: AppPaddings.tableCellPadding,
-                        child: Text(
-                          selectedFriends[index].displayName,
-                          maxLines: 1,
-                          style: theme.textTheme.titleMedium!.copyWith(
-                            color: theme.colorScheme.onSurface,
-                          ),
+                        child: Row(
+                          children: [
+                            Text(
+                              participant.displayName,
+                              maxLines: 1,
+                              style: theme.textTheme.titleMedium!.copyWith(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                             tripController.isParticipantLinked.value ?
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: Container(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 3.0),
+                                    child: Text(
+                                        'me',
+                                        style: theme.textTheme.labelMedium!
+                                            .copyWith(
+                                            color: theme.colorScheme.onPrimary
+                                        )
+                                    ),
+                                  ),
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10)),
+                                      color: theme.primaryColor.withValues(
+                                          alpha: 0.5)
+                                  ),
+                                ),
+                              ): SizedBox.shrink(),
+                          ],
                         ),
                       ),
                       Padding(
@@ -1104,11 +1123,10 @@ class MaintainTripScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: TextFormField(
-                              initialValue:
-                              "${selectedFriends[index].customMemberCount ??
-                                  selectedFriends[index].member ?? 1}",
-                              keyboardType: TextInputType.number,
-                              maxLines: 1,
+                              initialValue: "${participant.customMemberCount ??
+                                  participant.member ?? 1.0}",
+                              keyboardType: const TextInputType
+                                  .numberWithOptions(decimal: true),
                               style: theme.textTheme.titleMedium!.copyWith(
                                 color: theme.colorScheme.onSurface,
                               ),
@@ -1118,16 +1136,15 @@ class MaintainTripScreen extends StatelessWidget {
                                 contentPadding: EdgeInsets.zero,
                               ),
                               onChanged: (value) {
-                                final parsedValue = int.tryParse(value);
-                                if (parsedValue != null &&
-                                    parsedValue > 0) {
-                                  selectedFriends[index].customMemberCount =
-                                      parsedValue;
+                                final parsedValue = double.tryParse(value);
+                                if (parsedValue != null && parsedValue > 0) {
+                                  participant.customMemberCount = parsedValue;
                                   tripController.selectedParticipantModel
-                                      .refresh(); // Refresh if using RxList
+                                      .refresh();
                                 }
                               },
                             ),
+
                           ),
                         ),
                       ),
@@ -1143,8 +1160,7 @@ class MaintainTripScreen extends StatelessWidget {
                             tripController.removeFromParticipantList(
                               context: context,
                               theme: theme,
-                              participantReferenceId:
-                              selectedFriends[index].referenceId,
+                              participantReferenceId: participant.referenceId,
                             );
                           },
                         ),
@@ -1163,170 +1179,6 @@ class MaintainTripScreen extends StatelessWidget {
         AppStrings.noFriendsSelected,
         style: TextStyle(color: Colors.grey),
       ),
-    );
-  }
-
-  void selectCurrencyBottomSheetMethod({
-    required BuildContext context,
-    required RoundedRectangleBorder shape,
-    required String selectedCurrencyCode,
-    required Function(String currencyCode, String currencySymbol) onCurrencySelected,
-  }) {
-    final List<Map<String, dynamic>> currencyList = tripController
-        .availableCurrencies.toList();
-    RxList<Map<String, dynamic>> filteredList = currencyList.obs;
-    final TextEditingController searchController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      shape: shape,
-      isScrollControlled: true,
-      builder: (context) {
-        return Padding(
-          padding: MediaQuery
-              .of(context)
-              .viewInsets,
-          child: SizedBox(
-            height: MediaQuery
-                .of(context)
-                .size
-                .height * 0.8,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Center(
-                    child: Container(
-                      width: 48.0,
-                      height: 4.0,
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      decoration: BoxDecoration(
-                        color: Theme
-                            .of(context)
-                            .dividerColor
-                            .withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2.0),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppStrings.selectCurrency,
-                        style: Theme
-                            .of(context)
-                            .textTheme
-                            .headlineSmall!
-                            .copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20.0,
-                          color: Theme
-                              .of(context)
-                              .colorScheme
-                              .onSurface,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 28.0),
-                        color: Theme
-                            .of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                        onPressed: () {
-                          if (tripController.selectedCurrencyCode.value
-                              .isEmpty) {
-                            tripController.selectedCurrencyCode.value = 'INR';
-                          }
-                          Get.back();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search Currency...',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Theme
-                            .of(context)
-                            .colorScheme
-                            .onSurfaceVariant,
-                      ),
-                      filled: true,
-                      fillColor: Theme
-                          .of(context)
-                          .highlightColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 14.0,
-                        horizontal: 16.0,
-                      ),
-                    ),
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .bodyLarge,
-                    onChanged: (value) {
-                      filteredList.value = currencyList
-                          .where((currency) =>
-                      currency['name'].toLowerCase().contains(
-                          value.toLowerCase()) ||
-                          currency['code'].toLowerCase().contains(
-                              value.toLowerCase()))
-                          .toList();
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: Obx(
-                        () =>
-                        ListView.builder(
-                          itemCount: filteredList.length,
-                          itemBuilder: (context, index) {
-                            final currency = filteredList[index];
-                            final isSelected = currency['code'] ==
-                                selectedCurrencyCode;
-                            return ListTile(
-                              title: Text(currency['name']),
-                              leading: Text(
-                                currency['symbol'],
-                                style: Theme
-                                    .of(context)
-                                    .textTheme
-                                    .headlineMedium,
-                              ),
-                              trailing: isSelected
-                                  ? const Icon(Icons.check, color: Colors.blue)
-                                  : null,
-                              onTap: () {
-                                if (!isSelected) {
-                                  onCurrencySelected(
-                                      currency['code'], currency['symbol']);
-                                }
-                              },
-                            );
-                          },
-                        ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

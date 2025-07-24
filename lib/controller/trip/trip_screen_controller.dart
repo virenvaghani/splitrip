@@ -195,7 +195,7 @@ class TripScreenController extends GetxController {
         for (var id in tripIds) {
           final trip = archivedTripList.firstWhere(
                 (trip) => trip.id == id,
-            orElse: () => Trip(id: '', tripName: '', tripCurrency: '', tripEmoji: '', participantReferenceIds: []),
+            orElse: () => Trip(id: '', tripName: '', defaultCurrency: 0, tripEmoji: '', participantReferenceIds: []),
           );
           if (trip.id != null) {
             reorderedTrips.add(trip);

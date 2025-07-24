@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 
 class TripDetailController extends GetxController {
   RxBool ismokLoading = false.obs;
-  var isLoading = true.obs;
+  RxBool isLoading = false.obs;
   var selectedTabIndex = 0.obs;
 
   final trip = {}.obs;
@@ -22,7 +22,6 @@ class TripDetailController extends GetxController {
   void onInit() {
     super.onInit();
     initializeShares();
-    loadMockData();
   }
 
   void initializeShares() {
@@ -114,7 +113,6 @@ class TripDetailController extends GetxController {
   }
 
   void loadMockData() {
-    ismokLoading.value = true;
     final now = DateTime.now();
 
     transactions.value = [
@@ -209,7 +207,6 @@ class TripDetailController extends GetxController {
     ];
 
     calculateSummary();
-    isLoading.value = false;
   }
 
 

@@ -4,23 +4,20 @@ class Trip {
   final String? id;
   final String tripEmoji;
   final String tripName;
-  final String tripCurrency;
+  final int defaultCurrency;
   final String? inviteCode;
   final String? createdBy;
   final List<String> participantReferenceIds;
   final int? totalParticipants;
   final bool isArchived;
   final bool isDeleted;
-  final List<LinkedUserModel>?
-  linkedUsers;
-
-
+  final List<LinkedUserModel>? linkedUsers;
 
   Trip({
     this.id,
     required this.tripEmoji,
     required this.tripName,
-    required this.tripCurrency,
+    required this.defaultCurrency,
     this.inviteCode,
     this.createdBy,
     required this.participantReferenceIds,
@@ -34,19 +31,19 @@ class Trip {
     final tripData = json['trip'] ?? json;
 
     return Trip(
-      id: tripData['id'] == null ?  tripData['trip_id'].toString() :tripData['id'].toString(),
+      id: tripData['id'] == null ? tripData['trip_id']?.toString() : tripData['id'].toString(),
       tripEmoji: tripData['trip_emoji']?.toString() ?? '🌍',
       tripName: tripData['trip_name']?.toString() ?? '',
-      tripCurrency: tripData['trip_currency']?.toString() ?? 'USD',
+      defaultCurrency: (tripData['default_currency']) ?? 15,
       inviteCode: tripData['invite_code']?.toString(),
       createdBy: tripData['created_by']?.toString(),
       participantReferenceIds: tripData['participants'] != null && tripData['participants'] is List
           ? List<String>.from(tripData['participants'].map((p) => p.toString()))
           : [],
-      totalParticipants: json['total_participants'],
+      totalParticipants: tripData['total_participants'],
       isArchived: (tripData['is_archived'] as bool?) ?? false,
       isDeleted: (tripData['is_deleted'] as bool?) ?? false,
-      linkedUsers: (json['linked_users'] as List<dynamic>?)
+      linkedUsers: (tripData['linked_users'] as List<dynamic>?)
           ?.map((user) => LinkedUserModel.fromJson(user))
           .toList() ??
           [],
@@ -55,13 +52,18 @@ class Trip {
 
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'trip_id' ?? 'id': id,
+      'id': id,
+      'trip_id': id, // Include both for compatibility
       'trip_emoji': tripEmoji,
       'trip_name': tripName,
-      'trip_currency': tripCurrency,
+      'default_currency': defaultCurrency,
+      'invite_code': inviteCode,
+      'created_by': createdBy,
       'participants': participantReferenceIds,
+      'total_participants': totalParticipants,
       'is_archived': isArchived,
       'is_deleted': isDeleted,
+      'linked_users': linkedUsers?.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -69,26 +71,27 @@ class Trip {
     String? id,
     String? tripEmoji,
     String? tripName,
-    String? tripCurrency,
+    double? defaultCurrency,
     String? inviteCode,
     String? createdBy,
     List<String>? participantReferenceIds,
     int? totalParticipants,
     bool? isArchived,
     bool? isDeleted,
-
+    List<LinkedUserModel>? linkedUsers,
   }) {
     return Trip(
       id: id ?? this.id,
       tripEmoji: tripEmoji ?? this.tripEmoji,
       tripName: tripName ?? this.tripName,
-      tripCurrency: tripCurrency ?? this.tripCurrency,
+      defaultCurrency: this.defaultCurrency,
       inviteCode: inviteCode ?? this.inviteCode,
       createdBy: createdBy ?? this.createdBy,
       participantReferenceIds: participantReferenceIds ?? this.participantReferenceIds,
       totalParticipants: totalParticipants ?? this.totalParticipants,
       isArchived: isArchived ?? this.isArchived,
       isDeleted: isDeleted ?? this.isDeleted,
+      linkedUsers: linkedUsers ?? this.linkedUsers,
     );
   }
 }

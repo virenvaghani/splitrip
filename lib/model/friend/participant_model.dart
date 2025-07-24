@@ -4,7 +4,7 @@ import 'linkuser_model.dart';
 class ParticipantModel {
   final int? id;
   final String? name; // General participant list name
-  final int? member;
+  final double? member;
   final String? referenceId;
   final String? user;
   final List<LinkedUserModel> linkedUsers;
@@ -12,8 +12,8 @@ class ParticipantModel {
   // Fields from selected_participants (TripMembership-style)
   final String? participantReferenceId;
   final String? participantName;
-  final int? participantMember;
-  int? customMemberCount;
+  final double? participantMember;
+  double? customMemberCount;
   final List<Trip>? participatedTrips;
 
   ParticipantModel({
@@ -34,7 +34,7 @@ class ParticipantModel {
     return ParticipantModel(
       id: json['id'],
       name: json['name'],
-      member: json['member'],
+      member: (json['member'] as num?)?.toDouble(), // Convert to double
       referenceId: json['reference_id'],
       user: json['user'],
       linkedUsers: (json['linked_users'] as List<dynamic>?)
@@ -43,8 +43,8 @@ class ParticipantModel {
           [],
       participantReferenceId: json['participant_reference_id'],
       participantName: json['participant_name'],
-      participantMember: json['participant_member'],
-      customMemberCount: json['custom_member_count'],
+      participantMember: (json['participant_member'] as num?)?.toDouble(), // Convert to double
+      customMemberCount: (json['custom_member_count'] as num?)?.toDouble(),
       participatedTrips: (json['participated_trips'] as List<dynamic>?)
           ?.map((trip) => Trip.fromJson(trip))
           .toList() ??
@@ -64,7 +64,7 @@ class ParticipantModel {
       'participant_name': participantName,
       'participant_member': participantMember,
       'custom_member_count': customMemberCount,
-      'participatedTrips':participatedTrips,
+      'participated_trips': participatedTrips?.map((trip) => trip.toJson()).toList(),
     };
   }
 
@@ -76,6 +76,6 @@ class ParticipantModel {
       participantReferenceId ?? referenceId ?? "";
 
   /// Getter for member count fallback logic
-  int get displayMemberCount =>
-      customMemberCount ?? participantMember ?? member ?? 1;
+  double get displayMemberCount =>
+      customMemberCount?.toDouble() ?? participantMember ?? member ?? 1.0;
 }

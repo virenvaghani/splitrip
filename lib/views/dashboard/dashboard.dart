@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/widgets/my_navigation_bar.dart';
-import '../controller/appPageController/app_page_controller.dart';
+import '../../controller/appPageController/app_page_controller.dart';
 
 class DashBoard extends StatelessWidget {
    DashBoard({super.key});

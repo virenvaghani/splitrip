@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
-import '../../../../controller/trip/transaction_controller.dart';
+import '../../../../controller/transaction_controller/transaction_controller.dart';
 
 class CommonFormWidgets {
   static Widget buildSection({

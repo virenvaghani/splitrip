@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:splitrip/controller/splash_screen/splash_screen_controller.dart';
 import 'package:splitrip/controller/trip/trip_screen_controller.dart';
+import 'package:splitrip/views/trip/archive/archive_screen.dart';
+import 'package:splitrip/views/trip/trip_detail/trip_detail_screen.dart';
 
 import 'firebase_options.dart';
 import 'data/constants.dart';
@@ -16,22 +18,19 @@ import 'controller/loginButton/button_controller.dart';
 import 'controller/theme/theme_controller.dart';
 import 'controller/profile/user_controller.dart';
 import 'controller/friend/friend_controller.dart';
-import 'controller/trip/emoji_controller.dart';
+import 'controller/emoji_controller/emoji_controller.dart';
 import 'controller/trip/trip_controller.dart';
 import 'controller/trip/trip_detail_controller.dart';
-import 'controller/trip/transaction_controller.dart';
 import 'controller/appPageController/app_page_controller.dart';
 import 'controller/participant/participent_selection_controller.dart';
 
 // Views
-import 'views/dashboard.dart';
-import 'views/splash_screen.dart';
+import 'views/dashboard/dashboard.dart';
+import 'views/splash/splash_screen.dart';
 import 'views/profile/profile_page.dart';
-import 'views/trip/trip_screen.dart';
-import 'views/trip/maintain_trip_screen_.dart';
+import 'views/trip/trip_screen/trip_screen.dart';
+import 'views/trip/maintain_trip/maintain_trip_screen_.dart';
 import 'views/trip/transaction/transaction_screen.dart';
-import 'views/trip/archive_screen.dart';
-import 'views/trip/trip_detail_screen.dart';
 import 'views/participant/participant_selection_screen.dart';
 
 void main() async {
@@ -46,7 +45,6 @@ void main() async {
   Get.put(FriendController());
   Get.put(AppPageController());
   Get.put(TripDetailController());
-  Get.put(TransactionScreenController());
   Get.put(EmojiController());
   Get.lazyPut(() => SplashScreenController());
   Get.lazyPut(

@@ -41,6 +41,7 @@ class TransactionScreenController extends GetxController {
   final Map<String, TextEditingController> _recipientTextControllers = {};
   late final TripDetailController _tripDetailController;
   late TabController tabController;
+  var isSelected = false.obs;
 
   TransactionScreenController();
 
@@ -403,5 +404,9 @@ class TransactionScreenController extends GetxController {
     if (isTransactionSubmitted.value) {
       payersError.value = transactionPayers.isEmpty ? 'At least one payer is required' : '';
     }
+  }
+
+  void updateSelection(bool value) {
+    isSelected.value = value;
   }
 }

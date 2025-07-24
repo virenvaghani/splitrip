@@ -44,6 +44,7 @@ class AppSpacers {
   static const SizedBox small = SizedBox(height: 8);
   static const SizedBox medium = SizedBox(height: 16);
   static const double smallSpacing = 8;
+  static const double tinySpacing = 4;
   static const SizedBox horizontalSmall = SizedBox(width: 10); // Changed to SizedBox
   static const SizedBox bigSpacing = SizedBox(height: 36);
 

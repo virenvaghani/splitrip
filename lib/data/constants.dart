@@ -1,8 +1,11 @@
+import '../model/currency/currency_model.dart';
+
 class Kconstant {
   static const String themeModeKey = 'theme_mode';
   static const String userNameKey = 'user_name';
   static const String userEmail = 'user_email';
   static const String photoURL = 'Image';
+  static  List<CurrencyModel> currencyModelList = [];
 }
 
 class PageConstant {

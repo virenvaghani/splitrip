@@ -8,6 +8,8 @@ import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/widgets/myappbar.dart';
 
+import '../../../model/currency/currency_model.dart';
+
 class TripScreen extends StatelessWidget {
   TripScreen({super.key});
 
@@ -19,6 +21,7 @@ class TripScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
 
     return Obx(() {
       final token = tripScreenController.authToken.value;
@@ -91,6 +94,12 @@ class TripScreen extends StatelessWidget {
     );
   }
 
+  String getCurrencyNameById(int id) {
+    return Kconstant.currencyModelList.firstWhere(
+          (currency) => currency.id == id,
+      orElse: () => CurrencyModel(id: id, name: "Unknown", code: '', symbol: ''),
+    ).code;
+  }
 
   Widget _buildBody(BuildContext context, ThemeData theme) {
     if (tripScreenController.tripModelList.isNotEmpty) {
@@ -160,7 +169,7 @@ class TripScreen extends StatelessWidget {
                                       style: theme.textTheme.bodyLarge?.copyWith(
                                           color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500),
                                     ),
-                                    Text("Currency: ${trip.tripCurrency}", style: theme.textTheme.labelSmall),
+                                    Text("Currency: ${getCurrencyNameById(trip.defaultCurrency)}", style: theme.textTheme.labelSmall),
                                   ],
                                 ),
                               ],
@@ -384,4 +393,5 @@ class TripScreen extends StatelessWidget {
       ),
     );
   }
+
 }

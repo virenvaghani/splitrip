@@ -9,8 +9,10 @@ import 'package:splitrip/data/token.dart';
 import 'package:splitrip/model/friend/participant_model.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
 import 'package:splitrip/model/friend/friend_model.dart';
+import '../../model/currency/currency_model.dart';
 import '../../model/friend/linkuser_model.dart';
-import 'emoji_controller.dart';
+import '../emoji_controller/emoji_controller.dart';
+import '../splash_screen/splash_screen_controller.dart';
 
 class TripController extends GetxController {
   RxBool isFriendPageLoading = false.obs;
@@ -22,7 +24,7 @@ class TripController extends GetxController {
   final TextEditingController tripNameController = TextEditingController();
   final TextEditingController newParticipantNameController = TextEditingController();
   final TextEditingController newParticipantMembersController = TextEditingController();
-  final RxString selectedCurrencyCode = "INR".obs; // Store currency code
+  final selectedCurrencyId = 0.obs;
   final RxList<Map<String, dynamic>> availableCurrencies = RxList(); // Store currency data
 
   final RxString validationMsgForSelectFriend = "".obs;
@@ -37,6 +39,7 @@ class TripController extends GetxController {
   final RxList<ParticipantModel> selectedParticipantModel = RxList();
   final RxList<Trip> archivedTripList = RxList();
   final isTokenLoading = true.obs;
+  RxBool isParticipantLinked = false.obs;
 
   final searchText = ''.obs;
   final authToken = RxnString();
@@ -67,13 +70,7 @@ class TripController extends GetxController {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final availableParticipants = data["available_participants"] as List;
-        // Store currencies
-        availableCurrencies.value = List<Map<String, dynamic>>.from(data["currency"]);
-        return availableParticipants
-            .map((p) => p['reference_id'] as String?)
-            .where((id) => id != null && id.isNotEmpty)
-            .cast<String>()
-            .toList();
+        return availableParticipants.map((e) => e['participant_reference_id'].toString()).toList();
       } else {
         print("Failed to fetch valid participants: ${response.statusCode} - ${response.body}");
         return [];
@@ -84,10 +81,19 @@ class TripController extends GetxController {
     }
   }
 
+  double? _parseToDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
   Future<void> initStateMethodForMaintain({
     required Map<String, dynamic> argumentData,
   }) async {
     isMantainTripLoading.value = true;
+    final userIdString = await AuthStatusStorage.getUserId();
+    final parsedUserId = int.tryParse(userIdString ?? "");
 
     callFrom.value = argumentData["Call From"]?.toString() ?? "";
     int? tripId = int.tryParse(argumentData["trip_id"]?.toString() ?? "0");
@@ -99,14 +105,26 @@ class TripController extends GetxController {
 
       // Map selected participants
       final List<ParticipantModel> selectedList = (data["selected_participants"] as List)
-          .map((e) => ParticipantModel(
-        referenceId: e["participant_reference_id"],
-        name: e["participant_name"],
-        member: e["member"],
-        customMemberCount: e["custom_member_count"],
-        linkedUsers: [],
-      ))
-          .toList();
+          .map((e) {
+        final participantReferenceId = e["participant_reference_id"];
+        final friendController = Get.find<FriendController>();
+        isParticipantLinked.value = friendController.friendsList.any((friend) {
+          return friend.participant.referenceId == participantReferenceId &&
+              friend.participant.participatedTrips!.any((trip) {
+                return trip.linkedUsers!.any((user) {
+                  return user.id.toString() == parsedUserId.toString();
+                });
+              });
+        });
+
+        return ParticipantModel(
+          referenceId: e["participant_reference_id"],
+          name: "${e["participant_name"]}",
+          member: _parseToDouble(e["member"]),
+          customMemberCount: _parseToDouble(e["custom_member_count"]),
+          linkedUsers: [],
+        );
+      }).toList();
 
       // Map available participants
       final List<FriendModel> availableList = (data["available_participants"] as List)
@@ -120,8 +138,11 @@ class TripController extends GetxController {
       ))
           .toList();
 
-      // Store currencies
-      availableCurrencies.value = List<Map<String, dynamic>>.from(data["currency"]);
+      // Ensure currencies are loaded
+      if (Kconstant.currencyModelList.isEmpty) {
+        final SplashScreenController splashScreenController = Get.find<SplashScreenController>();
+        await splashScreenController.getAllCurrency();
+      }
 
       if (isEdit) {
         final trip = data["trip"];
@@ -132,28 +153,34 @@ class TripController extends GetxController {
         }
 
         tripNameController.text = trip["trip_name"] ?? "";
-        // Set currency code from database, default to INR if null
-        selectedCurrencyCode.value = trip["trip_currency"]?.toString() ?? "INR";
+        // Set currency ID from database, using ID directly
+        final defaultCurrencyId = int.tryParse(trip["default_currency"]?.toString() ?? "15") ?? 15;
+        final selectedCurrency = Kconstant.currencyModelList.firstWhere(
+              (currency) => currency.id == defaultCurrencyId,
+          orElse: () => CurrencyModel(
+            id: 15,
+            code: 'INR',
+            name: 'Indian Rupee',
+            symbol: '₹',
+          ),
+        );
+        selectedCurrencyId.value = selectedCurrency.id;
         emojiController.selectedEmoji.value =
             emojiController.getEmojiDataByString(trip["trip_emoji"]) ?? emojiController.getDefaultEmoji();
       } else {
         tripNameController.clear();
-        selectedCurrencyCode.value = "INR";
+        selectedCurrencyId.value = 15; // Default to INR
         emojiController.selectedEmoji.value = emojiController.getRandomEmoji();
 
-        final userIdString = await AuthStatusStorage.getUserId();
-        final parsedUserId = int.tryParse(userIdString ?? "");
         print("🔍 Parsed User ID: $parsedUserId");
 
         if (parsedUserId != null) {
           final friendController = Get.find<FriendController>();
-
           final List<FriendModel> matchingFriends = friendController.friendsList.where((friend) {
             return friend.participant.participatedTrips!.any((trip) {
               return trip.linkedUsers!.any((user) => user.id.toString() == parsedUserId.toString());
             });
           }).toList();
-
 
           print("✅ Matching Friends For Create Only:");
           for (var f in matchingFriends) {
@@ -239,27 +266,41 @@ class TripController extends GetxController {
   }
 
   Future<void> saveTrip({required Map<String, dynamic> argumentData}) async {
-    if (formKey.currentState?.validate() ?? false) {
-      isMantainTripLoading.value = true;
+    final tripController = Get.find<TripController>();
+    final splashScreenController = Get.find<SplashScreenController>();
 
-      final participantMaps = selectedParticipantModel.map((p) => {
+    if (formKey.currentState?.validate() ?? false) {
+      tripController.isMantainTripLoading.value = true;
+
+      final participantMaps = tripController.selectedParticipantModel.map((p) => {
         "participant_reference_id": p.referenceId,
         "custom_member_count": p.customMemberCount ?? p.member ?? 1,
       }).toList();
 
+      // Find the selected currency using selectedCurrencyId
+      final selectedCurrency = Kconstant.currencyModelList.firstWhere(
+            (currency) => currency.id == tripController.selectedCurrencyId.value,
+        orElse: () => CurrencyModel(
+          id: 15,
+          code: 'INR',
+          name: 'Indian Rupee',
+          symbol: '₹',
+        ),
+      );
+
       if (participantMaps.isEmpty ||
-          tripNameController.text.trim().isEmpty ||
-          selectedCurrencyCode.value.isEmpty ||
-          emojiController.selectedEmoji.value?.char == null) {
+          tripController.tripNameController.text.trim().isEmpty ||
+          tripController.selectedCurrencyId.value == 0 ||
+          tripController.emojiController.selectedEmoji.value?.char == null) {
         showSnackBar(Get.context!, Get.theme, "Please provide valid trip details and participants");
-        isMantainTripLoading.value = false;
+        tripController.isMantainTripLoading.value = false;
         return;
       }
 
       final tripData = {
-        'trip_name': tripNameController.text.trim(),
-        'trip_currency': selectedCurrencyCode.value, // Use currency code
-        'trip_emoji': emojiController.selectedEmoji.value?.char ?? '🧳',
+        'trip_name': tripController.tripNameController.text.trim(),
+        'default_currency': selectedCurrency.id, // Send currency ID to backend
+        'trip_emoji': tripController.emojiController.selectedEmoji.value?.char ?? '🧳',
         'participants': participantMaps,
       };
 
@@ -269,12 +310,12 @@ class TripController extends GetxController {
       if (response != null) {
         showSnackBar(Get.context!, Get.theme, tripId != null ? "Trip updated successfully" : "Trip created successfully");
         Get.back(result: response);
-        tripModelList.refresh();
+        tripController.tripModelList.refresh();
       } else {
         showSnackBar(Get.context!, Get.theme, "Failed to ${tripId != null ? 'update' : 'create'} trip");
       }
 
-      isMantainTripLoading.value = false;
+      tripController.isMantainTripLoading.value = false;
     } else {
       showSnackBar(Get.context!, Get.theme, "Please fill in all required fields");
     }
@@ -399,9 +440,9 @@ class TripController extends GetxController {
     print("🔍 Parsed User ID: $parsedUserId");
 
     if (parsedUserId == null) {
-      if(context.mounted){
-      showSnackBar(context, theme, "User not authenticated");
-      return;
+      if (context.mounted) {
+        showSnackBar(context, theme, "User not authenticated");
+        return;
       }
     }
 
@@ -412,12 +453,12 @@ class TripController extends GetxController {
           friend.participant.participatedTrips!.any((trip) {
             return trip.linkedUsers!.any((user) {
               return user.id.toString() == parsedUserId.toString();
-            },);
+            });
           });
     });
 
     if (isParticipantLinked) {
-      if(context.mounted){
+      if (context.mounted) {
         showSnackBar(context, theme, "Cannot remove a linked participant");
         return;
       }
@@ -439,17 +480,15 @@ class TripController extends GetxController {
       selectedParticipantModel.refresh();
       availableParticipantModel.refresh();
 
-      if(context.mounted){
+      if (context.mounted) {
         showSnackBar(context, theme, "Participant removed successfully");
         return;
       }
-
     } else {
-      if(context.mounted){
+      if (context.mounted) {
         showSnackBar(context, theme, "Participant not found");
         return;
       }
-
     }
   }
 
@@ -468,11 +507,10 @@ class TripController extends GetxController {
     );
   }
 
-  // Helper to get currency name from code
-  String getCurrencyName(String code) {
-    return availableCurrencies.firstWhere(
-          (c) => c["code"] == code,
-      orElse: () => {"name": "Indian Rupee"},
-    )["name"];
-  }
-}
+  // Helper to get currency name from ID
+  String getCurrencyName(int id) {
+    return Kconstant.currencyModelList.firstWhere(
+          (currency) => currency.id == id,
+      orElse: () => CurrencyModel(id: 15, code: 'INR', name: 'Indian Rupee', symbol: '₹'),
+    ).name;
+  }}

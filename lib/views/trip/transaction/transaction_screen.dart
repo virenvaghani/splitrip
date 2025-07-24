@@ -6,14 +6,14 @@ import 'package:splitrip/controller/trip/trip_detail_controller.dart';
 import 'package:splitrip/views/trip/transaction/tabs/expense_form.dart';
 import 'package:splitrip/views/trip/transaction/tabs/income_form.dart';
 import 'package:splitrip/views/trip/transaction/tabs/transfer_form.dart';
-import '../../../controller/trip/transaction_controller.dart';
+import '../../../controller/transaction_controller/transaction_controller.dart';
 
 class TransactionScreen extends StatelessWidget {
   const TransactionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final TransactionScreenController transactionController = Get.find<TransactionScreenController>();
+    final TransactionScreenController transactionController = Get.put(TransactionScreenController());
     final TripDetailController tripDetailController = Get.find<TripDetailController>();
     final tickerProvider = _TickerProvider();
     final tabController = TabController(length: 3, vsync: tickerProvider);

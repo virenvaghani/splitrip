@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:app_links/app_links.dart';
+import 'package:http/http.dart' as http;
+import 'package:splitrip/model/currency/currency_model.dart';
 import '../../data/constants.dart';
+import '../../data/token.dart';
 
 class SplashScreenController extends GetxController {
   late final AppLinks _appLinks;
@@ -9,29 +13,25 @@ class SplashScreenController extends GetxController {
   StreamSubscription<Uri>? _linkSubscription;
   Uri? _pendingLink;
   RxString appName = "Splitrip".obs;
-
-  @override
-  void onInit() {
-    super.onInit();
-    _processStartupLogic();
-  }
+  // final currencyList = <CurrencyModel>[].obs;
+  RxBool isLoading = false.obs;
 
   @override
   void onClose() {
-    _linkSubscription?.cancel(); // Clean up the subscription
+    _linkSubscription?.cancel();
     super.onClose();
   }
 
-  Future<void> _processStartupLogic() async {
+  Future<void> processStartupLogic() async {
     try {
       _appLinks = AppLinks();
 
-      // Listen for deep links (e.g., from WhatsApp)
+      // Listen for deep links
       _linkSubscription = _appLinks.uriLinkStream.listen(
             (Uri? link) {
           if (!_hasNavigated && link != null) {
             print('SplashScreenController: Received deep link in stream: $link');
-            _pendingLink = link; // Store the link for processing after delay
+            _pendingLink = link;
           }
         },
         onError: (e) {
@@ -43,15 +43,18 @@ class SplashScreenController extends GetxController {
       final Uri? initialLink = await _appLinks.getInitialAppLink();
       if (initialLink != null) {
         print('SplashScreenController: Received initial deep link: $initialLink');
-        _pendingLink = initialLink; // Store the initial link
+        _pendingLink = initialLink;
       }
 
-      // Always wait for the full splash screen duration
+      // Fetch currencies during startup
+      await getAllCurrency();
+
+      // Always wait for the splash screen duration
       await Future.delayed(const Duration(milliseconds: 1000));
 
       // Process the deep link after the delay
       if (!_hasNavigated && _pendingLink != null) {
-        _handleDeepLink(_pendingLink!);
+        handleDeepLink(_pendingLink!);
       }
 
       // Fallback to Dashboard if no navigation occurred
@@ -67,8 +70,7 @@ class SplashScreenController extends GetxController {
     }
   }
 
-  void _handleDeepLink(Uri link) {
-    // Check for supported schemes (https or app), host, and path
+  void handleDeepLink(Uri link) {
     if ((link.scheme == 'https' || link.scheme == 'app') &&
         link.host == 'expense.jayamsoft.net' &&
         link.path == '/trip') {
@@ -76,13 +78,12 @@ class SplashScreenController extends GetxController {
       if (tripIdStr != null && tripIdStr.isNotEmpty) {
         final tripId = int.tryParse(tripIdStr);
         if (tripId != null) {
-          print('SplashScreenController: Valid deep link from WhatsApp with tripId: $tripId → Navigating to SelectionPage');
+          print('SplashScreenController: Valid deep link with tripId: $tripId → Navigating to SelectionPage');
           _navigateToSelectionPage(tripId);
           return;
         }
       }
     }
-    // Log invalid cases but don't navigate here; let the caller handle the fallback
     if (link.scheme != 'https' && link.scheme != 'app') {
       print('SplashScreenController: Invalid deep link scheme: ${link.scheme} → Will navigate to Dashboard');
     } else if (link.host != 'expense.jayamsoft.net') {
@@ -118,6 +119,37 @@ class SplashScreenController extends GetxController {
         print('SplashScreenController: Navigation to SelectionPage failed: $e → Fallback to Dashboard');
         _navigateToDashboard();
       }
+    }
+  }
+
+  Future<void> getAllCurrency() async {
+    try {
+      isLoading.value = true;
+      final token = await TokenStorage.getToken();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/currency_list'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('[SplashScreenController] HTTP ${response.statusCode}: ${response.body}');
+        final List<dynamic> currencyData = jsonDecode(response.body);
+        List<CurrencyModel> currencyModelList = [];
+        currencyModelList = currencyData
+            .map((json) => CurrencyModel.fromJson(json))
+            .toList();
+        Kconstant.currencyModelList.addAll(currencyModelList);
+
+      } else {
+        Get.snackbar("Error", "Failed to fetch currencies: ${response.statusCode}");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Something went wrong: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controller/splash_screen/splash_screen_controller.dart';
+import '../../controller/splash_screen/splash_screen_controller.dart';
 
 class SplashScreen extends StatelessWidget {
    SplashScreen({super.key});
@@ -12,6 +12,12 @@ class SplashScreen extends StatelessWidget {
 
 
     return  GetX<SplashScreenController>(
+      initState: (state) {
+        splashScreenController.isLoading.value = true;
+        splashScreenController.processStartupLogic();
+        splashScreenController.getAllCurrency();
+        splashScreenController.isLoading.value = false;
+      },
       builder: (context) {
         return Scaffold(
           body: Center(

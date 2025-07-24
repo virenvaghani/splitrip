@@ -307,7 +307,7 @@ class _TripListItem extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            "Currency: ${trip.tripCurrency}",
+            "Currency: ${trip.defaultCurrency}",
             style: theme.textTheme.bodyMedium,
           ),
           trailing: IconButton(
