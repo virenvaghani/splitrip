@@ -10,6 +10,7 @@ import '../../../../widgets/emoji_selector.dart';
 import '../../../controller/splash_screen/splash_screen_controller.dart';
 import '../../../data/trip_constant.dart';
 import '../../../model/currency/currency_model.dart';
+import '../../../model/friend/participant_model.dart';
 import '../../../theme/theme_colors.dart';
 import '../../../widgets/my_textfield.dart';
 
@@ -1049,17 +1050,21 @@ class MaintainTripScreen extends StatelessWidget {
         ),
         Column(
           children: List.generate(selectedFriends.length, (index) {
-            final participant = selectedFriends[index];
-            // final isLinked = participant.name!.contains('(Linked)');
-            // final nameWithoutTag = isLinked ? participant.name!.replaceAll(
-            //     ' (Linked)', '') : participant.name;
+            // Create a new list with the linked participant first
+            final sortedFriends = List<ParticipantModel>.from(selectedFriends)
+              ..sort((a, b) {
+                if (a.isLinked && !b.isLinked) return -1; // Linked participant comes first
+                if (!a.isLinked && b.isLinked) return 1;
+                return 0; // Maintain original order for others
+              });
+
+            final participant = sortedFriends[index];
 
             return Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 color: theme.scaffoldBackgroundColor,
-                borderRadius: tripController.selectedParticipantModel.length -
-                    1 == index
+                borderRadius: tripController.selectedParticipantModel.length - 1 == index
                     ? AppBorders.tableBottomRadius
                     : null,
                 boxShadow: [AppShadows.defaultShadow(theme)],
@@ -1082,29 +1087,26 @@ class MaintainTripScreen extends StatelessWidget {
                                 color: theme.colorScheme.onSurface,
                               ),
                             ),
-                             tripController.isParticipantLinked.value ?
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Container(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 3.0),
-                                    child: Text(
-                                        'me',
-                                        style: theme.textTheme.labelMedium!
-                                            .copyWith(
-                                            color: theme.colorScheme.onPrimary
-                                        )
+                            participant.isLinked
+                                ? Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                  color: theme.primaryColor.withValues(alpha: 0.5),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                                  child: Text(
+                                    'me',
+                                    style: theme.textTheme.labelMedium!.copyWith(
+                                      color: theme.colorScheme.onPrimary,
                                     ),
                                   ),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(10)),
-                                      color: theme.primaryColor.withValues(
-                                          alpha: 0.5)
-                                  ),
                                 ),
-                              ): SizedBox.shrink(),
+                              ),
+                            )
+                                : const SizedBox.shrink(),
                           ],
                         ),
                       ),
@@ -1123,10 +1125,8 @@ class MaintainTripScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: TextFormField(
-                              initialValue: "${participant.customMemberCount ??
-                                  participant.member ?? 1.0}",
-                              keyboardType: const TextInputType
-                                  .numberWithOptions(decimal: true),
+                              initialValue: "${participant.customMemberCount ?? participant.member ?? 1.0}",
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               style: theme.textTheme.titleMedium!.copyWith(
                                 color: theme.colorScheme.onSurface,
                               ),
@@ -1139,12 +1139,10 @@ class MaintainTripScreen extends StatelessWidget {
                                 final parsedValue = double.tryParse(value);
                                 if (parsedValue != null && parsedValue > 0) {
                                   participant.customMemberCount = parsedValue;
-                                  tripController.selectedParticipantModel
-                                      .refresh();
+                                  tripController.selectedParticipantModel.refresh();
                                 }
                               },
                             ),
-
                           ),
                         ),
                       ),
@@ -1161,6 +1159,7 @@ class MaintainTripScreen extends StatelessWidget {
                               context: context,
                               theme: theme,
                               participantReferenceId: participant.referenceId,
+                              argumentData: argumentData,
                             );
                           },
                         ),

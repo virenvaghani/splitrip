@@ -5,6 +5,7 @@ import 'package:splitrip/controller/appPageController/app_page_controller.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/widgets/myappbar.dart';
 import '../../controller/friend/friend_controller.dart';
+import '../../data/constants.dart';
 import '../../model/friend/friend_model.dart';
 
 class FriendsPage extends StatelessWidget {
@@ -16,61 +17,53 @@ class FriendsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Obx(() {
-      final token = controller.authToken.value;
+    return GetX<FriendController>(
+      builder: (controller) {
+        final token = controller.authToken.value;
 
-      if (token == null) {
-        return Scaffold(
-          appBar: _buildAppBar(context, theme, showActions: false),
-          body: _unauthenticatedState(theme),
-        );
-      }
+        if (token == null) {
+          return Scaffold(
+            appBar: _buildAppBar(context, theme, showActions: false),
+            body: _unauthenticatedState(theme),
+          );
+        }
 
-      if (controller.isLoading.value) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
+        if (controller.isLoading.value) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
 
-      if (controller.errorMessage.isNotEmpty) {
+        if (controller.errorMessage.isNotEmpty) {
+          return Scaffold(
+            appBar: _buildAppBar(context, theme, showActions: true),
+            body: _stateMessage(
+              controller.errorMessage.value,
+              theme.colorScheme.error,
+              context,
+            ),
+          );
+        }
+
+        if (Kconstant.friendModelList.isEmpty) {
+          return Scaffold(
+            appBar: _buildAppBar(context, theme, showActions: true),
+            body: _emptyState(theme),
+          );
+        }
+
         return Scaffold(
           appBar: _buildAppBar(context, theme, showActions: true),
-          body: _stateMessage(
-            controller.errorMessage.value,
-            theme.colorScheme.error,
-            context,
-          ),
-        );
-      }
-
-      if (controller.friendsList.isEmpty) {
-        return Scaffold(
-          appBar: _buildAppBar(context, theme, showActions: true),
-          body: _emptyState(theme),
-        );
-      }
-
-      return Scaffold(
-        appBar: _buildAppBar(context, theme, showActions: true),
-        body: Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (controller.friendsList.isEmpty) {
-            return const Center(child: Text("No participants found."));
-          }
-
-          return ListView.separated(
+          body: ListView.separated(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            itemCount: controller.friendsList.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemCount: Kconstant.friendModelList.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final friend = controller.friendsList[index];
+              final friend = Kconstant.friendModelList[index];
               return _buildFriendTile(friend, theme);
             },
-          );
-        }),
-      );
-    });
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -493,122 +486,121 @@ ButtonStyle _buttonStyle(ThemeData theme) {
 }
 
 void _addFriend({required BuildContext context, required ThemeData theme}) {
-  TripController tripController = Get.find<TripController>();
 
   showDialog(
     context: context,
     builder: (context) {
-      return tripController.isAddparticipantLoading.value ? Center(child: CircularProgressIndicator() ,) : Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary.withValues(alpha: 0.05),
-                theme.colorScheme.secondary.withValues(alpha: 0.05),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Add New Friend",
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
+      return GetX<TripController>(
+        builder: (tripController) {
+          return tripController.isAddparticipantLoading.value
+              ? Center(child: CircularProgressIndicator())
+              : Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.05),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-              const SizedBox(height: 16),
-              _customInputField(
-                controller: tripController.newParticipantNameController,
-                label: "Friend Name",
-                theme: theme,
-              ),
-              const SizedBox(height: 12),
-              _customInputField(
-                controller: tripController.newParticipantMembersController,
-                label: "Number of Members",
-                theme: theme,
-                inputType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: _customDialogButton(
-                      label: "Cancel",
-                      theme: theme,
-                      onPressed: () {
-                        Get.back();
-                        tripController.newParticipantNameController.clear();
-                        tripController.newParticipantMembersController.clear();
-                      },
-                      backgroundColor:
-                      theme.colorScheme.surfaceContainerHighest,
-                      textColor: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _customDialogButton(
-                      label: "Add Friend",
-                      theme: theme,
-                      onPressed: () async {
-                        final name =
-                        tripController.newParticipantNameController.text
-                            .trim();
-                        final members = int.tryParse(
-                          tripController
-                              .newParticipantMembersController
-                              .text
-                              .trim(),
-                        ) ??
-                            0;
-                        if (name.isNotEmpty && members > 0) {
-                          tripController.isAddparticipantLoading.value = true;
-                          await tripController.addNewParticipant(
-                            context: context,
-                            theme: theme,
-                            participantData: {'name': name, 'member': members},
-                          );
-                          tripController.newParticipantNameController.clear();
-                          tripController.newParticipantMembersController.clear();
-                          Get.back();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Please enter a valid name and number of members',
-                                style: TextStyle(
-                                  color: theme.colorScheme.onErrorContainer,
-                                ),
-                              ),
-                              backgroundColor: theme.colorScheme.errorContainer,
-                            ),
-                          );
-                        }
-                      },
-                    ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Add New Friend",
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _customInputField(
+                    controller: tripController.newParticipantNameController,
+                    label: "Friend Name",
+                    theme: theme,
+                  ),
+                  const SizedBox(height: 12),
+                  _customInputField(
+                    controller: tripController.newParticipantMembersController,
+                    label: "Number of Members",
+                    theme: theme,
+                    inputType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _customDialogButton(
+                          label: "Cancel",
+                          theme: theme,
+                          onPressed: () {
+                            Get.back();
+                            tripController.newParticipantNameController.clear();
+                            tripController.newParticipantMembersController.clear();
+                          },
+                          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                          textColor: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _customDialogButton(
+                          label: "Add Friend",
+                          theme: theme,
+                          onPressed: () async {
+                            final name = tripController.newParticipantNameController.text.trim();
+                            final members = int.tryParse(
+                              tripController.newParticipantMembersController.text.trim(),
+                            ) ??
+                                0;
+                            if (name.isNotEmpty && members > 0) {
+                              tripController.isAddparticipantLoading.value = true;
+                              await tripController.addNewParticipant(
+                                context: context,
+                                theme: theme,
+                                participantData: {'name': name, 'member': members},
+                              );
+                              tripController.newParticipantNameController.clear();
+                              tripController.newParticipantMembersController.clear();
+                              Get.back();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Please enter a valid name and number of members',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onErrorContainer,
+                                    ),
+                                  ),
+                                  backgroundColor: theme.colorScheme.errorContainer,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       );
     },
   );
@@ -660,8 +652,7 @@ Widget _customDialogButton({
   return TextButton(
     onPressed: onPressed,
     style: TextButton.styleFrom(
-      backgroundColor:
-      backgroundColor ?? theme.colorScheme.primary.withValues(alpha: 0.1),
+      backgroundColor: backgroundColor ?? theme.colorScheme.primary.withValues(alpha: 0.1),
       foregroundColor: textColor ?? theme.colorScheme.primary,
       padding: const EdgeInsets.symmetric(vertical: 12),
       shape: RoundedRectangleBorder(

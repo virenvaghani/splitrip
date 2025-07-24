@@ -13,6 +13,8 @@ class FriendController extends GetxController {
   final authToken = RxnString();
   final isTokenLoading = true.obs;
 
+
+
   @override
   void onInit() {
     super.onInit();
@@ -60,10 +62,13 @@ class FriendController extends GetxController {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         print(data);
-        friendsList.value = data.map((participantData) {
+        Kconstant.friendModelList.clear();
+        List<FriendModel> friendModelList = [];
+        friendModelList = data.map((participantData) {
           final participant = ParticipantModel.fromJson(participantData);
           return FriendModel(participant: participant);
         }).toList();
+        Kconstant.friendModelList.addAll(friendModelList);
       } else {
         errorMessage.value = 'Failed to fetch linked participants: ${response.statusCode}';
         friendsList.clear();

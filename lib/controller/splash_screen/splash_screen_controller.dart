@@ -40,7 +40,7 @@ class SplashScreenController extends GetxController {
       );
 
       // Check for initial deep link
-      final Uri? initialLink = await _appLinks.getInitialAppLink();
+      final Uri? initialLink = await _appLinks.getInitialLink();
       if (initialLink != null) {
         print('SplashScreenController: Received initial deep link: $initialLink');
         _pendingLink = initialLink;

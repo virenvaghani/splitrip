@@ -15,6 +15,7 @@ class ParticipantModel {
   final double? participantMember;
   double? customMemberCount;
   final List<Trip>? participatedTrips;
+  final bool isLinked;
 
   ParticipantModel({
     this.id,
@@ -28,6 +29,7 @@ class ParticipantModel {
     this.participantName,
     this.participantMember,
     this.participatedTrips,
+    this.isLinked = false,
   });
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {

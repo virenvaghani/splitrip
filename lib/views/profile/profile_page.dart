@@ -23,7 +23,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  _appbar({required BuildContext context}) {
+  CustomAppBar _appbar({required BuildContext context}) {
     return CustomAppBar(
       title: "Profile",
       centerTitle: false,
@@ -49,7 +49,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  _body({required BuildContext context}) {
+  SafeArea _body({required BuildContext context}) {
     return SafeArea(
       child: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),

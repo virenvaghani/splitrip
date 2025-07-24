@@ -92,8 +92,20 @@ class TripController extends GetxController {
     required Map<String, dynamic> argumentData,
   }) async {
     isMantainTripLoading.value = true;
+
+    // Check if user is logged in
     final userIdString = await AuthStatusStorage.getUserId();
-    final parsedUserId = int.tryParse(userIdString ?? "");
+    if (userIdString == null || userIdString.isEmpty) {
+      isMantainTripLoading.value = false;
+      showSnackBar(Get.context!, Get.theme, "Please log in to continue");
+      return;
+    }
+    final parsedUserId = int.tryParse(userIdString);
+    if (parsedUserId == null) {
+      isMantainTripLoading.value = false;
+      showSnackBar(Get.context!, Get.theme, "Invalid user ID");
+      return;
+    }
 
     callFrom.value = argumentData["Call From"]?.toString() ?? "";
     int? tripId = int.tryParse(argumentData["trip_id"]?.toString() ?? "0");
@@ -103,18 +115,30 @@ class TripController extends GetxController {
     if (data != null) {
       final isEdit = data["trip"] != null;
 
-      // Map selected participants
-      final List<ParticipantModel> selectedList = (data["selected_participants"] as List)
-          .map((e) {
+      // Map selected participants with linked status
+      final List<ParticipantModel> selectedList = (data["selected_participants"] as List).map((e) {
         final participantReferenceId = e["participant_reference_id"];
-        final friendController = Get.find<FriendController>();
-        isParticipantLinked.value = friendController.friendsList.any((friend) {
-          return friend.participant.referenceId == participantReferenceId &&
-              friend.participant.participatedTrips!.any((trip) {
-                return trip.linkedUsers!.any((user) {
-                  return user.id.toString() == parsedUserId.toString();
-                });
-              });
+        // Determine if participant is linked
+        final isParticipantLinked = Kconstant.friendModelList.any((friend) {
+          if (friend.participant.referenceId != participantReferenceId) {
+            return false;
+          }
+          final participatedTrips = friend.participant.participatedTrips;
+          if (participatedTrips == null || participatedTrips.isEmpty) {
+            return false;
+          }
+          return participatedTrips.any((trip) {
+            if (trip.id.toString() != tripId.toString()) {
+              return false;
+            }
+            final linkedUsers = trip.linkedUsers;
+            if (linkedUsers == null || linkedUsers.isEmpty) {
+              return false;
+            }
+            return linkedUsers.any((user) {
+              return user.id.toString() == parsedUserId.toString();
+            });
+          });
         });
 
         return ParticipantModel(
@@ -123,6 +147,7 @@ class TripController extends GetxController {
           member: _parseToDouble(e["member"]),
           customMemberCount: _parseToDouble(e["custom_member_count"]),
           linkedUsers: [],
+          isLinked: isParticipantLinked, // Add isLinked to ParticipantModel
         );
       }).toList();
 
@@ -177,9 +202,9 @@ class TripController extends GetxController {
         if (parsedUserId != null) {
           final friendController = Get.find<FriendController>();
           final List<FriendModel> matchingFriends = friendController.friendsList.where((friend) {
-            return friend.participant.participatedTrips!.any((trip) {
-              return trip.linkedUsers!.any((user) => user.id.toString() == parsedUserId.toString());
-            });
+            return friend.participant.participatedTrips?.any((trip) {
+              return trip.linkedUsers?.any((user) => user.id.toString() == parsedUserId.toString()) ?? false;
+            }) ?? false;
           }).toList();
 
           print("✅ Matching Friends For Create Only:");
@@ -194,7 +219,14 @@ class TripController extends GetxController {
                     (p) => p.referenceId == match.participant.referenceId);
 
             if (existsInAvailable && !alreadySelected) {
-              selectedList.add(match.participant);
+              selectedList.add(ParticipantModel(
+                referenceId: match.participant.referenceId,
+                name: match.participant.name,
+                member: match.participant.member ?? 1.0,
+                customMemberCount: match.participant.customMemberCount,
+                linkedUsers: [],
+                isLinked: true, // Mark as linked for matching friends
+              ));
               availableList.removeWhere(
                       (f) => f.participant.referenceId == match.participant.referenceId);
               print("➡️ Moved ${match.participant.referenceId} to selected.");
@@ -266,20 +298,18 @@ class TripController extends GetxController {
   }
 
   Future<void> saveTrip({required Map<String, dynamic> argumentData}) async {
-    final tripController = Get.find<TripController>();
-    final splashScreenController = Get.find<SplashScreenController>();
 
     if (formKey.currentState?.validate() ?? false) {
-      tripController.isMantainTripLoading.value = true;
+      isMantainTripLoading.value = true;
 
-      final participantMaps = tripController.selectedParticipantModel.map((p) => {
+      final participantMaps = selectedParticipantModel.map((p) => {
         "participant_reference_id": p.referenceId,
         "custom_member_count": p.customMemberCount ?? p.member ?? 1,
       }).toList();
 
       // Find the selected currency using selectedCurrencyId
       final selectedCurrency = Kconstant.currencyModelList.firstWhere(
-            (currency) => currency.id == tripController.selectedCurrencyId.value,
+            (currency) => currency.id == selectedCurrencyId.value,
         orElse: () => CurrencyModel(
           id: 15,
           code: 'INR',
@@ -289,18 +319,18 @@ class TripController extends GetxController {
       );
 
       if (participantMaps.isEmpty ||
-          tripController.tripNameController.text.trim().isEmpty ||
-          tripController.selectedCurrencyId.value == 0 ||
-          tripController.emojiController.selectedEmoji.value?.char == null) {
+          tripNameController.text.trim().isEmpty ||
+          selectedCurrencyId.value == 0 ||
+          emojiController.selectedEmoji.value?.char == null) {
         showSnackBar(Get.context!, Get.theme, "Please provide valid trip details and participants");
-        tripController.isMantainTripLoading.value = false;
+        isMantainTripLoading.value = false;
         return;
       }
 
       final tripData = {
-        'trip_name': tripController.tripNameController.text.trim(),
+        'trip_name': tripNameController.text.trim(),
         'default_currency': selectedCurrency.id, // Send currency ID to backend
-        'trip_emoji': tripController.emojiController.selectedEmoji.value?.char ?? '🧳',
+        'trip_emoji': emojiController.selectedEmoji.value?.char ?? '🧳',
         'participants': participantMaps,
       };
 
@@ -310,12 +340,12 @@ class TripController extends GetxController {
       if (response != null) {
         showSnackBar(Get.context!, Get.theme, tripId != null ? "Trip updated successfully" : "Trip created successfully");
         Get.back(result: response);
-        tripController.tripModelList.refresh();
+        tripModelList.refresh();
       } else {
         showSnackBar(Get.context!, Get.theme, "Failed to ${tripId != null ? 'update' : 'create'} trip");
       }
 
-      tripController.isMantainTripLoading.value = false;
+      isMantainTripLoading.value = false;
     } else {
       showSnackBar(Get.context!, Get.theme, "Please fill in all required fields");
     }
@@ -429,6 +459,7 @@ class TripController extends GetxController {
     required BuildContext context,
     required ThemeData theme,
     required String? participantReferenceId,
+    required Map<String, dynamic> argumentData,
   }) async {
     if (participantReferenceId == null || participantReferenceId.isEmpty) {
       showSnackBar(context, theme, "Invalid participant ID");
@@ -445,19 +476,43 @@ class TripController extends GetxController {
         return;
       }
     }
+    callFrom.value = argumentData["Call From"]?.toString() ?? "";
+    int? tripId = int.tryParse(argumentData["trip_id"]?.toString() ?? "0");
 
-    final friendController = Get.find<FriendController>();
 
-    final isParticipantLinked = friendController.friendsList.any((friend) {
-      return friend.participant.referenceId == participantReferenceId &&
-          friend.participant.participatedTrips!.any((trip) {
-            return trip.linkedUsers!.any((user) {
-              return user.id.toString() == parsedUserId.toString();
-            });
-          });
+    isParticipantLinked.value = Kconstant.friendModelList.any((friend) {
+      print('Checking friend: ${friend.participant.referenceId}');
+      if (friend.participant.referenceId != participantReferenceId) {
+        return false;
+      }
+
+      final participatedTrips = friend.participant.participatedTrips;
+      if (participatedTrips == null || participatedTrips.isEmpty) {
+        print('No participated trips for friend: ${friend.participant.referenceId}');
+        return false;
+      }
+
+      return participatedTrips.any((trip) {
+        print('Checking trip: ${trip.id} against tripId: $tripId');
+        if (trip.id.toString() != tripId.toString()) {
+          return false;
+        }
+
+        final linkedUsers = trip.linkedUsers;
+        if (linkedUsers == null || linkedUsers.isEmpty) {
+          print('No linked users for trip: ${trip.id}');
+          return false;
+        }
+
+        return linkedUsers.any((user) {
+          print('Checking user: ${user.id} against parsedUserId: $parsedUserId');
+          return user.id.toString() == parsedUserId.toString();
+        });
+      });
     });
 
-    if (isParticipantLinked) {
+    if (isParticipantLinked.value) {
+
       if (context.mounted) {
         showSnackBar(context, theme, "Cannot remove a linked participant");
         return;

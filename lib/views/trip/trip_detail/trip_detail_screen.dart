@@ -167,6 +167,7 @@ class TripDetailScreen extends StatelessWidget {
             Get.toNamed(
               PageConstant.addTransactionScreen,
               arguments: {'type': 'Expense'},
+
             );
           } else {
             Get.snackbar(

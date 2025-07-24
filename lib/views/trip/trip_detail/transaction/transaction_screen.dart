@@ -3,10 +3,11 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
-import 'package:splitrip/views/trip/transaction/tabs/expense_form.dart';
-import 'package:splitrip/views/trip/transaction/tabs/income_form.dart';
-import 'package:splitrip/views/trip/transaction/tabs/transfer_form.dart';
-import '../../../controller/transaction_controller/transaction_controller.dart';
+import 'package:splitrip/views/trip/trip_detail/transaction/tabs/expense_form.dart';
+import 'package:splitrip/views/trip/trip_detail/transaction/tabs/income_form.dart';
+import 'package:splitrip/views/trip/trip_detail/transaction/tabs/transfer_form.dart';
+
+import '../../../../controller/transaction_controller/transaction_controller.dart';
 
 class TransactionScreen extends StatelessWidget {
   const TransactionScreen({super.key});

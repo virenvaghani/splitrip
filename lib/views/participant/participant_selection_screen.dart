@@ -91,7 +91,7 @@ class TripParticipantSelectorPage extends StatelessWidget {
     }
     return ListView.separated(
       itemCount: controller.participants.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      separatorBuilder: (_, _) => const SizedBox(height: 16),
       itemBuilder: (context, index) => _buildParticipantCard(
         context,
         controller.participants[index],

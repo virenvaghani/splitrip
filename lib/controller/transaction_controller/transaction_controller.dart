@@ -41,7 +41,9 @@ class TransactionScreenController extends GetxController {
   final Map<String, TextEditingController> _recipientTextControllers = {};
   late final TripDetailController _tripDetailController;
   late TabController tabController;
-  var isSelected = false.obs;
+  final Map<String, TextEditingController> shareControllers = {};
+  final Map<String, FocusNode> shareFocusNodes = {};
+  final selectedParticipants = <String>{}.obs;
 
   TransactionScreenController();
 
@@ -49,8 +51,183 @@ class TransactionScreenController extends GetxController {
   void onInit() {
     super.onInit();
     _tripDetailController = Get.find<TripDetailController>();
+    selectedParticipants.addAll(_tripDetailController.participants);
     _initializeShares();
     _setupValidation();
+    initializeShareFields(_tripDetailController.participants);
+  }
+
+  final Map<String, bool> clearedOnFocus = {};
+
+  void initializeShareFields(List<String> participantNames) {
+    for (var name in participantNames) {
+      // Controller
+      shareControllers.putIfAbsent(name, () {
+        final isAsParts = transactionSplitType.value == 'As parts';
+        final text = isAsParts && selectedParticipants.contains(name) ? '1' : '0.00';
+        return TextEditingController(text: text);
+      });
+
+      // Custom share
+      customShares.putIfAbsent(name, () {
+        final isAsParts = transactionSplitType.value == 'As parts';
+        return isAsParts && selectedParticipants.contains(name) ? 1.0 : 0.0;
+      });
+
+      // FocusNode
+      if (!shareFocusNodes.containsKey(name)) {
+        final focusNode = FocusNode();
+        focusNode.addListener(() {
+          final controller = shareControllers[name]!;
+
+          if (!focusNode.hasFocus) {
+            final text = controller.text.trim();
+            final isAsParts = transactionSplitType.value == 'As parts';
+            final fallback = isAsParts ? 1.0 : 0.0;
+
+            if (text.isEmpty) {
+              controller.text = isAsParts ? '1' : '0.00';
+              customShares[name] = fallback;
+            } else {
+              final value = double.tryParse(text);
+              if (value != null && value >= 0) {
+                customShares[name] = value;
+              } else {
+                controller.text = isAsParts ? '1' : '0.00';
+                customShares[name] = fallback;
+              }
+            }
+
+            updateCalculatedShares();
+            clearedOnFocus[name] = false; // reset for future taps
+          }
+        });
+
+        shareFocusNodes[name] = focusNode;
+      }
+
+      clearedOnFocus.putIfAbsent(name, () => false);
+    }
+
+    syncShareTextFields(); // optional if you need to refresh on logic
+  }
+
+
+
+  void syncShareTextFields() {
+    transactionShares.forEach((name, value) {
+      if (shareControllers.containsKey(name)) {
+        final controller = shareControllers[name]!;
+        if (transactionSplitType.value == 'Equally') {
+          controller.text = _tripDetailController.formatCurrency(value);
+        } else if (transactionSplitType.value == 'As parts') {
+          controller.text = (customShares[name] ?? 1.0).toStringAsFixed(0);
+        } else {
+          controller.text = (customShares[name] ?? 0.0).toStringAsFixed(2);
+        }
+      }
+    });
+  }
+
+  void incrementParts(String name) {
+    final currentParts = customShares[name] ?? 1.0;
+    updateCustomShare(name, currentParts + 1);
+  }
+
+  void decrementParts(String name) {
+    final currentParts = customShares[name] ?? 1.0;
+    if (currentParts > 1) {
+      updateCustomShare(name, currentParts - 1);
+    }
+  }
+
+  void updateCustomShare(String person, double value) {
+    if (transactionSplitType.value == 'As parts') {
+      customShares[person] = value < 1 ? 1.0 : value;
+    } else {
+      customShares[person] = value;
+    }
+    updateCalculatedShares();
+    syncShareTextFields();
+    hasChanges.value = true;
+  }
+
+  void updateSplitType(String value) {
+    if (splitTypes.contains(value)) {
+      transactionSplitType.value = value;
+      customShares.clear();
+      for (var person in _tripDetailController.participants) {
+        if (value == 'As parts' && selectedParticipants.contains(person)) {
+          customShares[person] = 1.0;
+        } else {
+          customShares[person] = 0.0;
+        }
+      }
+      initializeShareFields(_tripDetailController.participants);
+      updateCalculatedShares();
+      syncShareTextFields();
+      hasChanges.value = true;
+    }
+  }
+
+  void updateCalculatedShares() {
+    if (transactionType.value == 'transfer') return;
+
+    final amount = double.tryParse(transactionAmount.value) ?? 0.0;
+    final splitType = transactionSplitType.value;
+
+    transactionShares.clear();
+    try {
+      transactionShares.addAll(calculateSplit(amount, splitType, customShares));
+      syncShareTextFields();
+    } catch (e) {
+      errorMessage.value = e.toString();
+    }
+  }
+
+  Map<String, double> calculateSplit(double amount, String splitType, Map<String, double> customShares) {
+    final shares = <String, double>{};
+    final selected = selectedParticipants.toList();
+
+    if (selected.isEmpty) {
+      throw TransactionException('At least one participant must be selected');
+    }
+
+    if (amount <= 0) {
+      for (var person in selected) {
+        shares[person] = 0.0;
+      }
+      return shares;
+    }
+
+    if (splitType == 'Equally') {
+      final share = double.parse((amount / selected.length).toStringAsFixed(2));
+      for (var person in selected) {
+        shares[person] = share;
+      }
+    } else if (splitType == 'As parts') {
+      final totalParts = selected.fold<double>(0.0, (sum, person) => sum + (customShares[person] ?? 1.0));
+      if (totalParts <= 0) {
+        final share = double.parse((amount / selected.length).toStringAsFixed(2));
+        for (var person in selected) {
+          shares[person] = share;
+          customShares[person] = 1.0;
+        }
+      } else {
+        for (var person in selected) {
+          final parts = customShares[person] ?? 1.0;
+          final share = double.parse(((parts / totalParts) * amount).toStringAsFixed(2));
+          shares[person] = share;
+        }
+      }
+    } else if (splitType == 'As Amount') {
+      for (var person in selected) {
+        final share = double.parse((customShares[person] ?? 0.0).toStringAsFixed(2));
+        shares[person] = share;
+      }
+    }
+
+    return shares;
   }
 
   void _initializeShares() {
@@ -58,7 +235,9 @@ class TransactionScreenController extends GetxController {
       transactionShares[person] = 0.0;
       payerAmounts[person] = 0.0;
       recipientAmounts[person] = 0.0;
-      customShares[person] = 0.0;
+      customShares[person] = transactionSplitType.value == 'As parts' && selectedParticipants.contains(person)
+          ? 1.0
+          : 0.0;
     }
   }
 
@@ -118,8 +297,12 @@ class TransactionScreenController extends GetxController {
   void onClose() {
     _payerTextControllers.forEach((_, controller) => controller.dispose());
     _recipientTextControllers.forEach((_, controller) => controller.dispose());
+    shareControllers.forEach((_, controller) => controller.dispose());
+    shareFocusNodes.forEach((_, focusNode) => focusNode.dispose());
     _payerTextControllers.clear();
     _recipientTextControllers.clear();
+    shareControllers.clear();
+    shareFocusNodes.clear();
     tabController.dispose();
     super.onClose();
   }
@@ -136,6 +319,8 @@ class TransactionScreenController extends GetxController {
     transactionSplitType.value = 'Equally';
     transactionShares.clear();
     customShares.clear();
+    selectedParticipants.clear();
+    selectedParticipants.addAll(_tripDetailController.participants);
     isTransactionSubmitted.value = false;
     selectedCategory.value = categories[0];
     titleError.value = '';
@@ -150,8 +335,15 @@ class TransactionScreenController extends GetxController {
       controller.text = '';
       controller.dispose();
     });
+    shareControllers.forEach((_, controller) {
+      controller.text = '';
+      controller.dispose();
+    });
+    shareFocusNodes.forEach((_, focusNode) => focusNode.dispose());
     _payerTextControllers.clear();
     _recipientTextControllers.clear();
+    shareControllers.clear();
+    shareFocusNodes.clear();
     _initializeShares();
   }
 
@@ -233,20 +425,6 @@ class TransactionScreenController extends GetxController {
     hasChanges.value = true;
   }
 
-  void updateSplitType(String value) {
-    if (splitTypes.contains(value)) {
-      transactionSplitType.value = value;
-      updateCalculatedShares();
-      hasChanges.value = true;
-    }
-  }
-
-  void updateCustomShare(String person, double value) {
-    customShares[person] = value;
-    updateCalculatedShares();
-    hasChanges.value = true;
-  }
-
   void updateCategory(String? value) {
     if (value != null && categories.contains(value)) {
       selectedCategory.value = value;
@@ -256,20 +434,6 @@ class TransactionScreenController extends GetxController {
 
   void pickImage() {
     Get.snackbar('Image', 'Image picker to be implemented');
-  }
-
-  void updateCalculatedShares() {
-    if (transactionType.value == 'transfer') return;
-
-    final amount = double.tryParse(transactionAmount.value) ?? 0.0;
-    final splitType = transactionSplitType.value;
-
-    transactionShares.clear();
-    try {
-      transactionShares.addAll(calculateSplit(amount, splitType, customShares));
-    } catch (e) {
-      errorMessage.value = e.toString();
-    }
   }
 
   String remainingShareString({bool forPayers = false}) {
@@ -285,7 +449,7 @@ class TransactionScreenController extends GetxController {
     if (transactionSplitType.value == 'Equally') {
       return _tripDetailController.formatCurrency(0.0);
     }
-    final assigned = customShares.values.fold(0.0, (sum, v) => sum + v);
+    final assigned = transactionShares.values.fold(0.0, (sum, v) => sum + v);
     return _tripDetailController.formatCurrency(total - assigned);
   }
 
@@ -338,6 +502,12 @@ class TransactionScreenController extends GetxController {
         payersError.value = 'Total paid amounts must equal the transaction amount';
         throw TransactionException('Total paid amounts must equal the transaction amount');
       }
+      if (transactionSplitType.value == 'As Amount') {
+        final totalShares = transactionShares.values.fold(0.0, (sum, v) => sum + v);
+        if ((totalShares - totalAmount).abs() > 0.01) {
+          throw TransactionException('Total shares must equal the transaction amount');
+        }
+      }
     }
   }
 
@@ -359,43 +529,6 @@ class TransactionScreenController extends GetxController {
     };
   }
 
-  Map<String, double> calculateSplit(double amount, String splitType, Map<String, double> customShares) {
-    final shares = <String, double>{};
-    final participantCount = _tripDetailController.participants.length;
-
-    if (amount <= 0) {
-      throw TransactionException('Amount must be greater than zero');
-    }
-
-    if (splitType == 'Equally') {
-      final share = double.parse((amount / participantCount).toStringAsFixed(2));
-      for (var person in _tripDetailController.participants) {
-        shares[person] = share;
-      }
-    } else if (splitType == 'As parts') {
-      final totalParts = customShares.values.fold(0.0, (sum, val) => sum + val);
-      if (totalParts <= 0) {
-        throw TransactionException('Total parts must be greater than zero');
-      }
-      for (var person in _tripDetailController.participants) {
-        final parts = customShares[person] ?? 0.0;
-        final share = double.parse(((parts / totalParts) * amount).toStringAsFixed(2));
-        shares[person] = share;
-      }
-    } else if (splitType == 'As Amount') {
-      final totalAssigned = customShares.values.fold(0.0, (sum, val) => sum + val);
-      if ((totalAssigned - amount).abs() > 0.01) {
-        throw TransactionException('Assigned amounts must equal total amount');
-      }
-      for (var person in _tripDetailController.participants) {
-        final share = double.parse((customShares[person] ?? 0.0).toStringAsFixed(2));
-        shares[person] = share;
-      }
-    }
-
-    return shares;
-  }
-
   void removePayer(String name) {
     transactionPayers.remove(name);
     payerAmounts.remove(name);
@@ -404,9 +537,5 @@ class TransactionScreenController extends GetxController {
     if (isTransactionSubmitted.value) {
       payersError.value = transactionPayers.isEmpty ? 'At least one payer is required' : '';
     }
-  }
-
-  void updateSelection(bool value) {
-    isSelected.value = value;
   }
 }

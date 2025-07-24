@@ -51,6 +51,7 @@ class IncomeForm extends StatelessWidget {
                   Row(
                     children: [
                       CommonFormWidgets.currencyBox(
+                        context: context,
                         theme: theme,
                         tripDetailController: tripDetailController,
                       ),

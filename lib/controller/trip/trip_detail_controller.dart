@@ -32,7 +32,7 @@ class TripDetailController extends GetxController {
 
   void shareTripLink(int tripId) {
     final url = 'https://expense.jayamsoft.net/trip?id=$tripId';
-    Share.share('Join my trip: $url');
+    SharePlus.instance.share(ShareParams(text: 'Join my trip: $url'));
   }
 
   List<Map<String, dynamic>> get todayTransactions {
@@ -68,13 +68,12 @@ class TripDetailController extends GetxController {
   }
 
   String formatCurrency(double amount) {
-    final currency = trip['currency'] ?? 'INR';
     final format = NumberFormat.currency(
       locale: 'en_IN',
-      symbol: currency == 'INR' ? '₹' : '\$',
+      symbol: '', // No symbol
       decimalDigits: 2,
     );
-    return format.format(amount);
+    return format.format(amount).trim();
   }
 
   String formatDate(DateTime date) {

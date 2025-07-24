@@ -1,3 +1,5 @@
+import 'package:splitrip/model/friend/friend_model.dart';
+
 import '../model/currency/currency_model.dart';
 
 class Kconstant {
@@ -6,6 +8,7 @@ class Kconstant {
   static const String userEmail = 'user_email';
   static const String photoURL = 'Image';
   static  List<CurrencyModel> currencyModelList = [];
+  static List<FriendModel> friendModelList = [];
 }
 
 class PageConstant {

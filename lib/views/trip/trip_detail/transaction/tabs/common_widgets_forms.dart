@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
-import '../../../../controller/transaction_controller/transaction_controller.dart';
+import '../../../../../controller/transaction_controller/transaction_controller.dart';
+import '../../../../../data/constants.dart';
 
 class CommonFormWidgets {
   static Widget buildSection({
-    required ThemeData theme,
-    required IconData icon,
-    required String title,
+    ThemeData? theme,
+    IconData? icon,
+    String? title,
     required Widget child,
   }) {
+    final t = theme ?? ThemeData.light(); // fallback theme
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(15),
@@ -18,8 +21,8 @@ class CommonFormWidgets {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.surfaceContainer.withValues(alpha: 0.9),
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.95),
+            t.colorScheme.surfaceContainer.withOpacity(0.9),
+            t.colorScheme.surfaceContainerHighest.withOpacity(0.95),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -27,7 +30,7 @@ class CommonFormWidgets {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.15),
+            color: t.shadowColor.withOpacity(0.15),
             blurRadius: 16,
             offset: const Offset(0, 6),
             spreadRadius: 1,
@@ -37,26 +40,30 @@ class CommonFormWidgets {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 24,
-                color: theme.colorScheme.primary.withValues(alpha: 0.95),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
-                  letterSpacing: 0.8,
-                ),
-                semanticsLabel: title,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          if (icon != null || title != null)
+            Row(
+              children: [
+                if (icon != null)
+                  Icon(
+                    icon,
+                    size: 24,
+                    color: t.colorScheme.primary.withOpacity(0.95),
+                  ),
+                if (icon != null && title != null)
+                  const SizedBox(width: 12),
+                if (title != null)
+                  Text(
+                    title,
+                    style: t.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: t.colorScheme.primary,
+                      letterSpacing: 0.8,
+                    ),
+                    semanticsLabel: title,
+                  ),
+              ],
+            ),
+          if (icon != null || title != null) const SizedBox(height: 16),
           child,
         ],
       ),
@@ -136,119 +143,172 @@ class CommonFormWidgets {
     required TransactionScreenController controller,
   }) {
     return Obx(
-      () => DropdownMenu<String>(
-        initialSelection:
-            controller.selectedCategory.value.isEmpty
-                ? null
-                : controller.selectedCategory.value,
-        onSelected: controller.updateCategory,
-        width: 200,
-        hintText: 'Select category',
-        menuStyle: MenuStyle(
-          surfaceTintColor: WidgetStatePropertyAll(theme.colorScheme.surface),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          elevation: const WidgetStatePropertyAll(8),
-          backgroundColor: WidgetStatePropertyAll(
-            theme.colorScheme.surfaceContainer.withValues(alpha: 0.95),
+          () => Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.8),
+          border: Border.all(
+            color: controller.selectedCategory.value.isNotEmpty
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withValues(alpha: 0.4),
+            width: controller.selectedCategory.value.isNotEmpty ? 1.8 : 1.2,
           ),
         ),
-        textStyle: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.onSurface,
-        ),
-        dropdownMenuEntries:
-            TransactionScreenController.categories
-                .map(
-                  (e) => DropdownMenuEntry(
-                    value: e,
-                    label: e,
-                    style: MenuItemButton.styleFrom(
-                      textStyle: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      backgroundColor: theme.colorScheme.surfaceContainer,
-                    ),
-                  ),
-                )
-                .toList(),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: theme.colorScheme.surfaceContainer.withValues(alpha: 0.75),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: DropdownMenu<String>(
+          initialSelection: controller.selectedCategory.value.isEmpty
+              ? null
+              : controller.selectedCategory.value,
+          onSelected: controller.updateCategory,
+          hintText: 'Select category',
+          width: 260, // 👈 dropdown field width
+          textStyle: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(
-              color: theme.colorScheme.outline.withValues(alpha: 0.4),
-              width: 1.2,
+          menuStyle: MenuStyle(
+            backgroundColor: WidgetStatePropertyAll(
+              theme.colorScheme.surfaceContainerHighest,
+            ),
+            elevation: const WidgetStatePropertyAll(12),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            shadowColor: WidgetStatePropertyAll(
+              theme.shadowColor.withValues(alpha: 0.2),
+            ),
+            maximumSize: WidgetStatePropertyAll(
+              const Size(165, 300), // 👈 dropdown list size (width x height)
             ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(
-              color: theme.colorScheme.primary,
-              width: 2.0,
+          dropdownMenuEntries: TransactionScreenController.categories
+              .map(
+                (e) => DropdownMenuEntry<String>(
+              value: e,
+              label: e,
+              style: MenuItemButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 14,
+                ),
+                textStyle: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
             ),
-          ),
-          hintStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.outline.withValues(alpha: 0.6),
-            fontSize: 14,
+          )
+              .toList(),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.transparent,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 0,
+              vertical: 12,
+            ),
+            border: InputBorder.none,
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.outline.withValues(alpha: 0.6),
+            ),
           ),
         ),
       ),
     );
   }
 
+
+
   static Widget currencyBox({
+    required BuildContext context,
     required ThemeData theme,
     required TripDetailController tripDetailController,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.surfaceContainer.withValues(alpha: 0.7),
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.4),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    final currencyList = Kconstant.currencyModelList;
+
+    final selectedCurrency = currencyList.firstWhere(
+          (currency) => currency.id == tripDetailController.trip['currency'],
+      orElse: () => currencyList.first,
+    );
+
+    return GestureDetector(
+      onTap: () async {
+        await Get.dialog(
+          AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: theme.scaffoldBackgroundColor,
+            title: Text('Select Currency', style: theme.textTheme.titleMedium),
+            content: SizedBox(
+              height: 300, // fixed height for scroll
+              width: 300,  // you can adjust width if needed
+              child: Scrollbar(
+                thickness: 4,
+                radius: const Radius.circular(8),
+                child: ListView.builder(
+                  itemCount: currencyList.length,
+                  itemBuilder: (context, index) {
+                    final currency = currencyList[index];
+                    return ListTile(
+                      leading: Text(currency.symbol, style: theme.textTheme.titleMedium),
+                      title: Text('${currency.name} (${currency.code})'),
+                      onTap: () {
+                        tripDetailController.trip['currency'] = currency.id;
+                        tripDetailController.update();
+                        Get.back();
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
-        ],
-      ),
-      child: Text(
-        tripDetailController.trip['currency'] == 'INR' ? '₹' : '\$',
-        style: theme.textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.primary,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              theme.colorScheme.surfaceContainer.withValues(alpha: 0.7),
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        semanticsLabel:
-            tripDetailController.trip['currency'] == 'INR'
-                ? 'Indian Rupee'
-                : 'Dollar',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              selectedCurrency.symbol,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.primary),
+          ],
+        ),
       ),
     );
   }
+
+
 
   static Widget amountField({
     required ThemeData theme,
@@ -365,7 +425,7 @@ class CommonFormWidgets {
                       ),
                       content: Container(
                         width: double.maxFinite,
-                        constraints: const BoxConstraints(maxHeight: 320),
+                        constraints: const BoxConstraints(maxHeight: 250),
                         child: Obx(
                           () => ListView(
                             children:
@@ -621,8 +681,7 @@ class CommonFormWidgets {
         forPayers: forPayers,
       );
       final remaining =
-          double.tryParse(remainingRaw.replaceAll(RegExp(r'[^\d.-]'), '')) ??
-          0.0;
+          double.tryParse(remainingRaw.replaceAll(RegExp(r'[^\d.-]'), '')) ?? 0.0;
 
       final showWarning = remaining != 0 && amount > 0;
 
@@ -633,39 +692,43 @@ class CommonFormWidgets {
         roleText = forPayers ? 'Paid By' : 'Split';
       }
 
-      final message = 'Unassigned Amount: $remainingRaw';
+      // 🔹 Get selected currency symbol
+      TripDetailController tripDetailController = Get.find<TripDetailController>();
+      final selectedCurrency = Kconstant.currencyModelList.firstWhere(
+            (c) => c.id == tripDetailController.trip['currency'],
+        orElse: () => Kconstant.currencyModelList.first,
+      );
+
+      final message = 'Unassigned Amount: ${selectedCurrency.symbol} $remaining';
 
       return controller.transactionAmount.value == '0.0'
           ? const SizedBox.shrink()
           : Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color:
-                  showWarning
-                      ? theme.colorScheme.error.withValues(alpha: 0.15)
-                      : theme.colorScheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color:
-                    showWarning
-                        ? theme.colorScheme.error.withValues(alpha: 0.3)
-                        : theme.colorScheme.primary.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              message,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color:
-                    showWarning
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-            ),
-          );
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        decoration: BoxDecoration(
+          color: showWarning
+              ? theme.colorScheme.error.withOpacity(0.15)
+              : theme.colorScheme.primary.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: showWarning
+                ? theme.colorScheme.error.withOpacity(0.3)
+                : theme.colorScheme.primary.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          message,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: showWarning
+                ? theme.colorScheme.error
+                : theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.7,
+          ),
+        ),
+      );
     });
   }
 
@@ -674,83 +737,90 @@ class CommonFormWidgets {
     required ThemeData theme,
     required TransactionScreenController controller,
   }) {
+    final tripController = Get.find<TripDetailController>();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        ElevatedButton.icon(
-          onPressed: controller.pickImage,
-          icon: Icon(
-            Icons.image_outlined,
-            size: 22,
-            color: theme.colorScheme.primary,
-          ),
-          label: Text(
-            "Bill Image",
-            style: theme.textTheme.labelLarge?.copyWith(
+        Flexible(
+          flex: 1,
+          child: ElevatedButton.icon(
+            onPressed: controller.pickImage,
+            icon: Icon(
+              Icons.image_outlined,
+              size: 20,
               color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
             ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.surfaceContainer.withValues(
-              alpha: 0.7,
-            ),
-            foregroundColor: theme.colorScheme.primary,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 2,
-            shadowColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-          ),
-        ),
-        TextButton.icon(
-          onPressed: () async {
-            final picked = await showDialog<DateTime>(
-              context: context,
-              builder:
-                  (dialogContext) => DatePickerDialog(
-                    initialDate: controller.transactionDate.value,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2100),
-                  ),
-            );
-            if (picked != null) controller.updateDate(picked);
-          },
-          icon: Icon(
-            Icons.calendar_today_outlined,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
-          label: Obx(
-            () => Text(
-              Get.find<TripDetailController>().formatDate(
-                controller.transactionDate.value,
-              ),
-              style: theme.textTheme.bodyLarge?.copyWith(
+            label: Text(
+              "Bill Image",
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.5,
               ),
-              semanticsLabel: Get.find<TripDetailController>().formatDate(
-                controller.transactionDate.value,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.surfaceContainer.withAlpha(180),
+              foregroundColor: theme.colorScheme.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
               ),
+              elevation: 2,
+              shadowColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              minimumSize: const Size(0, 44),
             ),
           ),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            backgroundColor: theme.colorScheme.surfaceContainer.withValues(
-              alpha: 0.7,
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          flex: 1,
+          child: TextButton.icon(
+            onPressed: () async {
+              final picked = await showDialog<DateTime>(
+                context: context,
+                builder: (dialogContext) => DatePickerDialog(
+                  initialDate: controller.transactionDate.value,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                ),
+              );
+              if (picked != null) controller.updateDate(picked);
+            },
+            icon: Icon(
+              Icons.calendar_today_outlined,
+              size: 18,
+              color: theme.colorScheme.primary,
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+            label: Obx(
+                  () => Text(
+                tripController.formatDate(controller.transactionDate.value),
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+                semanticsLabel: tripController.formatDate(controller.transactionDate.value),
+              ),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              backgroundColor: theme.colorScheme.surfaceContainer.withAlpha(180),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              minimumSize: const Size(0, 44),
             ),
           ),
         ),
       ],
     );
   }
+
 
   static Widget submitButton({
     required String label,
