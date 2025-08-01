@@ -526,60 +526,161 @@ class TransactionScreenController extends GetxController {
     return tripDetailController.formatCurrency(total - assigned);
   }
 
-  Future<void> submitTransaction() async {
-    isTransactionSubmitted.value = true;
-    isLoading.value = true;
-    errorMessage.value = '';
+  static Future<void> saveTransactionToBackend({
+    required TransactionScreenController controller,
+    required TripDetailController tripDetailController,
+  }) async {
+    controller.isLoading.value = true;
+    controller.errorMessage.value = '';
 
     try {
-      _validateTransaction();
-      if (transactionType.value == 'transfer') {
-        await _saveTransferToBackend();
-        Get.snackbar('Success', 'Transfer added successfully');
-        Get.back();
+      // Validate transaction data
+      _validateTransaction(controller);
+
+      final token = await TokenStorage.getToken();
+      final tripId = tripDetailController.trip['id'] as int;
+      final currencyId = tripDetailController.trip['default_currency'] as int;
+      final amount = double.tryParse(controller.transactionAmount.value) ?? 0.0;
+
+      // Prepare common transaction data
+      final transactionData = {
+        'type': controller.transactionType.value,
+        'trip': tripId,
+        'currency': currencyId,
+        'amount': amount,
+        'exchange_rate': 1.0,
+        'title': controller.transactionTitle.value,
+        'date': DateFormat('yyyy-MM-dd').format(controller.transactionDate.value),
+        if (controller.selectedCategory.value != null)
+          'category': controller.selectedCategory.value?.id,
+      };
+
+      if (controller.transactionType.value == 'transfer') {
+        // Handle transfer transaction
+        final fromParticipantName = controller.transactionPayers.first;
+        final fromParticipant = Kconstant.participantsRx.firstWhere(
+              (p) => p['name'] == fromParticipantName,
+          orElse: () => throw TransactionException('From participant not found: $fromParticipantName'),
+        );
+        final fromParticipantId = fromParticipant['id'] as int;
+
+        final payees = controller.transactionPayers.map((payerName) {
+          final participant = Kconstant.participantsRx.firstWhere(
+                (p) => p['name'] == payerName,
+            orElse: () => throw TransactionException('Payer not found: $payerName'),
+          );
+          final participantId = participant['id'] as int;
+          final payerAmount = controller.payerAmounts[payerName] ?? amount;
+          return {'participant': participantId, 'amount': payerAmount};
+        }).toList();
+
+        final receivers = controller.transactionRecipients.map((recipientName) {
+          final participant = Kconstant.participantsRx.firstWhere(
+                (p) => p['name'] == recipientName,
+            orElse: () => throw TransactionException('Recipient not found: $recipientName'),
+          );
+          final participantId = participant['id'] as int;
+          final recipientAmount = controller.recipientAmounts[recipientName] ?? (amount / controller.transactionRecipients.length);
+          return {'participant': participantId, 'amount': recipientAmount};
+        }).toList();
+
+        transactionData.addAll({
+          'from_participant': fromParticipantId,
+          'payees': payees,
+          'receivers': receivers,
+        });
       } else {
-        final transaction = _buildTransaction();
-        await tripDetailController.addTransaction(transaction);
-        Get.snackbar('Success', 'Transaction added successfully');
-        Get.back();
+        // Handle regular transaction
+        final payees = controller.transactionPayers.map((payerName) {
+          final participant = Kconstant.participantsRx.firstWhere(
+                (p) => p['name'] == payerName,
+            orElse: () => throw TransactionException('Payer not found: $payerName'),
+          );
+          final participantId = participant['id'] as int;
+          final payerAmount = controller.payerAmounts[payerName] ?? (amount / controller.transactionPayers.length);
+          return {'participant': participantId, 'amount': payerAmount};
+        }).toList();
+
+        final shares = controller.transactionShares.map((name, share) {
+          final participant = Kconstant.participantsRx.firstWhere(
+                (p) => p['name'] == name,
+            orElse: () => throw TransactionException('Participant not found: $name'),
+          );
+          final participantId = participant['id'] as int;
+          return MapEntry(name, {'participant': participantId, 'amount': share});
+        }).entries.map((e) => e.value).toList();
+
+        transactionData.addAll({
+          'payees': payees,
+          'shares': shares,
+          'split_type': controller.transactionSplitType.value,
+        });
       }
+
+      // Handle bill image if present
+      // if (controller.billImage.value != null) {
+      //   // Note: Actual image upload logic depends on backend requirements.
+      //   // This example assumes a separate endpoint or field for image upload.
+      //   // Adjust according to your API.
+      //   transactionData['bill_image'] = 'image_upload_placeholder'; // Replace with actual image upload logic
+      // }
+
+      // Send to backend
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/transaction/maintain/$tripId/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+        body: jsonEncode(transactionData),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw TransactionException('Failed to save transaction: ${response.body}');
+      }
+
+      Get.snackbar('Success', 'Transaction added successfully');
+      Get.back();
     } catch (e) {
-      errorMessage.value = e is TransactionException ? e.message : 'An unexpected error occurred';
-      Get.snackbar('Error', errorMessage.value);
+      controller.errorMessage.value = e is TransactionException ? e.message : 'An unexpected error occurred';
+      Get.snackbar('Error', controller.errorMessage.value);
     } finally {
-      isLoading.value = false;
+      controller.isLoading.value = false;
     }
   }
 
-  void _validateTransaction() {
-    titleError.value = transactionTitle.value.isEmpty ? 'Title is required' : '';
-    amountError.value = (double.tryParse(transactionAmount.value) ?? 0.0) <= 0 ? 'Amount must be greater than zero' : '';
-    payersError.value = transactionPayers.isEmpty ? 'At least one payer is required' : '';
-    recipientsError.value = transactionType.value == 'transfer' && transactionRecipients.isEmpty ? 'At least one recipient is required' : '';
+  static void _validateTransaction(TransactionScreenController controller) {
+    controller.titleError.value = controller.transactionTitle.value.isEmpty ? 'Title is required' : '';
+    controller.amountError.value = (double.tryParse(controller.transactionAmount.value) ?? 0.0) <= 0 ? 'Amount must be greater than zero' : '';
+    controller.payersError.value = controller.transactionPayers.isEmpty ? 'At least one payer is required' : '';
+    controller.recipientsError.value = controller.transactionType.value == 'transfer' && controller.transactionRecipients.isEmpty ? 'At least one recipient is required' : '';
 
-    if (titleError.value.isNotEmpty || amountError.value.isNotEmpty || payersError.value.isNotEmpty || recipientsError.value.isNotEmpty) {
+    if (controller.titleError.value.isNotEmpty ||
+        controller.amountError.value.isNotEmpty ||
+        controller.payersError.value.isNotEmpty ||
+        controller.recipientsError.value.isNotEmpty) {
       throw TransactionException('Please correct the errors in the form');
     }
 
-    final totalAmount = double.tryParse(transactionAmount.value) ?? 0.0;
-    if (transactionType.value == 'transfer') {
-      if (transactionPayers.length > 1) {
-        payersError.value = 'Transfer can only have one payer';
+    final totalAmount = double.tryParse(controller.transactionAmount.value) ?? 0.0;
+    if (controller.transactionType.value == 'transfer') {
+      if (controller.transactionPayers.length > 1) {
+        controller.payersError.value = 'Transfer can only have one payer';
         throw TransactionException('Transfer can only have one payer');
       }
-      final totalReceived = recipientAmounts.values.fold(0.0, (sum, amount) => sum + amount);
+      final totalReceived = controller.recipientAmounts.values.fold(0.0, (sum, amount) => sum + amount);
       if ((totalReceived - totalAmount).abs() > 0.01) {
-        recipientsError.value = 'Total received amounts must equal the transaction amount';
+        controller.recipientsError.value = 'Total received amounts must equal the transaction amount';
         throw TransactionException('Total received amounts must equal the transaction amount');
       }
     } else {
-      final totalPaid = payerAmounts.values.fold(0.0, (sum, amount) => sum + amount);
+      final totalPaid = controller.payerAmounts.values.fold(0.0, (sum, amount) => sum + amount);
       if ((totalPaid - totalAmount).abs() > 0.01) {
-        payersError.value = 'Total paid amounts must equal the transaction amount';
+        controller.payersError.value = 'Total paid amounts must equal the transaction amount';
         throw TransactionException('Total paid amounts must equal the transaction amount');
       }
-      if (transactionSplitType.value == 'As Amount') {
-        final totalShares = transactionShares.values.fold(0.0, (sum, v) => sum + v);
+      if (controller.transactionSplitType.value == 'As Amount') {
+        final totalShares = controller.transactionShares.values.fold(0.0, (sum, v) => sum + v);
         if ((totalShares - totalAmount).abs() > 0.01) {
           throw TransactionException('Total shares must equal the transaction amount');
         }
@@ -587,90 +688,8 @@ class TransactionScreenController extends GetxController {
     }
   }
 
-  Map<String, dynamic> _buildTransaction() {
-    final totalAmount = double.tryParse(transactionAmount.value) ?? 0.0;
-    return {
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'type': transactionType.value,
-      'title': transactionTitle.value,
-      'category': selectedCategory.value,
-      'icon': 'category',
-      'amount': totalAmount,
-      'payers': Map<String, double>.from(payerAmounts),
-      'user_share': transactionType.value == 'transfer' ? 0.0 : transactionShares['Viren'] ?? 0.0,
-      'date': DateFormat('yyyy-MM-dd').format(transactionDate.value),
-      'split_type': transactionType.value == 'transfer' ? 'None' : transactionSplitType.value,
-      'shares': transactionType.value == 'transfer' ? {} : Map<String, double>.from(transactionShares),
-      if (transactionType.value == 'transfer') 'recipients': Map<String, double>.from(recipientAmounts),
-    };
-  }
 
-  Future<void> _saveTransferToBackend() async {
-    final token = await TokenStorage.getToken();
-    try {
-      final amount = double.tryParse(transactionAmount.value) ?? 0.0;
-      final tripId = tripDetailController.trip['id'] as int;
-      final currencyId = tripDetailController.trip['default_currency'] as int;
 
-      // Map payers
-      final payees = transactionPayers.map((payerName) {
-        final participant = Kconstant.participantsRx.firstWhere(
-              (p) => p['name'] == payerName,
-          orElse: () => throw TransactionException('Payer not found: $payerName'),
-        );
-        final participantId = participant['id'] as int;
-        final payerAmount = payerAmounts[payerName] ?? amount; // Use total amount if not specified
-        return Payee(participant: participantId, amount: payerAmount);
-      }).toList();
-
-      // Map recipients
-      final receivers = transactionRecipients.map((recipientName) {
-        final participant = Kconstant.participantsRx.firstWhere(
-              (p) => p['name'] == recipientName,
-          orElse: () => throw TransactionException('Recipient not found: $recipientName'),
-        );
-        final participantId = participant['id'] as int;
-        final recipientAmount = recipientAmounts[recipientName] ?? (amount / transactionRecipients.length);
-        return Receiver(participant: participantId, amount: recipientAmount);
-      }).toList();
-
-      // Get fromParticipant
-      final fromParticipantName = transactionPayers.first;
-      final fromParticipant = Kconstant.participantsRx.firstWhere(
-            (p) => p['name'] == fromParticipantName,
-        orElse: () => throw TransactionException('From participant not found: $fromParticipantName'),
-      );
-      final fromParticipantId = fromParticipant['id'] as int;
-
-      // Create Transfer object
-      final transfer = Transfer(
-        type: 'transfer',
-        trip: tripId,
-        currency: currencyId,
-        amount: amount,
-        exchangeRate: 1.0, // As per your example JSON
-        fromParticipant: fromParticipantId,
-        payees: payees,
-        receivers: receivers,
-      );
-
-      // Send to backend
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/transaction/maintain/$tripId/'), // Replace with your actual API endpoint
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Token $token',
-        },
-        body: jsonEncode(transfer.toJson()),
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw TransactionException('Failed to save transfer: ${response.body}');
-      }
-    } catch (e) {
-      throw TransactionException('Error saving transfer: $e');
-    }
-  }
 
   void removePayer(String name) {
     transactionPayers.remove(name);
@@ -682,3 +701,4 @@ class TransactionScreenController extends GetxController {
     }
   }
 }
+

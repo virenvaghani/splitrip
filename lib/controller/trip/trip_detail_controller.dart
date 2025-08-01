@@ -108,8 +108,7 @@ class TripDetailController extends GetxController {
           data['trip_data']['selected_participants'],
         );
 
-        // Save participants to your global state
-        Kconstant.friendModelList.clear();
+
         Kconstant.setParticipantsRx(participants);
 
         // Save transactions (optional: if you store them elsewhere)

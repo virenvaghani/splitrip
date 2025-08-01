@@ -5,6 +5,7 @@ import 'package:icons_plus/icons_plus.dart';
 import 'package:splitrip/data/constants.dart';
 
 import '../../../controller/trip/trip_detail_controller.dart';
+import '../../../model/Category/category_model.dart';
 
 class TripDetailScreen extends StatelessWidget {
   const TripDetailScreen({super.key});
@@ -372,7 +373,12 @@ class TripDetailScreen extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
 
-    final String category = expense['category'] ?? 'Uncategorized';
+    final dynamic cat = expense['category'];
+    final String category = cat is CategoryModel
+        ? cat.name
+        : (cat is String ? cat : 'Uncategorized');
+
+
     final String paidBy = expense['paid_by'] ?? 'Unknown';
     final double amount = (expense['amount'] as num?)?.toDouble() ?? 0.0;
     final double userShare = (expense['user_share'] as num?)?.toDouble() ?? 0.0;
