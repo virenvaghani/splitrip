@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
 import 'package:splitrip/controller/transaction_controller/transaction_controller.dart';
 import 'package:splitrip/data/trip_constant.dart';
+import '../../../../../data/constants.dart';
 import 'common_widgets_forms.dart';
 
 class TransferForm extends StatelessWidget {
@@ -20,7 +21,7 @@ class TransferForm extends StatelessWidget {
     return Form(
       key: formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 10,top: 5),
+        padding: const EdgeInsets.only(bottom: 10, top: 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -65,12 +66,27 @@ class TransferForm extends StatelessWidget {
               theme: theme,
               icon: Icons.call_made,
               title: "From",
-              child: CommonFormWidgets.payerDropdown(
-                context: context,
-                theme: theme,
-                tripDetailController: tripDetailController,
-                controller: transactionController,
-                isSingleSelection: true,
+              child: Column(
+                children: [
+                  CommonFormWidgets.payerDropdown(
+                    context: context,
+                    theme: theme,
+                    tripDetailController: tripDetailController,
+                    controller: transactionController,
+                    isSingleSelection: true,
+                  ),
+                  AppSpacers.medium,
+                  _payerAmountInputs(theme, transactionController),
+                  AppSpacers.small,
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: CommonFormWidgets.amountValidation(
+                      theme: theme,
+                      controller: transactionController,
+                      forPayers: true,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -102,7 +118,6 @@ class TransferForm extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
             CommonFormWidgets.submitButton(
               label: 'Transfer',
               theme: theme,
@@ -116,82 +131,86 @@ class TransferForm extends StatelessWidget {
   }
 
   Widget _recipientDropdown(
-    BuildContext context,
-    ThemeData theme,
-    TripDetailController tripDetailController,
-    TransactionScreenController controller,
-  ) {
+      BuildContext context,
+      ThemeData theme,
+      TripDetailController tripDetailController,
+      TransactionScreenController controller,
+      ) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
         showDialog(
           context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                backgroundColor: theme.colorScheme.surfaceContainer,
-                title: Text(
-                  'Select Recipients',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                content: Container(
-                  width: double.maxFinite,
-                  constraints: const BoxConstraints(maxHeight: 300),
-                  child: Obx(
-                    () => ListView(
-                      children:
-                          tripDetailController.participants.map((name) {
-                            return CheckboxListTile(
-                              value: controller.transactionRecipients.contains(
-                                name,
-                              ),
-                              onChanged:
-                                  (value) => controller.toggleRecipient(name),
-                              title: Text(
-                                name == "Viren" ? "$name (me)" : name,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontSize: 14,
-                                ),
-                              ),
-                              activeColor: theme.colorScheme.primary,
-                              checkColor: theme.colorScheme.onPrimary,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: Text(
-                      'Done',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+          builder: (dialogContext) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: theme.colorScheme.surfaceContainer,
+            title: Text(
+              'Select Recipients',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
+            ),
+            content: Container(
+              width: double.maxFinite,
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: Obx(
+                    () {
+                  // Map participants to List<String>
+                  final participantNames = Kconstant.participantsRx
+                      .map((participant) => participant['name'] as String)
+                      .toList();
+                  return ListView(
+                    children: participantNames
+                        .where((name) => !controller.transactionPayers.contains(name))
+                        .map((name) {
+                      return CheckboxListTile(
+                        value: controller.transactionRecipients.contains(name),
+                        onChanged: (value) => controller.toggleRecipient(name),
+                        title: Text(
+                          name,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                          ),
+                        ),
+                        activeColor: theme.colorScheme.primary,
+                        checkColor: theme.colorScheme.onPrimary,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  'Done',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
       child: IgnorePointer(
         child: Obx(
-          () => TextFormField(
+              () => TextFormField(
             readOnly: true,
             decoration: InputDecoration(
-              hintText:
-                  controller.transactionRecipients.isEmpty
-                      ? 'Select recipients'
-                      : 'Received by ${controller.transactionRecipients.length} people',
-              errorText: controller.recipientsError.toString(),
+              hintText: controller.transactionRecipients.isEmpty
+                  ? 'Select recipients'
+                  : 'Received by ${controller.transactionRecipients.length} people',
+              errorText: controller.recipientsError.toString().isEmpty
+                  ? null
+                  : controller.recipientsError.toString(),
               hintStyle: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
@@ -216,14 +235,14 @@ class TransferForm extends StatelessWidget {
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
-                  color: theme.colorScheme.error,
+                  color: theme.dividerColor.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
-                  color: theme.colorScheme.error,
+                  color: theme.dividerColor.withValues(alpha: 0.5),
                   width: 1.5,
                 ),
               ),
@@ -232,11 +251,9 @@ class TransferForm extends StatelessWidget {
                 color: theme.colorScheme.primary,
               ),
             ),
-            validator:
-                (value) =>
-                    controller.transactionRecipients.isEmpty
-                        ? 'Please select at least one recipient'
-                        : null,
+            validator: (value) => controller.transactionRecipients.isEmpty
+                ? 'Please select at least one recipient'
+                : null,
           ),
         ),
       ),
@@ -244,9 +261,9 @@ class TransferForm extends StatelessWidget {
   }
 
   Widget _recipientAmountInputs(
-    ThemeData theme,
-    TransactionScreenController controller,
-  ) {
+      ThemeData theme,
+      TransactionScreenController controller,
+      ) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -259,7 +276,9 @@ class TransferForm extends StatelessWidget {
         ),
       ),
       child: Obx(
-        () => transactionController.transactionRecipients.isEmpty ? SizedBox.shrink() : ListView.builder(
+            () => controller.transactionRecipients.isEmpty
+            ? const SizedBox.shrink()
+            : ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: controller.transactionRecipients.length,
@@ -267,7 +286,10 @@ class TransferForm extends StatelessWidget {
             final name = controller.transactionRecipients[index];
             final textController = controller.getRecipientTextController(name);
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              padding: const EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 12,
+              ),
               child: Row(
                 children: [
                   IconButton(
@@ -292,11 +314,10 @@ class TransferForm extends StatelessWidget {
                     child: TextFormField(
                       controller: textController,
                       onChanged: (val) {
-                        final amount =
-                            double.tryParse(
-                              val.replaceAll(RegExp(r'[^\d.]'), ''),
-                            ) ??
-                                0.0;
+                        final amount = double.tryParse(
+                          val.replaceAll(RegExp(r'[^\d.]'), ''),
+                        ) ??
+                            0.0;
                         controller.updateRecipientAmount(name, amount);
                       },
                       keyboardType: const TextInputType.numberWithOptions(
@@ -307,10 +328,11 @@ class TransferForm extends StatelessWidget {
                           RegExp(r'^\d*\.?\d{0,2}'),
                         ),
                       ],
-                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
-                        prefixText:
-                        tripDetailController.trip['currency'] == 'INR'
+                        prefixText: tripDetailController.trip['currency'] == 'INR'
                             ? '₹ '
                             : '\$ ',
                         prefixStyle: theme.textTheme.bodyMedium?.copyWith(
@@ -344,6 +366,121 @@ class TransferForm extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+
+  Widget _payerAmountInputs(
+      ThemeData theme,
+      TransactionScreenController controller,
+      ) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+          width: 0.5,
+        ),
+      ),
+      child: Obx(() {
+        final selectedCurrency = Kconstant.currencyModelList.firstWhere(
+              (currency) => currency.id == tripDetailController.trip['default_currency'],
+          orElse: () => Kconstant.currencyModelList.firstWhere(
+                (currency) => currency.id == 15,
+          ),
+        );
+
+        return controller.transactionPayers.isEmpty
+            ? const SizedBox.shrink()
+            : ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: controller.transactionPayers.length,
+          itemBuilder: (context, index) {
+            final name = controller.transactionPayers[index];
+            final textController = controller.getPayerTextController(name);
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 12,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.remove_circle_outline,
+                      color: theme.colorScheme.error,
+                    ),
+                    onPressed: () => controller.removePayer(name),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      name,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      semanticsLabel: name,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    selectedCurrency.symbol,
+                    style: theme.textTheme.titleMedium!.copyWith(
+                      color: theme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 100,
+                    child: TextFormField(
+                      controller: textController,
+                      onChanged: (val) {
+                        final amount = double.tryParse(
+                          val.replaceAll(RegExp(r'[^\d.]'), ''),
+                        ) ??
+                            0.0;
+                        controller.updatePayerAmount(name, amount);
+                      },
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}'),
+                        ),
+                      ],
+                      textDirection: TextDirection.ltr,
+                      style: theme.textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        prefixStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: theme.primaryColor.withValues(alpha: 0.1),
+                        hintText: "0.00",
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

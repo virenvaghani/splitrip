@@ -1,3 +1,5 @@
+import 'package:get/get.dart';
+import 'package:splitrip/model/Category/category_model.dart';
 import 'package:splitrip/model/friend/friend_model.dart';
 
 import '../model/currency/currency_model.dart';
@@ -8,7 +10,17 @@ class Kconstant {
   static const String userEmail = 'user_email';
   static const String photoURL = 'Image';
   static  List<CurrencyModel> currencyModelList = [];
-  static List<FriendModel> friendModelList = [];
+  static RxList<FriendModel> friendModelList = RxList();
+  static RxList<Map<String, dynamic>> participantsRx = RxList();
+  static RxList<CategoryModel> categoryModelList = RxList();
+  static void setParticipantsRx(List<Map<String, dynamic>> participantsList) {
+    participantsRx.value = List<Map<String, dynamic>>.from(participantsList);
+  }
+  static RxList<Map<String, dynamic>> transactionsRx = <Map<String, dynamic>>[].obs;
+
+  static void setTransactions(List<Map<String, dynamic>> transactions) {
+    transactionsRx.value = transactions;
+  }
 }
 
 class PageConstant {

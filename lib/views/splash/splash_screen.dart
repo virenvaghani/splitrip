@@ -16,6 +16,7 @@ class SplashScreen extends StatelessWidget {
         splashScreenController.isLoading.value = true;
         splashScreenController.processStartupLogic();
         splashScreenController.getAllCurrency();
+        splashScreenController.getAllCategory();
         splashScreenController.isLoading.value = false;
       },
       builder: (context) {

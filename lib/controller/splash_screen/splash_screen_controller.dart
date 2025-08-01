@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:splitrip/model/currency/currency_model.dart';
 import '../../data/constants.dart';
 import '../../data/token.dart';
+import '../../model/Category/category_model.dart';
 
 class SplashScreenController extends GetxController {
   late final AppLinks _appLinks;
@@ -127,7 +128,7 @@ class SplashScreenController extends GetxController {
       isLoading.value = true;
       final token = await TokenStorage.getToken();
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/currency_list'),
+        Uri.parse('${ApiConstants.baseUrl}/currency_list/'),
         headers: {
           'Authorization': 'Token $token',
           'Content-Type': 'application/json',
@@ -135,7 +136,6 @@ class SplashScreenController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        print('[SplashScreenController] HTTP ${response.statusCode}: ${response.body}');
         final List<dynamic> currencyData = jsonDecode(response.body);
         List<CurrencyModel> currencyModelList = [];
         currencyModelList = currencyData
@@ -145,6 +145,36 @@ class SplashScreenController extends GetxController {
 
       } else {
         Get.snackbar("Error", "Failed to fetch currencies: ${response.statusCode}");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Something went wrong: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  Future<void> getAllCategory() async {
+    try {
+      isLoading.value = true;
+      final token = await TokenStorage.getToken();
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/categories/'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> categoryData = jsonDecode(response.body);
+        List<CategoryModel> categoryModelList = categoryData
+            .map((json) => CategoryModel.fromJson(json))
+            .toList();
+        Kconstant.categoryModelList.addAll(categoryModelList);
+        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+        print(Kconstant.categoryModelList);
+      }
+      else {
+        Get.snackbar("Error", "Failed to fetch categories: ${response.statusCode}");
       }
     } catch (e) {
       Get.snackbar("Error", "Something went wrong: $e");

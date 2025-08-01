@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../data/authenticate_value.dart';
 import '../../views/friend_list/friends_page.dart';
 import '../../views/profile/profile_page.dart';
 import '../../views/trip/trip_screen/trip_screen.dart';
 
 class AppPageController extends GetxController {
+
+  var profileImageUrl = ''.obs;
   // Lazy page builders instead of directly instantiated widgets
   final List<Widget Function()> pageBuilders = [
         () => FriendsPage(),
         () => TripScreen(),
         () => ProfilePage(),
   ];
+
+  void loadProfileImage() async {
+    final image = await AuthStatusStorage.getUserImage(); // async call
+    if (image != null) {
+      profileImageUrl.value = image;
+    }
+  }
+
 
   var pageIndex = 1.obs; // Default to TripScreen
 
@@ -22,5 +33,9 @@ class AppPageController extends GetxController {
     if (index >= 0 && index < pageBuilders.length) {
       pageIndex.value = index;
     }
+  }
+
+  void clearProfileImage() {
+    profileImageUrl.value = '';
   }
 }

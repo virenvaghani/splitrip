@@ -7,9 +7,9 @@ import 'package:splitrip/controller/theme/theme_controller.dart';
 import 'package:splitrip/data/trip_constant.dart';
 
 class ProfileDetailsPage extends StatelessWidget {
-  final User user;
 
-  const ProfileDetailsPage({super.key, required this.user});
+
+   ProfileDetailsPage({super.key});
 
   void _showProfileImage(BuildContext context, String imageUrl) {
     showDialog(
@@ -32,18 +32,11 @@ class ProfileDetailsPage extends StatelessWidget {
     final themeController = Provider.of<ThemeController>(context);
     final theme = Theme.of(context);
 
-    final photoUrl = userController.photoUrl.isNotEmpty
-        ? userController.photoUrl
-        : user.photoURL ?? '';
+    final photoUrl = userController.photoUrl;
 
-    final displayName = userController.userName.isNotEmpty
-        ? userController.userName
-        : user.displayName ?? 'No name available';
+    final displayName = userController.userName;
 
-    final email = userController.userEmail.isNotEmpty
-        ? userController.userEmail
-        : user.email ?? 'No email available';
-
+    final email = userController.userEmail;
     final isDarkMode = themeController.isDarkMode;
     final borderColor = isDarkMode
         ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
@@ -91,7 +84,7 @@ class ProfileDetailsPage extends StatelessWidget {
             ),
             AppSpacers.medium,
             Text(
-              user.displayName.toString(),
+              displayName.toString(),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
@@ -99,7 +92,7 @@ class ProfileDetailsPage extends StatelessWidget {
             ),
             AppSpacers.tiny,
             Text(
-              user.email.toString(),
+              email.toString(),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),

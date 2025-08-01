@@ -94,12 +94,23 @@ class TripScreen extends StatelessWidget {
     );
   }
 
-  String getCurrencyNameById(int id) {
-    return Kconstant.currencyModelList.firstWhere(
-          (currency) => currency.id == id,
-      orElse: () => CurrencyModel(id: id, name: "Unknown", code: '', symbol: ''),
-    ).code;
+  String getCurrencyDetailById(int id, {String type = 'code'}) {
+    final currency = Kconstant.currencyModelList.firstWhere(
+          (c) => c.id == id,
+      orElse: () => CurrencyModel(id: id, name: 'Unknown', code: '', symbol: ''),
+    );
+
+    switch (type) {
+      case 'name':
+        return currency.name;
+      case 'symbol':
+        return currency.symbol;
+      case 'code':
+      default:
+        return currency.code;
+    }
   }
+
 
   Widget _buildBody(BuildContext context, ThemeData theme) {
     if (tripScreenController.tripModelList.isNotEmpty) {
@@ -151,30 +162,58 @@ class TripScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: theme.scaffoldBackgroundColor,
-                                  child: Text(trip.tripEmoji),
-                                ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      trip.tripName,
-                                      style: theme.textTheme.bodyLarge?.copyWith(
-                                          color: theme.colorScheme.onSurface, fontWeight: FontWeight.w500),
-                                    ),
-                                    Text("Currency: ${getCurrencyNameById(trip.defaultCurrency)}", style: theme.textTheme.labelSmall),
-                                  ],
-                                ),
-                              ],
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: theme.scaffoldBackgroundColor,
+                              child: Text(
+                                trip.tripEmoji,
+                                style: theme.textTheme.headlineSmall,
+                              ),
                             ),
-                            Icon(Icons.arrow_forward_ios, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), size: 20),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    trip.tripName,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.currency_exchange_rounded, size: 14, color: theme.hintColor),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "Currency: ${getCurrencyDetailById(trip.defaultCurrency, type: 'code')}",
+                                        style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Icon(Icons.people_alt_outlined, size: 14, color: theme.hintColor),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "${trip.totalParticipants} Friends",
+                                        style: theme.textTheme.labelSmall?.copyWith(color: theme.hintColor),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "Spent: ${getCurrencyDetailById(trip.defaultCurrency, type: 'symbol')}6,000", // TODO: Replace hardcoded value
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 18, color: Colors.grey),
                           ],
                         ),
                       ),

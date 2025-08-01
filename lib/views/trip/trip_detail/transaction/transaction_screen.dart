@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
 import 'package:splitrip/views/trip/trip_detail/transaction/tabs/expense_form.dart';
 import 'package:splitrip/views/trip/trip_detail/transaction/tabs/income_form.dart';
 import 'package:splitrip/views/trip/trip_detail/transaction/tabs/transfer_form.dart';
-
 import '../../../../controller/transaction_controller/transaction_controller.dart';
 
-class TransactionScreen extends StatelessWidget {
+class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
 
   @override
+  State<TransactionScreen> createState() => _TransactionScreenState();
+}
+
+class _TransactionScreenState extends State<TransactionScreen> with TickerProviderStateMixin {
+  @override
   Widget build(BuildContext context) {
-    final TransactionScreenController transactionController = Get.put(TransactionScreenController());
     final TripDetailController tripDetailController = Get.find<TripDetailController>();
-    final tickerProvider = _TickerProvider();
-    final tabController = TabController(length: 3, vsync: tickerProvider);
+    final TransactionScreenController transactionController = Get.put(TransactionScreenController(tripDetailController));
+    final theme = Theme.of(context);
+
+    final tabController = TabController(length: 3, vsync: this);
     transactionController.setTabController(tabController);
 
     return PopScope(
@@ -29,58 +33,48 @@ class TransactionScreen extends StatelessWidget {
         final isSubmitted = transactionController.isTransactionSubmitted.value;
 
         if (hasChanges && !isSubmitted) {
-          final shouldDiscard =
-              await showDialog<bool>(
-                context: context,
-                builder:
-                    (context) => AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      backgroundColor:
-                          Theme.of(context).colorScheme.surfaceContainer,
-                      title: Text(
-                        'Discard changes?',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      content: Text(
-                        'You have unsaved changes. Do you want to discard them?',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            'Cancel',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.labelLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            'Discard',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.labelLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.error,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+          final shouldDiscard = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: theme.colorScheme.surfaceContainer,
+              title: Text(
+                'Discard changes?',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              content: Text(
+                'You have unsaved changes. Do you want to discard them?',
+                style: theme.textTheme.bodyMedium,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(
+                    'Cancel',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
                     ),
-              ) ??
-              false;
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(
+                    'Discard',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ) ?? false;
 
           if (shouldDiscard) {
             transactionController.discardTransaction();
@@ -95,9 +89,8 @@ class TransactionScreen extends StatelessWidget {
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
-          systemNavigationBarColor:
-              Theme.of(context).scaffoldBackgroundColor, // navigation bar color
-          statusBarColor: Theme.of(context).scaffoldBackgroundColor,
+          systemNavigationBarColor: theme.scaffoldBackgroundColor,
+          statusBarColor: theme.scaffoldBackgroundColor,
           statusBarBrightness: Brightness.light,
           statusBarIconBrightness: Brightness.dark,
           systemNavigationBarContrastEnforced: true,
@@ -106,45 +99,173 @@ class TransactionScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                "${tripDetailController.trip['trip_emoji']} ${tripDetailController.trip['trip_name']}",
-                style: Theme.of(
-                  context,
-                ).textTheme.displayMedium,
-              ),
-              bottom: TabBar(
-                controller: tabController,
-                labelStyle: Theme.of(
-                  context,
-                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-                unselectedLabelStyle: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
-                indicatorColor: Theme.of(context).colorScheme.primary,
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-                tabs: const [
-                  Tab(text: 'Expense'),
-                  Tab(text: 'Income'),
-                  Tab(text: 'Transfer'),
-                ],
-              ),
-            ),
-            body: TabBarView(
-              controller: tabController,
-              children: [ExpenseForm(), IncomeForm(), TransferForm()],
+            body: Column(
+              children: [
+                // Compact Trip Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          Icons.close,
+                          size: 25,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        onPressed: () async {
+                          if (transactionController.hasChanges.value &&
+                              !transactionController.isTransactionSubmitted.value) {
+                            final shouldDiscard = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                backgroundColor: theme.colorScheme.surfaceContainer,
+                                title: Text(
+                                  'Discard changes?',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                content: Text(
+                                  'You have unsaved changes. Do you want to discard them?',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: Text(
+                                      'Cancel',
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: Text(
+                                      'Discard',
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        color: theme.colorScheme.error,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ) ?? false;
+
+                            if (shouldDiscard) {
+                              transactionController.discardTransaction();
+                              transactionController.hasChanges.value = false;
+                              Get.back();
+                            }
+                          } else {
+                            transactionController.discardTransaction();
+                            transactionController.hasChanges.value = false;
+                            Get.back();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                // Compact Tab Bar
+                ListenableBuilder(
+                  listenable: tabController,
+                  builder: (context, child) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildTabButton(
+                            context: context,
+                            label: 'Expense',
+                            index: 0,
+                            tabController: tabController,
+                            isSelected: tabController.index == 0,
+                          ),
+                          _buildTabButton(
+                            context: context,
+                            label: 'Income',
+                            index: 1,
+                            tabController: tabController,
+                            isSelected: tabController.index == 1,
+                          ),
+                          _buildTabButton(
+                            context: context,
+                            label: 'Transfer',
+                            index: 2,
+                            tabController: tabController,
+                            isSelected: tabController.index == 2,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                // Tab Content
+                Expanded(
+                  child: TabBarView(
+                    controller: tabController,
+                    physics: const NeverScrollableScrollPhysics(), // Disable swipe gestures
+                    children: [
+                      ExpenseForm(),
+                      IncomeForm(),
+                      TransferForm(),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
-}
 
-class _TickerProvider extends TickerProvider {
-  @override
-  Ticker createTicker(TickerCallback onTick) => Ticker(onTick);
+  Widget _buildTabButton({
+    required BuildContext context,
+    required String label,
+    required int index,
+    required TabController tabController,
+    required bool isSelected,
+  }) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          tabController.animateTo(index);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -36,13 +36,20 @@ class TripParticipantSelectorPage extends StatelessWidget {
           systemStatusBarContrastEnforced: true,
         ),
         child: SafeArea(
-          child: Scaffold(
-            backgroundColor: theme.colorScheme.surface,
-            appBar: CustomAppBar(title: controller.authToken.value != null ? 'Select Your Identity' : '', centerTitle: true,),
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-              child: Obx(() => _buildBody(context, theme, controller, tag)),
-            ),
+          child: GetX<TripParticipantSelectorController>(
+            initState: (state) async {
+              await controller.fetchAndSetToken();
+            },
+            builder: (_) {
+              return Scaffold(
+                backgroundColor: theme.colorScheme.surface,
+                appBar: CustomAppBar(title: controller.authToken.value != null ? 'Select Your Identity' : '', centerTitle: true,),
+                body: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  child: _buildBody(context, theme, controller, tag),
+                ),
+              );
+            }
           ),
         ),
       ),
@@ -175,7 +182,6 @@ class TripParticipantSelectorPage extends StatelessWidget {
       TripParticipantSelectorController controller,
       ) {
     final participant = friend.participant;
-    if (participant == null) return const SizedBox.shrink();
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),

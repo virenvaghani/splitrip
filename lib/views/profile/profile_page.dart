@@ -14,12 +14,19 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Theme
-            .of(context)
-            .scaffoldBackgroundColor,
-        appBar: _appbar(context: context),
-        body: _body(context: context)
+    return GetX<ProfileController>(
+      initState: (state) {
+        profileController.loadToken();
+      },
+      builder: (_) {
+        return Scaffold(
+            backgroundColor: Theme
+                .of(context)
+                .scaffoldBackgroundColor,
+            appBar: profileController.isloading.value ? null : _appbar(context: context),
+            body:profileController.isloading.value? Center(child: CircularProgressIndicator()):  _body(context: context)
+        );
+      }
     );
   }
 
@@ -28,40 +35,24 @@ class ProfilePage extends StatelessWidget {
       title: "Profile",
       centerTitle: false,
       actions: [
-        StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            final isSignedIn = snapshot.data != null;
-            return isSignedIn
-                ? IconButton(
-              onPressed: profileController.signOut,
-              icon: const Icon(
-                Icons.logout,
-                color: Colors.redAccent,
-                size: 24,
-              ),
-              tooltip: 'Sign Out',
-            )
-                : const SizedBox.shrink();
-          },
-        ),
+       profileController.authToken.value != null? IconButton(
+         onPressed: profileController.signOut,
+         icon: const Icon(
+           Icons.logout,
+           color: Colors.redAccent,
+           size: 24,
+         ),
+         tooltip: 'Sign Out',
+       )
+           :  SizedBox.shrink()
       ],
     );
   }
 
   SafeArea _body({required BuildContext context}) {
     return SafeArea(
-      child: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          final user = snapshot.data;
-          final isSignedIn = user != null;
-
-          return isSignedIn
-              ? ProfileDetailsPage(user: user)
-              : const SignUpPage();
-        },
-      ),
+      child: profileController.authToken.value != null ? ProfileDetailsPage()
+          :  SignUpPage()
     );
   }
 }

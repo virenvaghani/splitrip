@@ -15,20 +15,7 @@ class TripDetailController extends GetxController {
   final trip = {}.obs;
   final summary = {}.obs;
   final transactions = <Map<String, dynamic>>[].obs;
-  final participants = ["Viren", "Sandip", "Akash", "Prayag"].obs;
   final participantShares = <String, double>{}.obs;
-
-  @override
-  void onInit() {
-    super.onInit();
-    initializeShares();
-  }
-
-  void initializeShares() {
-    for (var person in participants) {
-      participantShares[person] = 0.0;
-    }
-  }
 
   void shareTripLink(int tripId) {
     final url = 'https://expense.jayamsoft.net/trip?id=$tripId';
@@ -57,7 +44,9 @@ class TripDetailController extends GetxController {
     final yesterday = now.subtract(const Duration(days: 1));
     return transactions.where((t) {
       final tDate = DateTime.tryParse(t['date'] ?? '') ?? now;
-      return tDate.isBefore(DateTime(yesterday.year, yesterday.month, yesterday.day));
+      return tDate.isBefore(
+        DateTime(yesterday.year, yesterday.month, yesterday.day),
+      );
     }).toList();
   }
 
@@ -84,7 +73,10 @@ class TripDetailController extends GetxController {
     selectedTabIndex.value = index;
   }
 
-  Future<void> fetchTripDetailById({required BuildContext context, required int tripId}) async {
+  Future<void> fetchTripDetailById({
+    required BuildContext context,
+    required int tripId,
+  }) async {
     isLoading.value = true;
     final token = await TokenStorage.getToken();
 
@@ -96,14 +88,38 @@ class TripDetailController extends GetxController {
     final Uri url = Uri.parse('${ApiConstants.baseUrl}/trips/$tripId');
 
     try {
-      final response = await http.get(url, headers: {
-        'content-type': 'application/json',
-        'Authorization': 'Token $token'
-      });
+      final response = await http.get(
+        url,
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        trip.value = data['trip'];
+
+        // Save the trip data (basic info and emoji)
+        trip.value = data['trip_data'];
+
+        // Extract selected participants from trip_data
+        final participants = <Map<String, dynamic>>[].obs;
+        participants.value = List<Map<String, dynamic>>.from(
+          data['trip_data']['selected_participants'],
+        );
+
+        // Save participants to your global state
+        Kconstant.friendModelList.clear();
+        Kconstant.setParticipantsRx(participants);
+
+        // Save transactions (optional: if you store them elsewhere)
+        final transactions = List<Map<String, dynamic>>.from(
+          data['transactions'],
+        );
+        Kconstant.setTransactions(
+          transactions,
+        ); // You can define this method similarly to setParticipantsRx()
+
         isLoading.value = false;
       }
     } catch (e) {
@@ -128,7 +144,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Viren',
         'amount': 1200.0,
         'user_share': 400.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 1))),
         'type': 'expense',
       },
       {
@@ -136,7 +154,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Prayag',
         'amount': 2000.0,
         'user_share': 500.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 2))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 2))),
         'type': 'transfer',
       },
       {
@@ -144,7 +164,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Sandip',
         'amount': 800.0,
         'user_share': 200.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 3))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 3))),
         'type': 'expense',
       },
       {
@@ -152,7 +174,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Akash',
         'amount': 8000.0,
         'user_share': 0.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 4))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 4))),
         'type': 'income',
       },
       {
@@ -160,7 +184,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Akash',
         'amount': 3000.0,
         'user_share': 750.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 5))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 5))),
         'type': 'expense',
       },
       {
@@ -168,7 +194,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Sandip',
         'amount': 3000.0,
         'user_share': 750.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 6))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 6))),
         'type': 'transfer',
       },
       {
@@ -176,7 +204,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Viren',
         'amount': 1500.0,
         'user_share': 375.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 7))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 7))),
         'type': 'expense',
       },
       {
@@ -184,7 +214,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Viren',
         'amount': 5000.0,
         'user_share': 0.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 8))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 8))),
         'type': 'income',
       },
       {
@@ -192,7 +224,9 @@ class TripDetailController extends GetxController {
         'paid_by': 'Prayag',
         'amount': 5000.0,
         'user_share': 1250.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 9))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 9))),
         'type': 'expense',
       },
       {
@@ -200,14 +234,15 @@ class TripDetailController extends GetxController {
         'paid_by': 'Sandip',
         'amount': 600.0,
         'user_share': 150.0,
-        'date': DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 10))),
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(const Duration(days: 10))),
         'type': 'expense',
       },
     ];
 
     calculateSummary();
   }
-
 
   void calculateSummary() {
     double totalExpenses = 0;

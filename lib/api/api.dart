@@ -38,6 +38,7 @@ class ApiService {
 
         if (token != null && token.isNotEmpty) {
           await TokenStorage.saveToken(token);
+          await AuthStatusStorage.saveUserToken(token);
           await AuthStatusStorage.saveUserImage(userImage);
           await AuthStatusStorage.saveUserName(userName);
           await AuthStatusStorage.saveUserEmail(userEmail);

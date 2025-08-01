@@ -393,7 +393,10 @@ class TripController extends GetxController {
       isFriendPageLoading.value = false;
       return;
     }
-    if (participantData['member'] == null || int.tryParse(participantData['member'].toString())! <= 0) {
+    double? memberCount = double.tryParse(participantData['member']?.toString() ?? '');
+    double calculatedValue = (memberCount ?? 0) * 100 / 25;
+
+    if (participantData['member'] == null || memberCount == null || memberCount <= 0 || calculatedValue == 0) {
       showSnackBar(Get.context!, Get.theme, "Valid number of members is required");
       isAddparticipantLoading.value = false;
       isFriendPageLoading.value = false;

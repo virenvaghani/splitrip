@@ -16,7 +16,7 @@ class TripDetailScreen extends StatelessWidget {
       TripDetailController(),
     );
     final int tripId = int.tryParse(Get.arguments['tripId'].toString()) ?? 0;
-
+    print(tripId);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         systemNavigationBarColor: theme.scaffoldBackgroundColor,
@@ -42,7 +42,12 @@ class TripDetailScreen extends StatelessWidget {
                       ? const Center(child: CircularProgressIndicator())
                       : _buildBodyContent(context, tripDetailController),
 
-              bottomNavigationBar: tripDetailController.isLoading.value ? SizedBox.shrink() :_buildFAB(context, tripDetailController),
+              bottomNavigationBar:
+                  tripDetailController.isLoading.value
+                      ? SizedBox.shrink()
+                      : tripDetailController.selectedTabIndex.value == 1
+                      ? SizedBox.shrink()
+                      : _buildFAB(context, tripDetailController),
             );
           },
         ),
@@ -78,7 +83,7 @@ class TripDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    controller.trip['trip_name'] ?? 'Unnamed Trip',
+                    controller.trip['name'] ?? 'Unnamed Trip',
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
                     ),
@@ -120,32 +125,48 @@ class TripDetailScreen extends StatelessWidget {
         return const Center(child: Text('Photos coming soon'));
       default:
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           children: [
             _buildSummaryCard(context, controller),
-            const SizedBox(height: 24),
+            const SizedBox(height: 18),
 
             if (controller.todayTransactions.isNotEmpty) ...[
-              Text('Today', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  'Today',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               ...controller.todayTransactions.map(
                 (expense) => _buildExpenseCard(context, controller, expense),
               ),
-              const SizedBox(height: 16),
             ],
-
+            SizedBox(height: 8),
             if (controller.yesterdayTransactions.isNotEmpty) ...[
-              Text('Yesterday', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  'Yesterday',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               ...controller.yesterdayTransactions.map(
                 (expense) => _buildExpenseCard(context, controller, expense),
               ),
-              const SizedBox(height: 16),
             ],
-
+            SizedBox(height: 8),
             if (controller.olderTransactions.isNotEmpty) ...[
-              Text('Earlier', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  'Earlier',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               ...controller.olderTransactions.map(
                 (expense) => _buildExpenseCard(context, controller, expense),
               ),
@@ -166,8 +187,7 @@ class TripDetailScreen extends StatelessWidget {
           if (tab == 0) {
             Get.toNamed(
               PageConstant.addTransactionScreen,
-              arguments: {'type': 'Expense'},
-
+              arguments: {'type': 'Expense', 'add':''},
             );
           } else {
             Get.snackbar(
@@ -179,7 +199,9 @@ class TripDetailScreen extends StatelessWidget {
         child: Container(
           height: 56, // Match standard navigation bar height
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12), // Consistent with cards and tabs
+            borderRadius: BorderRadius.circular(
+              12,
+            ), // Consistent with cards and tabs
             gradient: LinearGradient(
               colors: [
                 theme.colorScheme.primary.withValues(alpha: 0.6),
@@ -190,7 +212,9 @@ class TripDetailScreen extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.6), // Softer shadow
+                color: theme.colorScheme.primary.withValues(
+                  alpha: 0.6,
+                ), // Softer shadow
                 blurRadius: 8,
                 offset: const Offset(0, 2), // Consistent with summary card
               ),
@@ -201,7 +225,8 @@ class TripDetailScreen extends StatelessWidget {
             children: [
               Icon(
                 Icons.add,
-                color: theme.colorScheme.onPrimary, // Use onPrimary for contrast
+                color:
+                    theme.colorScheme.onPrimary, // Use onPrimary for contrast
                 size: 24,
               ),
               const SizedBox(width: 8),

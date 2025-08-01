@@ -9,6 +9,8 @@ import '../../model/friend/participant_model.dart';
 class FriendController extends GetxController {
   final friendsList = <FriendModel>[].obs;
   final isLoading = false.obs;
+  RxBool isDeleteBoxIsLoading = false.obs;
+  RxBool isAddParticipantisLoading = false.obs;
   final errorMessage = ''.obs;
   final authToken = RxnString();
   final isTokenLoading = true.obs;
@@ -64,7 +66,9 @@ class FriendController extends GetxController {
         print(data);
         Kconstant.friendModelList.clear();
         List<FriendModel> friendModelList = [];
-        friendModelList = data.map((participantData) {
+        friendModelList = data
+            .where((participantData) => participantData['is_deleted'] == false)
+            .map((participantData) {
           final participant = ParticipantModel.fromJson(participantData);
           return FriendModel(participant: participant);
         }).toList();
@@ -81,6 +85,50 @@ class FriendController extends GetxController {
 
     isLoading.value = false;
   }
+  Future<void> deleteParticipant(FriendModel friend) async {
+    final token = authToken.value;
+    if (token == null || token.isEmpty) {
+      return;
+    }
+
+    isDeleteBoxIsLoading.value = true;
+    errorMessage.value = '';
+
+    try {
+      print("=============================================");
+      print(friend.participant.id);
+
+      final response = await http.put(
+        Uri.parse('${ApiConstants.baseUrl}/participants/${friend.participant.id}/'),
+        headers: {
+          'Authorization': 'Token $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        print(data);
+
+        // Remove from the local list
+        Kconstant.friendModelList.removeWhere((t) => t.participant.id == friend.participant.id);
+        Kconstant.friendModelList.refresh();
+
+      } else {
+        errorMessage.value = 'Failed to delete participant: ${response.statusCode}';
+        friendsList.clear();
+      }
+    } catch (error) {
+      errorMessage.value = 'Error deleting participant: $error';
+      print('$error');
+      friendsList.clear();
+    }
+
+    isDeleteBoxIsLoading.value = false;
+  }
+
+
+
 
   void refreshFriends() {
     fetchAndSetToken();

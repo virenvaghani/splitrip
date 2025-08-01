@@ -7,7 +7,6 @@ import 'package:splitrip/controller/trip/trip_controller.dart';
 import '../../data/constants.dart';
 import '../../data/token.dart';
 import '../../model/friend/friend_model.dart';
-import '../../model/friend/participant_model.dart';
 
 class TripParticipantSelectorController extends GetxController {
   final int tripId;
@@ -20,65 +19,17 @@ class TripParticipantSelectorController extends GetxController {
   var isLoading = true.obs;
   var participants = <FriendModel>[].obs;
   RxBool isTokenLoading = false.obs;
-  @override
-  void onInit() {
-    super.onInit();
-    loadParticipants();
-  }
 
-  Future<void> fetchAndSetToken() async {
+
+  Future<void> aa() async {
     print('[TripScreenController] Fetching token...');
     isTokenLoading.value = true;
 
-    try {
-      final token = await TokenStorage.getToken();
-      authToken.value = token;
-      isTokenLoading.value = false;
 
-      if (token != null && token.isNotEmpty) {
-        print('[TripScreenController] Token found, fetching friends...');
-        await loadParticipants();
-      } else {
-        print('[FriendController] No token, clearing friends list...');
-              }
-    } catch (e) {
-      authToken.value = null;
-      isTokenLoading.value = false;
-      print('[FriendController] Error fetching token: $e');
-    }
   }
 
   Future<void> loadParticipants() async {
-    try {
-      isLoading.value = true;
-      final token = await TokenStorage.getToken();
-      if (token == null) {
-        Get.snackbar('Error', 'Authentication token not found');
-        return;
-      }
 
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/participants/selection_list/$tripId/'),
-        headers: {
-          'Authorization': 'Token $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        participants.value = data.map((json) {
-          final participant = ParticipantModel.fromJson(json);
-          return FriendModel(participant: participant);
-        }).toList();
-      } else {
-        Get.snackbar('Error', 'Failed to fetch participants');
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Error fetching participants');
-    } finally {
-      isLoading.value = false;
-    }
   }
 
   Future<void> linkuserWithParticipant({
@@ -122,6 +73,25 @@ class TripParticipantSelectorController extends GetxController {
       Get.snackbar('Error', 'Error linking participant: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<dynamic>fetchAndSetToken() async {
+    try {
+      final token = await TokenStorage.getToken();
+      authToken.value = token;
+      isTokenLoading.value = false;
+
+      if (token != null && token.isNotEmpty) {
+        print('[TripScreenController] Token found, fetching friends...');
+        await loadParticipants();
+      } else {
+        print('[FriendController] No token, clearing friends list...');
+      }
+    } catch (e) {
+      authToken.value = null;
+      isTokenLoading.value = false;
+      print('[FriendController] Error fetching token: $e');
     }
   }
 

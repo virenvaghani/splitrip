@@ -34,7 +34,7 @@ class ParticipantModel {
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {
     return ParticipantModel(
-      id: json['id'],
+      id: json['participnt_id'],
       name: json['name'],
       member: (json['member'] as num?)?.toDouble(), // Convert to double
       referenceId: json['reference_id'],
@@ -56,7 +56,7 @@ class ParticipantModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'participnt_id': id,
       'name': name,
       'member': member,
       'reference_id': referenceId,
