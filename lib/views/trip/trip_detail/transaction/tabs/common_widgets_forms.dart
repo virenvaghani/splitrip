@@ -845,50 +845,52 @@ class CommonFormWidgets {
     required TransactionScreenController controller,
   }) {
     return Obx(
-          () =>
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: controller.isLoading.value
-                    ? null
-                    : () {
-                  if (formKey.currentState?.validate() ?? false) {
-                    controller.submitTransaction();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 3,
-                  shadowColor: theme.colorScheme.primary.withValues(alpha: 0.4),
-                ),
-                child: controller.isLoading.value
-                    ? SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    color: theme.colorScheme.onPrimary,
-                    strokeWidth: 3,
-                  ),
-                )
-                    : Text(
-                  label,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.0,
-                  ),
-                  semanticsLabel: label,
-                ),
+          () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: controller.isLoading.value
+                ? null
+                : () {
+              if (formKey.currentState?.validate() ?? false) {
+                TransactionScreenController.saveTransactionToBackend(
+                  controller: controller,
+                  tripDetailController: tripDetailController,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
+              elevation: 3,
+              shadowColor: theme.colorScheme.primary.withValues(alpha: 0.4),
+            ),
+            child: controller.isLoading.value
+                ? SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                color: theme.colorScheme.onPrimary,
+                strokeWidth: 3,
+              ),
+            )
+                : Text(
+              label,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.0,
+              ),
+              semanticsLabel: label,
             ),
           ),
+        ),
+      ),
     );
   }
-}
+  }
