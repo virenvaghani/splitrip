@@ -29,6 +29,7 @@ class Trip {
 
   factory Trip.fromJson(Map<String, dynamic> json) {
     final tripData = json['trip'] ?? json;
+    final totalparticipants = json['total_participants'];
 
     return Trip(
       id: tripData['id'] == null ? tripData['trip_id']?.toString() : tripData['id'].toString(),
@@ -40,7 +41,7 @@ class Trip {
       participantReferenceIds: tripData['participants'] != null && tripData['participants'] is List
           ? List<String>.from(tripData['participants'].map((p) => p.toString()))
           : [],
-      totalParticipants: tripData['total_participants'],
+      totalParticipants: totalparticipants,
       isArchived: (tripData['is_archived'] as bool?) ?? false,
       isDeleted: (tripData['is_deleted'] as bool?) ?? false,
       linkedUsers: (tripData['linked_users'] as List<dynamic>?)

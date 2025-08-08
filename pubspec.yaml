@@ -53,9 +53,13 @@ dependencies:
   flutter_multi_formatter: ^2.13.7
   animated_text_kit: ^4.2.3
   app_links: ^6.4.0
-  share_plus: ^11.0.
+  share_plus: ^11.0.0
   rxdart: ^0.28.0
   http: ^1.4.0
+  mobile_scanner: ^5.2.1
+  qr_flutter: ^4.1.0
+  path_provider: ^2.1.4
+  image: ^4.2.0
 
 
 

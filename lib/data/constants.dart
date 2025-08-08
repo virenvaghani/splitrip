@@ -33,6 +33,8 @@ class PageConstant {
   static const String selectionPage = "/trip";
   static const String dashboard = "/Dashboard";
   static const String splashScreen = "/SplashScreen";
+  static const String scanscreen = "/scanscreen";
+  static const String generateQrScreen = "/generateQrScreen";
 }
 
 class ApiConstants {

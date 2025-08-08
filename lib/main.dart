@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:splitrip/controller/splash_screen/splash_screen_controller.dart';
 import 'package:splitrip/controller/trip/trip_screen_controller.dart';
 import 'package:splitrip/views/trip/archive/archive_screen.dart';
+import 'package:splitrip/views/trip/scan_trip/generate_qr_screen.dart';
+import 'package:splitrip/views/trip/scan_trip/scan_trip_screen.dart';
 import 'package:splitrip/views/trip/trip_detail/transaction/transaction_screen.dart';
 import 'package:splitrip/views/trip/trip_detail/trip_detail_screen.dart';
 
@@ -47,9 +49,6 @@ void main() async {
   Get.put(TripDetailController());
   Get.put(EmojiController());
   Get.lazyPut(() => SplashScreenController());
-  Get.lazyPut(
-    () => TripParticipantSelectorController(0),
-  ); // Initialized with dummy tripId
 
   runApp(const MyApp());
 }
@@ -67,7 +66,6 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeController>(
         builder: (context, themeController, child) {
           return GetMaterialApp(
-
             debugShowCheckedModeBanner: false,
             defaultTransition: Transition.rightToLeftWithFade,
             transitionDuration: const Duration(milliseconds: 300),
@@ -79,11 +77,11 @@ class MyApp extends StatelessWidget {
             getPages: [
               GetPage(
                 name: PageConstant.splashScreen,
-                page: () =>  SplashScreen(),
+                page: () => SplashScreen(),
               ),
               GetPage(
                 name: PageConstant.selectionPage,
-                page: () => TripParticipantSelectorPage(),
+                page: () => ParticipantSelectorPage(),
               ),
               GetPage(
                 name: PageConstant.maintainTripPage,
@@ -106,10 +104,13 @@ class MyApp extends StatelessWidget {
                 name: PageConstant.tripDetailScreen,
                 page: () => TripDetailScreen(),
               ),
+              GetPage(name: PageConstant.dashboard, page: () => DashBoard()),
               GetPage(
-                name: PageConstant.dashboard,
-                page: () =>  DashBoard(),
+                name: PageConstant.scanscreen,
+                page: () => QRScannerPage(),
               ),
+
+
             ],
           );
         },

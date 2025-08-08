@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:splitrip/controller/appPageController/app_page_controller.dart';
+import 'package:splitrip/controller/participant/participent_selection_controller.dart';
 import 'package:splitrip/controller/trip/trip_controller.dart';
 import 'package:splitrip/controller/trip/trip_detail_controller.dart';
 import 'package:splitrip/controller/trip/trip_screen_controller.dart';
 import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/model/trip/trip_model.dart';
+import 'package:splitrip/views/trip/scan_trip/generate_qr_screen.dart';
 import 'package:splitrip/widgets/myappbar.dart';
 
 import '../../../model/currency/currency_model.dart';
@@ -74,6 +76,9 @@ class TripScreen extends StatelessWidget {
           tooltip: 'Archive',
         )
             : const SizedBox.shrink(),
+        IconButton(onPressed: () {
+          Get.toNamed(PageConstant.scanscreen);
+        }, icon: Icon(Icons.qr_code_scanner, color: theme.primaryColor,)),
         IconButton(
           onPressed: () async {
             final result = await Get.toNamed(
@@ -355,7 +360,7 @@ class TripScreen extends StatelessWidget {
       items: [
         _popupMenuItem(Icons.edit, 'Edit', 'edit', Colors.green),
         _popupMenuItem(Icons.archive, 'Archive', 'archive', theme.colorScheme.primary),
-        _popupMenuItem(Icons.share, 'Share', 'Share', Colors.grey),
+        _popupMenuItem(Icons.qr_code, 'Qr Code', 'Qr Code', Colors.grey),
         _popupMenuItem(Icons.delete, 'Delete', 'delete', theme.colorScheme.error),
       ],
       elevation: 8,
@@ -402,8 +407,8 @@ class TripScreen extends StatelessWidget {
       case 'delete':
         _showDeleteConfirmationDialog(context, trip, theme);
         break;
-      case 'Share':
-        tripDetailController.shareTripLink(int.parse(trip.id!));
+      case 'Qr Code':
+       Get.to(GenerateQRPage( tripId: int.parse(trip.id!)));
         break;
     }
   }

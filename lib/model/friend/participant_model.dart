@@ -36,7 +36,12 @@ class ParticipantModel {
     return ParticipantModel(
       id: json['participnt_id'],
       name: json['name'],
-      member: (json['member'] as num?)?.toDouble(), // Convert to double
+        member: json['member'] == null
+            ? null
+            : (json['member'] is num)
+            ? (json['member'] as num).toDouble()
+            : double.tryParse(json['member'].toString()),
+         // Convert to double
       referenceId: json['reference_id'],
       user: json['user'],
       linkedUsers: (json['linked_users'] as List<dynamic>?)
