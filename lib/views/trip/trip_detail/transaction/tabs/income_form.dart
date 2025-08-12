@@ -329,7 +329,7 @@ Widget _shareInputsAsParts(
       .map((participant) => participant['name'] as String)
       .toList();
   final participantMembers = Kconstant.participantsRx
-      .map((participant) => num.tryParse(participant['custom_member_count'].toString()) ?? 1)
+      .map((participant) => double.tryParse(participant['custom_member_count'].toString()) ?? 1)
       .toList();
 
   controller.initializeShareFields(participantNames,participantMembers);

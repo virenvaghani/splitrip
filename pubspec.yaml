@@ -60,10 +60,14 @@ dependencies:
   qr_flutter: ^4.1.0
   path_provider: ^2.1.4
   image: ^4.2.0
+  json_annotation: ^4.9.0
+  build_runner: ^2.4.6
+  json_serializable: ^6.8.0
 
 
 
 dev_dependencies:
+
   flutter_test:
     sdk: flutter
 

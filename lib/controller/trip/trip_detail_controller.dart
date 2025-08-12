@@ -1,31 +1,25 @@
-import 'package:flutter/Material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
 import 'package:splitrip/data/constants.dart';
 import 'package:splitrip/data/token.dart';
-import 'package:http/http.dart' as http;
 
 class TripDetailController extends GetxController {
-  RxBool ismokLoading = false.obs;
   RxBool isLoading = false.obs;
   var selectedTabIndex = 0.obs;
 
   final trip = {}.obs;
   final summary = {}.obs;
   final transactions = <Map<String, dynamic>>[].obs;
+  final participants = <Map<String, dynamic>>[].obs;
   final participantShares = <String, double>{}.obs;
-
-  void shareTripLink(int tripId) {
-    final url = 'https://expense.jayamsoft.net/trip?id=$tripId';
-    SharePlus.instance.share(ShareParams(text: 'Join my trip: $url'));
-  }
 
   List<Map<String, dynamic>> get todayTransactions {
     final now = DateTime.now();
     return transactions.where((t) {
-      final tDate = DateTime.tryParse(t['date'] ?? '') ?? now;
+      final tDate = DateTime.tryParse(t['created_at'] ?? '') ?? now;
       return isSameDate(tDate, now);
     }).toList();
   }
@@ -34,7 +28,7 @@ class TripDetailController extends GetxController {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
     return transactions.where((t) {
-      final tDate = DateTime.tryParse(t['date'] ?? '') ?? now;
+      final tDate = DateTime.tryParse(t['created_at'] ?? '') ?? now;
       return isSameDate(tDate, yesterday);
     }).toList();
   }
@@ -43,7 +37,7 @@ class TripDetailController extends GetxController {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
     return transactions.where((t) {
-      final tDate = DateTime.tryParse(t['date'] ?? '') ?? now;
+      final tDate = DateTime.tryParse(t['created_at'] ?? '') ?? now;
       return tDate.isBefore(
         DateTime(yesterday.year, yesterday.month, yesterday.day),
       );
@@ -82,6 +76,7 @@ class TripDetailController extends GetxController {
 
     if (token == null) {
       Get.snackbar("Please log in again", "");
+      isLoading.value = false;
       return;
     }
 
@@ -99,148 +94,75 @@ class TripDetailController extends GetxController {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Save the trip data (basic info and emoji)
+        // Save trip data
         trip.value = data['trip_data'];
 
-        // Extract selected participants from trip_data
-        final participants = <Map<String, dynamic>>[].obs;
-        participants.value = List<Map<String, dynamic>>.from(
-          data['trip_data']['selected_participants'],
+        // Save participants
+        participants.assignAll(
+          List<Map<String, dynamic>>.from(data['trip_data']['selected_participants']),
+        );
+
+        // Process and save transactions
+        transactions.assignAll(
+          List<Map<String, dynamic>>.from(data['transactions']).map((t) {
+            final pyers = List<Map<String, dynamic>>.from(t['pyers'] ?? []);
+            final splits = List<Map<String, dynamic>>.from(t['splits'] ?? []);
+
+            // Find payer name (first payer for display)
+            final paidBy = pyers.isNotEmpty
+                ? participants.firstWhere(
+                  (p) => p['id'] == pyers[0]['participant'],
+              orElse: () => {'name': 'Unknown'},
+            )['name']
+                : 'Unknown';
+
+            // Find only participants that exist in both pyers & splits
+            final matchedShares = pyers.where((payer) {
+              return splits.any((split) => split['participant'] == payer['participant']);
+            }).map((payer) {
+              final split = splits.firstWhere(
+                    (s) => s['participant'] == payer['participant'],
+                orElse: () => {'amount': '0'},
+              );
+
+              return {
+                'participant': payer['participant'],
+                'paid': double.tryParse(payer['amount'].toString()) ?? 0.0,
+                'share': double.tryParse(split['amount'].toString()) ?? 0.0,
+              };
+            }).toList();
+
+            return {
+              'category': getCategoryName(t['category'] ?? 0),
+              'paid_by': paidBy,
+              'amount': t['amount'] ?? 0.0,
+              'user_share': matchedShares, // only payer who also has split
+              'created_at': t['created_at'] ?? DateTime.now().toIso8601String(),
+              'type': t['type'] ?? 'expense',
+              'tr_name': t['tr_name'] ?? '',
+            };
+          }).toList(),
         );
 
 
-        Kconstant.setParticipantsRx(participants);
 
-        // Save transactions (optional: if you store them elsewhere)
-        final transactions = List<Map<String, dynamic>>.from(
-          data['transactions'],
-        );
-        Kconstant.setTransactions(
-          transactions,
-        ); // You can define this method similarly to setParticipantsRx()
-
+        calculateSummary();
+        isLoading.value = false;
+      } else {
+        Get.snackbar('Error', 'Failed to fetch trip details: ${response.body}');
         isLoading.value = false;
       }
     } catch (e) {
-      print(e);
+      print('Error fetching trip details: $e');
+      Get.snackbar('Error', 'An error occurred while fetching trip details');
+      isLoading.value = false;
     }
   }
 
-  void loadMockData() {
-    final now = DateTime.now();
-
-    transactions.value = [
-      {
-        'category': 'Salary',
-        'paid_by': 'Viren',
-        'amount': 15000.0,
-        'user_share': 0.0,
-        'date': DateFormat('yyyy-MM-dd').format(now),
-        'type': 'income',
-      },
-      {
-        'category': 'Food',
-        'paid_by': 'Viren',
-        'amount': 1200.0,
-        'user_share': 400.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 1))),
-        'type': 'expense',
-      },
-      {
-        'category': 'Bank Transfer',
-        'paid_by': 'Prayag',
-        'amount': 2000.0,
-        'user_share': 500.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 2))),
-        'type': 'transfer',
-      },
-      {
-        'category': 'Transport',
-        'paid_by': 'Sandip',
-        'amount': 800.0,
-        'user_share': 200.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 3))),
-        'type': 'expense',
-      },
-      {
-        'category': 'Freelance Payment',
-        'paid_by': 'Akash',
-        'amount': 8000.0,
-        'user_share': 0.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 4))),
-        'type': 'income',
-      },
-      {
-        'category': 'Shopping',
-        'paid_by': 'Akash',
-        'amount': 3000.0,
-        'user_share': 750.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 5))),
-        'type': 'expense',
-      },
-      {
-        'category': 'Payback',
-        'paid_by': 'Sandip',
-        'amount': 3000.0,
-        'user_share': 750.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 6))),
-        'type': 'transfer',
-      },
-      {
-        'category': 'Misc',
-        'paid_by': 'Viren',
-        'amount': 1500.0,
-        'user_share': 375.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 7))),
-        'type': 'expense',
-      },
-      {
-        'category': 'Bonus',
-        'paid_by': 'Viren',
-        'amount': 5000.0,
-        'user_share': 0.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 8))),
-        'type': 'income',
-      },
-      {
-        'category': 'Hotel',
-        'paid_by': 'Prayag',
-        'amount': 5000.0,
-        'user_share': 1250.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 9))),
-        'type': 'expense',
-      },
-      {
-        'category': 'Snacks',
-        'paid_by': 'Sandip',
-        'amount': 600.0,
-        'user_share': 150.0,
-        'date': DateFormat(
-          'yyyy-MM-dd',
-        ).format(now.subtract(const Duration(days: 10))),
-        'type': 'expense',
-      },
-    ];
-
-    calculateSummary();
+  Object getCategoryName(int categoryId) {
+    // Map category ID to name (replace with actual category fetching logic)
+    final categoryMap = Kconstant.categoryModelList;
+    return categoryMap[categoryId] ?? 'Unknown';
   }
 
   void calculateSummary() {
@@ -253,11 +175,13 @@ class TripDetailController extends GetxController {
       final amount = (t['amount'] ?? 0.0) as double;
       final userShare = (t['user_share'] ?? 0.0) as double;
 
-      totalExpenses += amount;
-      if (paidBy == 'Viren') {
-        myExpenses += amount;
+      if (t['type'] == 'expense') {
+        totalExpenses += amount;
+        if (paidBy == 'Viren') { // Replace 'Viren' with current user logic
+          myExpenses += amount;
+        }
+        amountOwed += userShare;
       }
-      amountOwed += userShare;
     }
 
     summary.value = {

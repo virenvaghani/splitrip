@@ -143,7 +143,7 @@ class TripController extends GetxController {
 
         return ParticipantModel(
           referenceId: e["participant_reference_id"],
-          name: "${e["participant_name"]}",
+          name: "${e["name"]}",
           member: _parseToDouble(e["member"]),
           customMemberCount: _parseToDouble(e["custom_member_count"]),
           linkedUsers: [],

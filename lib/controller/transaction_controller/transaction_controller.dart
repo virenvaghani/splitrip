@@ -530,17 +530,29 @@ class TransactionScreenController extends GetxController {
     required TransactionScreenController controller,
     required TripDetailController tripDetailController,
   }) async {
+    print("=== saveTransactionToBackend START ===");
+
     controller.isLoading.value = true;
     controller.errorMessage.value = '';
+    print("Step 1: Loading started, error message cleared");
 
     try {
       // Validate transaction data
+      print("Step 2: Validating transaction...");
       _validateTransaction(controller);
+      print("Validation successful");
 
+      // Fetch token and trip details
       final token = await TokenStorage.getToken();
+      print("Token fetched: $token");
+
       final tripId = tripDetailController.trip['id'] as int;
       final currencyId = tripDetailController.trip['default_currency'] as int;
       final amount = double.tryParse(controller.transactionAmount.value) ?? 0.0;
+
+      print("Trip ID: $tripId");
+      print("Currency ID: $currencyId");
+      print("Amount: $amount");
 
       // Prepare common transaction data
       final transactionData = {
@@ -554,15 +566,21 @@ class TransactionScreenController extends GetxController {
         if (controller.selectedCategory.value != null)
           'category': controller.selectedCategory.value?.id,
       };
+      print("Step 3: Common transaction data prepared: $transactionData");
 
+      // Transfer transaction
       if (controller.transactionType.value == 'transfer') {
-        // Handle transfer transaction
+        print("Step 4: Handling transfer transaction");
+
         final fromParticipantName = controller.transactionPayers.first;
+        print("From participant name: $fromParticipantName");
+
         final fromParticipant = Kconstant.participantsRx.firstWhere(
               (p) => p['name'] == fromParticipantName,
           orElse: () => throw TransactionException('From participant not found: $fromParticipantName'),
         );
         final fromParticipantId = fromParticipant['id'] as int;
+        print("From participant ID: $fromParticipantId");
 
         final payees = controller.transactionPayers.map((payerName) {
           final participant = Kconstant.participantsRx.firstWhere(
@@ -571,6 +589,7 @@ class TransactionScreenController extends GetxController {
           );
           final participantId = participant['id'] as int;
           final payerAmount = controller.payerAmounts[payerName] ?? amount;
+          print("Payee added: ID=$participantId, Amount=$payerAmount");
           return {'participant': participantId, 'amount': payerAmount};
         }).toList();
 
@@ -581,6 +600,7 @@ class TransactionScreenController extends GetxController {
           );
           final participantId = participant['id'] as int;
           final recipientAmount = controller.recipientAmounts[recipientName] ?? (amount / controller.transactionRecipients.length);
+          print("Receiver added: ID=$participantId, Amount=$recipientAmount");
           return {'participant': participantId, 'amount': recipientAmount};
         }).toList();
 
@@ -589,8 +609,12 @@ class TransactionScreenController extends GetxController {
           'payees': payees,
           'receivers': receivers,
         });
+        print("Transfer transaction data: $transactionData");
+
       } else {
-        // Handle regular transaction
+        // Regular transaction
+        print("Step 4: Handling regular transaction");
+
         final payees = controller.transactionPayers.map((payerName) {
           final participant = Kconstant.participantsRx.firstWhere(
                 (p) => p['name'] == payerName,
@@ -598,6 +622,7 @@ class TransactionScreenController extends GetxController {
           );
           final participantId = participant['id'] as int;
           final payerAmount = controller.payerAmounts[payerName] ?? (amount / controller.transactionPayers.length);
+          print("Payee added: ID=$participantId, Amount=$payerAmount");
           return {'participant': participantId, 'amount': payerAmount};
         }).toList();
 
@@ -607,6 +632,7 @@ class TransactionScreenController extends GetxController {
             orElse: () => throw TransactionException('Participant not found: $name'),
           );
           final participantId = participant['id'] as int;
+          print("Share added: ID=$participantId, Amount=$share");
           return MapEntry(name, {'participant': participantId, 'amount': share});
         }).entries.map((e) => e.value).toList();
 
@@ -615,17 +641,11 @@ class TransactionScreenController extends GetxController {
           'shares': shares,
           'split_type': controller.transactionSplitType.value,
         });
+        print("Regular transaction data: $transactionData");
       }
 
-      // Handle bill image if present
-      // if (controller.billImage.value != null) {
-      //   // Note: Actual image upload logic depends on backend requirements.
-      //   // This example assumes a separate endpoint or field for image upload.
-      //   // Adjust according to your API.
-      //   transactionData['bill_image'] = 'image_upload_placeholder'; // Replace with actual image upload logic
-      // }
-
       // Send to backend
+      print("Step 5: Sending POST request to backend...");
       final response = await http.post(
         Uri.parse('${ApiConstants.baseUrl}/transaction/maintain/$tripId/'),
         headers: {
@@ -635,19 +655,27 @@ class TransactionScreenController extends GetxController {
         body: jsonEncode(transactionData),
       );
 
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw TransactionException('Failed to save transaction: ${response.body}');
       }
 
+      print("Transaction saved successfully");
       Get.snackbar('Success', 'Transaction added successfully');
       Get.back();
+
     } catch (e) {
+      print("Error occurred: $e");
       controller.errorMessage.value = e is TransactionException ? e.message : 'An unexpected error occurred';
       Get.snackbar('Error', controller.errorMessage.value);
     } finally {
       controller.isLoading.value = false;
+      print("=== saveTransactionToBackend END ===");
     }
   }
+
 
   static void _validateTransaction(TransactionScreenController controller) {
     controller.titleError.value = controller.transactionTitle.value.isEmpty ? 'Title is required' : '';
@@ -701,4 +729,3 @@ class TransactionScreenController extends GetxController {
     }
   }
 }
-

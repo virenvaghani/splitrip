@@ -16,6 +16,7 @@ class ParticipantModel {
   double? customMemberCount;
   final List<Trip>? participatedTrips;
   final bool isLinked;
+  final bool? isMain;
 
   ParticipantModel({
     this.id,
@@ -30,6 +31,7 @@ class ParticipantModel {
     this.participantMember,
     this.participatedTrips,
     this.isLinked = false,
+    this.isMain
   });
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class ParticipantModel {
           ?.map((trip) => Trip.fromJson(trip))
           .toList() ??
           [],
+      isMain: json['is_main']
     );
   }
 
@@ -72,6 +75,7 @@ class ParticipantModel {
       'participant_member': participantMember,
       'custom_member_count': customMemberCount,
       'participated_trips': participatedTrips?.map((trip) => trip.toJson()).toList(),
+      'is_main': isMain
     };
   }
 
